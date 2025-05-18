@@ -1,0 +1,266 @@
+<template>
+  <ion-page>
+    <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
+      <div class="login-container">
+        <h1 class="ion-text-center">Welcome Back</h1>
+        <p class="ion-text-center subtitle">Sign in to continue</p>
+
+        <form @submit.prevent="handleSubmit" class="form">
+          <span class="input-span">
+            <label for="username" class="label">Username</label>
+            <div class="inputForm">
+              <input
+                type="text"
+                id="username"
+                v-model="username"
+                required
+                placeholder="Enter your username"
+              />
+            </div>
+            <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
+          </span>
+
+          <span class="input-span">
+            <label for="password" class="label">Password</label>
+            <div class="inputForm">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="password"
+                v-model="password"
+                required
+                placeholder="Enter your password"
+              />
+              <span class="toggle-password" @click="showPassword = !showPassword">
+                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              </span>
+            </div>
+            <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
+          </span>
+
+          <button class="button-submit" type="submit" :disabled="!isFormValid">Sign In</button>
+
+          <p class="p">Don't have an account? <span class="span" @click="goToSignup">Sign Up</span></p>
+        </form>
+      </div>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+import { IonPage, IonContent, toastController } from '@ionic/vue';
+
+const router = useRouter();
+const username = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const errors = ref({
+  username: '',
+  password: '',
+  general: ''
+});
+
+const isFormValid = computed(() => {
+  return username.value && password.value;
+});
+
+const handleSubmit = async () => {
+  // Reset errors
+  errors.value = {
+    username: '',
+    password: '',
+    general: ''
+  };
+
+  if (!username.value) {
+    errors.value.username = 'Username is required';
+    return;
+  }
+
+  if (!password.value) {
+    errors.value.password = 'Password is required';
+    return;
+  }
+
+  try {
+    console.log('Attempting login with:', { username: username.value });
+    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/login.php', {
+      username: username.value,
+      password: password.value
+    });
+
+    console.log('Login response:', response.data);
+
+    if (response.data.message === 'success') {
+      // Store user data and token in localStorage
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('token', response.data.token);
+      
+      // Configure axios to use the token for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      
+      await router.push('/tabs/dashboard');
+    } else {
+      throw new Error(response.data.message || 'Invalid username or password');
+    }
+  } catch (error: any) {
+    console.error('Login error:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please try again.';
+    
+    const toast = await toastController.create({
+      message: errorMessage,
+      duration: 2000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+    errors.value.general = errorMessage;
+  }
+};
+
+const goToSignup = () => {
+  router.push('/signup');
+};
+</script>
+
+<style scoped>
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 20px;
+  color: #ffffff;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+}
+
+.subtitle {
+  color: #8c8c8c;
+  margin-bottom: 2rem;
+}
+
+.form {
+  width: 100%;
+  max-width: 400px;
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.input-span {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+  font-weight: 500;
+}
+
+.inputForm {
+  position: relative;
+  background-color: #333333;
+  border: 2px solid #404040;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.inputForm:focus-within {
+  border-color: #4a90e2;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  outline: none;
+}
+
+input::placeholder {
+  color: #666666;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+}
+
+.error-message {
+  color: #ff4d4d;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.button-submit {
+  width: 100%;
+  padding: 14px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.button-submit:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.button-submit:disabled {
+  background-color: #333333;
+  cursor: not-allowed;
+}
+
+.p {
+  text-align: center;
+  color: #8c8c8c;
+  margin-top: 1.5rem;
+}
+
+.span {
+  color: #4a90e2;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.span:hover {
+  text-decoration: underline;
+}
+
+:deep(ion-content) {
+  --background: #1a1a1a;
+}
+
+@media (max-width: 480px) {
+  .form {
+    padding: 1.5rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+}
+</style>
