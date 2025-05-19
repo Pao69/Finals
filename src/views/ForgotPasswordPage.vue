@@ -1,0 +1,382 @@
+<template>
+  <ion-page>
+    <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
+      <div class="forgot-container">
+        <h1 class="ion-text-center">Forgot Password</h1>
+        <p class="ion-text-center subtitle">Reset your account password</p>
+
+        <form v-if="step === 1" @submit.prevent="handleRequestCode" class="form">
+          <span class="input-span">
+            <label for="email" class="label">Email</label>
+            <div class="inputForm">
+              <input
+                type="email"
+                id="email"
+                v-model="email"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+            <span class="error-message" v-if="error">{{ error }}</span>
+          </span>
+          <button class="button-submit" type="submit" :disabled="loading || resendTimer > 0">
+            {{ loading ? 'Sending...' : 'Send Reset Code' }}
+          </button>
+          <div v-if="resendTimer > 0" class="resend-timer">You can resend in {{ resendTimer }}s</div>
+        </form>
+
+        <div v-if="devResetCode && step === 2 && isDevMode" class="dev-reset-code">
+          <strong>Reset Code (dev):</strong> <span>{{ devResetCode }}</span>
+        </div>
+
+        <form v-if="step === 2" @submit.prevent="handleResetPassword" class="form">
+          <span class="input-span">
+            <label for="code" class="label">Reset Code</label>
+            <div class="inputForm">
+              <input
+                type="text"
+                id="code"
+                v-model="code"
+                required
+                placeholder="Enter reset code"
+              />
+            </div>
+          </span>
+          <span class="input-span">
+            <label for="newPassword" class="label">New Password</label>
+            <div class="inputForm">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="newPassword"
+                v-model="newPassword"
+                required
+                placeholder="Enter new password"
+              />
+              <span class="toggle-password" @click="showPassword = !showPassword">
+                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              </span>
+            </div>
+            <div class="password-requirements" v-if="newPassword">
+              <p :class="{ valid: hasLength }">✓ At least 11 characters</p>
+              <p :class="{ valid: hasLetter }">✓ At least one letter</p>
+              <p :class="{ valid: hasNumber }">✓ At least one number</p>
+              <p :class="{ valid: hasSpecial }">✓ At least one special character</p>
+            </div>
+          </span>
+          <span class="input-span">
+            <label for="confirmPassword" class="label">Confirm Password</label>
+            <div class="inputForm">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="confirmPassword"
+                v-model="confirmPassword"
+                required
+                placeholder="Confirm new password"
+              />
+            </div>
+          </span>
+          <span class="error-message" v-if="error">{{ error }}</span>
+          <button class="button-submit" type="submit" :disabled="loading">
+            {{ loading ? 'Resetting...' : 'Reset Password' }}
+          </button>
+          <button v-if="resendTimer === 0" class="resend-link" type="button" @click="handleRequestCode" :disabled="loading">Resend Code</button>
+        </form>
+
+        <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
+        <router-link to="/login" class="back-link">Back to Login</router-link>
+      </div>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+import { IonPage, IonContent } from '@ionic/vue';
+
+const router = useRouter();
+const step = ref(1);
+const email = ref('');
+const code = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const showPassword = ref(false);
+const error = ref('');
+const successMessage = ref('');
+const loading = ref(false);
+const devResetCode = ref('');
+const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const resendTimer = ref(0);
+let resendInterval: any = null;
+
+const hasLength = computed(() => newPassword.value.length >= 11);
+const hasLetter = computed(() => /[A-Za-z]/.test(newPassword.value));
+const hasNumber = computed(() => /[0-9]/.test(newPassword.value));
+const hasSpecial = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(newPassword.value));
+
+function startResendTimer() {
+  resendTimer.value = 30;
+  if (resendInterval) clearInterval(resendInterval);
+  resendInterval = setInterval(() => {
+    if (resendTimer.value > 0) {
+      resendTimer.value--;
+    } else {
+      clearInterval(resendInterval);
+    }
+  }, 1000);
+}
+
+const handleRequestCode = async () => {
+  error.value = '';
+  successMessage.value = '';
+  devResetCode.value = '';
+  loading.value = true;
+  try {
+    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/request_reset.php', {
+      email: email.value
+    });
+    if (response.data.success) {
+      step.value = 2;
+      if (response.data.debug_code && isDevMode) {
+        devResetCode.value = response.data.debug_code;
+      }
+      startResendTimer();
+      error.value = '';
+      successMessage.value = 'A reset code has been sent to your email.';
+    } else {
+      error.value = response.data.message || 'Failed to send reset code.';
+    }
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to send reset code.';
+  }
+  loading.value = false;
+};
+
+const handleResetPassword = async () => {
+  error.value = '';
+  successMessage.value = '';
+  if (!code.value) {
+    error.value = 'Reset code is required.';
+    return;
+  }
+  if (!newPassword.value) {
+    error.value = 'New password is required.';
+    return;
+  }
+  if (!hasLength.value) {
+    error.value = 'Password must be at least 11 characters.';
+    return;
+  }
+  if (!hasLetter.value) {
+    error.value = 'Password must contain at least one letter.';
+    return;
+  }
+  if (!hasNumber.value) {
+    error.value = 'Password must contain at least one number.';
+    return;
+  }
+  if (!hasSpecial.value) {
+    error.value = 'Password must contain at least one special character.';
+    return;
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match.';
+    return;
+  }
+  loading.value = true;
+  try {
+    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/reset_password.php', {
+      email: email.value,
+      code: code.value,
+      newPassword: newPassword.value
+    });
+    if (response.data.success) {
+      successMessage.value = 'Password reset successful! You can now log in.';
+      error.value = '';
+      step.value = 1;
+      email.value = '';
+      code.value = '';
+      newPassword.value = '';
+      confirmPassword.value = '';
+      devResetCode.value = '';
+    } else {
+      error.value = response.data.message || 'Failed to reset password.';
+    }
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to reset password.';
+  }
+  loading.value = false;
+};
+</script>
+
+<style scoped>
+.forgot-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 20px;
+  color: #ffffff;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+}
+
+.subtitle {
+  color: #8c8c8c;
+  margin-bottom: 2rem;
+}
+
+.form {
+  width: 100%;
+  max-width: 400px;
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.input-span {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+  font-weight: 500;
+}
+
+.inputForm {
+  position: relative;
+  background-color: #333333;
+  border: 2px solid #404040;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.inputForm:focus-within {
+  border-color: #4a90e2;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  outline: none;
+}
+
+input::placeholder {
+  color: #666666;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+}
+
+.error-message {
+  color: #ff4d4d;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.success-message {
+  color: #4CAF50;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.password-requirements {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.password-requirements p {
+  color: #ff4d4d;
+  margin: 0.3rem 0;
+  transition: color 0.3s ease;
+}
+
+.password-requirements p.valid {
+  color: #4CAF50;
+}
+
+.button-submit {
+  width: 100%;
+  padding: 14px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.button-submit:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.button-submit:disabled {
+  background-color: #333333;
+  cursor: not-allowed;
+}
+
+.resend-link {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  font-size: 1rem;
+  margin: 0.5em 0 1em 0;
+  cursor: pointer;
+  text-align: center;
+  display: block;
+}
+.resend-link:disabled {
+  color: #888;
+  cursor: not-allowed;
+}
+.resend-timer {
+  color: #bdbdbd;
+  font-size: 0.95em;
+  margin-top: 0.5em;
+  text-align: center;
+}
+.dev-reset-code {
+  background: #222;
+  color: #4a90e2;
+  padding: 0.7em 1em;
+  border-radius: 8px;
+  margin: 1em 0 0.5em 0;
+  text-align: center;
+  font-size: 1.1em;
+}
+.back-link {
+  color: #4a90e2;
+  text-align: center;
+  display: block;
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  text-decoration: underline;
+}
+</style> 

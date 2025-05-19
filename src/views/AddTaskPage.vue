@@ -55,7 +55,7 @@
               presentation="date"
               :min="minDateTime"
               locale="en-US"
-              first-day-of-week="0"
+              :first-day-of-week="0"
               class="custom-datetime"
               :show-default-buttons="true"
               @ionChange="confirmDate"
@@ -185,7 +185,8 @@ const handleSubmit = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      throw new Error('Authentication required');
+      router.push('/login');
+      return;
     }
     
     // Format the date to YYYY-MM-DD as required by the backend
@@ -198,7 +199,7 @@ const handleSubmit = async () => {
       title: taskForm.value.title.trim(),
       description: taskForm.value.description.trim(),
       due_date: formattedDate,
-      completed: 0
+      completed: taskForm.value.completed ? 1 : 0
     };
 
     console.log('Sending request with data:', requestData); // Debug log

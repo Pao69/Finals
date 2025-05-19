@@ -126,20 +126,8 @@ const validateUsername = async () => {
     errors.value.username = 'Username is required';
     return;
   }
-  
-  try {
-    const response = await axios.post('http://localhost/codes/PROJ/dbConnect/check_username.php', {
-      username: username.value
-    });
-    
-    if (response.data.exists) {
-      errors.value.username = 'Username already exists';
-    } else {
-      errors.value.username = '';
-    }
-  } catch (error) {
-    errors.value.username = 'Error checking username';
-  }
+  // Optionally, add frontend-only uniqueness check here if you have a list of users
+  errors.value.username = '';
 };
 
 const validateEmail = () => {

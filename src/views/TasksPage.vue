@@ -42,6 +42,7 @@
     </ion-header>
 
     <ion-content :fullscreen="true" class="ion-padding-bottom">
+      
       <!-- Sort Option -->
       <ion-item lines="none" class="sort-option" v-if="filteredTasks.length > 0">
         <ion-button fill="clear" size="small" @click="toggleSortOrder">
@@ -80,30 +81,25 @@
               </ion-item>
             </template>
           </template>
+          
           <template v-else>
-            <ion-item-sliding v-for="task in sortedTasks" :key="task.id">
-              <ion-item class="task-item" button @click="viewTask(task)">
-                <ion-checkbox 
-                  slot="start" 
-                  :checked="task.completed === 1"
-                  @click.stop="toggleTaskCompletion(task)"
-                ></ion-checkbox>
-                <ion-label>
-                  <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
-                  <p class="task-description">{{ task.description }}</p>
-                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
-                </ion-label>
-              </ion-item>
-
-              <ion-item-options side="end">
-                <ion-item-option color="primary" @click="editTask(task)">
-                  <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
-                </ion-item-option>
-                <ion-item-option color="danger" @click="confirmDelete(task)">
-                  <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
-                </ion-item-option>
-              </ion-item-options>
-            </ion-item-sliding>
+            <ion-item v-for="task in sortedTasks" :key="task.id" class="task-item" button @click="editTask(task)">
+              <ion-checkbox 
+                slot="start" 
+                :checked="task.completed === 1"
+                @click.stop="toggleTaskCompletion(task)"
+              ></ion-checkbox>
+              <ion-label>
+                <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
+                <p class="task-description">{{ task.description }}</p>
+                <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+              </ion-label>
+              <ion-buttons slot="end">
+                <ion-button @click.stop="confirmDelete(task)" expand="block" size="large" color="danger">
+                  <ion-icon :icon="trashOutline"></ion-icon>
+                </ion-button>
+              </ion-buttons>
+            </ion-item>
           </template>
         </ion-item-group>
       </ion-list>
@@ -145,58 +141,6 @@
         },
       ]"
     ></ion-alert>
-
-    <!-- Add View Task Modal -->
-    <ion-modal :is-open="!!selectedTask" @didDismiss="selectedTask = null">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Task Details</ion-title>
-          <ion-buttons slot="end">
-            <ion-button @click="selectedTask = null">Close</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding" v-if="selectedTask">
-        <div class="task-details">
-          <h1>{{ selectedTask.title }}</h1>
-          
-          <ion-item lines="none">
-            <ion-icon :icon="calendarOutline" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <h2>Due Date</h2>
-              <p>{{ formatDate(selectedTask.due_date) }}</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-item lines="none">
-            <ion-icon :icon="checkmarkCircleOutline" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <h2>Status</h2>
-              <p>{{ selectedTask.completed === 1 ? 'Completed' : 'Pending' }}</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-item lines="none" v-if="selectedTask.description">
-            <ion-icon :icon="documentTextOutline" slot="start" color="primary"></ion-icon>
-            <ion-label class="ion-text-wrap">
-              <h2>Description</h2>
-              <p>{{ selectedTask.description }}</p>
-            </ion-label>
-          </ion-item>
-
-          <div class="task-actions ion-padding-top">
-            <ion-button expand="block" @click="editTask(selectedTask)">
-              <ion-icon :icon="createOutline" slot="start"></ion-icon>
-              Edit Task
-            </ion-button>
-            <ion-button expand="block" color="danger" @click="confirmDelete(selectedTask)">
-              <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-              Delete Task
-            </ion-button>
-          </div>
-        </div>
-      </ion-content>
-    </ion-modal>
   </ion-page>
 </template>
 
@@ -214,6 +158,7 @@ import {
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
+  IonModal,
 } from '@ionic/vue';
 import { 
   addOutline, createOutline, trashOutline,
@@ -657,42 +602,8 @@ ion-item-divider {
   color: var(--ion-color-medium);
 }
 
-.task-details h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  color: var(--ion-color-dark);
-}
-
-.task-details ion-item {
-  --padding-start: 0;
-  margin-bottom: 1rem;
-}
-
-.task-details ion-item ion-icon {
-  font-size: 1.5rem;
-  margin-right: 1rem;
-}
-
-.task-details h2 {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--ion-color-medium);
-  margin: 0;
-}
-
-.task-details p {
-  font-size: 1rem;
-  color: var(--ion-color-dark);
-  margin: 0.25rem 0 0 0;
-}
-
 .task-actions {
-  margin-top: 2rem;
-}
-
-.task-actions ion-button {
-  margin-bottom: 1rem;
+  display: none;
 }
 
 .custom-fab {
@@ -709,14 +620,135 @@ ion-item-sliding {
   margin-bottom: 0.5rem;
   border-radius: 8px;
   overflow: hidden;
+  --ion-item-sliding-transition-duration: 300ms;
+  --ion-item-sliding-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin-bottom: 0.5rem;
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  --transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --min-height: 72px; /* Set a consistent height for items */
+}
+
+ion-item-options {
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent;
+  width: 140px; /* Set a fixed width for the options container */
 }
 
 ion-item-option {
   --padding-start: 1rem;
   --padding-end: 1rem;
+  --background: var(--ion-color-primary);
+  --background-hover: var(--ion-color-primary-shade);
+  --background-activated: var(--ion-color-primary-shade);
+  --color: white;
+  --color-hover: white;
+  --color-activated: white;
+  --ripple-color: rgba(255, 255, 255, 0.2);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  width: 70px; /* Set a fixed width for each option */
+}
+
+ion-item-option:last-child {
+  --background: var(--ion-color-danger);
+  --background-hover: var(--ion-color-danger-shade);
+  --background-activated: var(--ion-color-danger-shade);
 }
 
 ion-item-option ion-icon {
+  font-size: 1.2rem; /* Slightly smaller icon size */
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0; /* Remove any margin */
+}
+
+ion-item-option:hover ion-icon {
+  transform: scale(1.1);
+}
+
+/* Improve the button appearance */
+ion-item-option::part(native) {
+  padding: 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Add a subtle gradient to the buttons */
+ion-item-option:first-child::part(native) {
+  background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+}
+
+ion-item-option:last-child::part(native) {
+  background: linear-gradient(45deg, var(--ion-color-danger), var(--ion-color-danger-shade));
+}
+
+/* Ensure the sliding item has proper spacing */
+ion-item-sliding {
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  --ion-item-sliding-transition-duration: 300ms;
+  --ion-item-sliding-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin-bottom: 0.5rem;
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  --transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --min-height: 72px; /* Set a consistent height for items */
+}
+
+ion-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+ion-button ion-icon {
   font-size: 1.2rem;
+}
+
+/* Add hover effect for task items */
+.task-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.task-item:hover {
+  --background: var(--ion-color-light-shade);
+}
+
+/* Style the task details alert */
+:deep(.alert-wrapper) {
+  max-width: 90%;
+}
+
+:deep(.alert-message) {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+:deep(.alert-button) {
+  font-weight: 500;
+}
+
+:deep(.alert-button[role="destructive"]) {
+  color: var(--ion-color-danger);
 }
 </style>
