@@ -45,9 +45,9 @@
       
       <!-- Sort Option -->
       <ion-item lines="none" class="sort-option" v-if="filteredTasks.length > 0">
-        <ion-button fill="clear" size="small" @click="toggleSortOrder">
+        <ion-button fill="clear" size="small" @click="presentSortPopover">
           <ion-icon :icon="swapVerticalOutline" slot="start"></ion-icon>
-          Sort by Due Date
+          {{ sortOptions.find(opt => opt.value === currentSort)?.label || 'Sort by' }}
         </ion-button>
       </ion-item>
 
@@ -62,43 +62,32 @@
               <ion-item v-for="task in group.tasks" :key="task.id" class="task-item" button @click="viewTask(task)">
                 <ion-checkbox 
                   slot="start" 
-                  :checked="task.completed === 1"
-                  @click.stop="toggleTaskCompletion(task)"
+                  :modelValue="task.completed === 1"
+                  @update:modelValue="toggleTaskCompletion(task, $event)"
+                  @click.stop
                 ></ion-checkbox>
                 <ion-label>
                   <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                   <p class="task-description">{{ task.description }}</p>
                   <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
                 </ion-label>
-                <ion-buttons slot="end">
-                  <ion-button @click.stop="editTask(task)">
-                    <ion-icon :icon="createOutline" color="primary"></ion-icon>
-                  </ion-button>
-                  <ion-button @click.stop="confirmDelete(task)">
-                    <ion-icon :icon="trashOutline" color="danger"></ion-icon>
-                  </ion-button>
-                </ion-buttons>
               </ion-item>
             </template>
           </template>
           
           <template v-else>
-            <ion-item v-for="task in sortedTasks" :key="task.id" class="task-item" button @click="editTask(task)">
+            <ion-item v-for="task in sortedTasks" :key="task.id" class="task-item" button @click="viewTask(task)">
               <ion-checkbox 
                 slot="start" 
-                :checked="task.completed === 1"
-                @click.stop="toggleTaskCompletion(task)"
+                :modelValue="task.completed === 1"
+                @update:modelValue="toggleTaskCompletion(task, $event)"
+                @click.stop
               ></ion-checkbox>
               <ion-label>
                 <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                 <p class="task-description">{{ task.description }}</p>
                 <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
               </ion-label>
-              <ion-buttons slot="end">
-                <ion-button @click.stop="confirmDelete(task)" expand="block" size="large" color="danger">
-                  <ion-icon :icon="trashOutline"></ion-icon>
-                </ion-button>
-              </ion-buttons>
             </ion-item>
           </template>
         </ion-item-group>
@@ -145,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import {
@@ -159,6 +148,7 @@ import {
   IonItemOptions,
   IonItemOption,
   IonModal,
+  popoverController,
 } from '@ionic/vue';
 import { 
   addOutline, createOutline, trashOutline,
@@ -179,6 +169,14 @@ interface Task {
   updated_at: string;
 }
 
+// Declare global function type
+declare global {
+  interface Window {
+    updateTaskData: (task: Task) => void;
+    refreshTaskList: () => void;
+  }
+}
+
 const router = useRouter();
 const tasks = ref<Task[]>([]);
 const showDeleteAlert = ref(false);
@@ -187,6 +185,26 @@ const searchQuery = ref('');
 const selectedFilter = ref('all');
 const sortAscending = ref(true);
 const selectedTask = ref<Task | null>(null);
+
+// Add sort options
+const sortOptions = [
+  { label: 'Due Date (Earliest)', value: 'due_date_asc' },
+  { label: 'Due Date (Latest)', value: 'due_date_desc' },
+  { label: 'Title (A-Z)', value: 'title_asc' },
+  { label: 'Title (Z-A)', value: 'title_desc' },
+  { label: 'Created Date (Newest)', value: 'created_desc' },
+  { label: 'Created Date (Oldest)', value: 'created_asc' }
+];
+
+const currentSort = ref('due_date_asc');
+
+// Function to refresh task list
+const refreshTaskList = async () => {
+  await fetchTasks();
+};
+
+// Make the refresh function available globally
+window.refreshTaskList = refreshTaskList;
 
 // Fetch tasks from the database
 const fetchTasks = async () => {
@@ -274,15 +292,24 @@ const filteredTasks = computed(() => {
 // Sort tasks by due date
 const sortedTasks = computed(() => {
   return [...filteredTasks.value].sort((a, b) => {
-    const dateA = new Date(a.due_date).getTime();
-    const dateB = new Date(b.due_date).getTime();
-    return sortAscending.value ? dateA - dateB : dateB - dateA;
+    switch (currentSort.value) {
+      case 'due_date_asc':
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      case 'due_date_desc':
+        return new Date(b.due_date).getTime() - new Date(a.due_date).getTime();
+      case 'title_asc':
+        return a.title.localeCompare(b.title);
+      case 'title_desc':
+        return b.title.localeCompare(a.title);
+      case 'created_desc':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'created_asc':
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      default:
+        return 0;
+    }
   });
 });
-
-const toggleSortOrder = () => {
-  sortAscending.value = !sortAscending.value;
-};
 
 const handleSearch = (event: CustomEvent) => {
   searchQuery.value = event.detail.value || '';
@@ -292,23 +319,58 @@ const handleFilterChange = (event: CustomEvent) => {
   selectedFilter.value = event.detail.value;
 };
 
-// Toggle task completion
-const toggleTaskCompletion = async (task: Task) => {
+// Toggle task completion status
+const toggleTaskCompletion = async (task: Task, newValue: boolean) => {
   try {
-    const token = localStorage.getItem('token');
-    await axios.post('http://localhost/codes/PROJ/dbConnect/update_task.php', {
-      id: task.id,
-      completed: task.completed === 1 ? 0 : 1
-    }, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    // Immediately update the UI
+    const newStatus = newValue ? 1 : 0;
+    task.completed = newStatus;
 
-    await fetchTasks();
-  } catch (error) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
+    const response = await axios.post(
+      'http://localhost/codes/PROJ/dbConnect/tasks.php',
+      {
+        id: task.id,
+        completed: newStatus
+      },
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+
+    if (!response.data.success) {
+      // Revert the change if the API call fails
+      task.completed = task.completed === 1 ? 0 : 1;
+      throw new Error(response.data.message || 'Failed to update task');
+    }
+
+    // Show success toast
     const toast = await toastController.create({
-      message: 'Failed to update task',
+      message: newStatus === 1 ? 'Task marked as complete' : 'Task marked as incomplete',
       duration: 2000,
-      color: 'danger'
+      color: 'success',
+      position: 'bottom',
+      cssClass: 'custom-toast'
+    });
+    await toast.present();
+
+  } catch (error: any) {
+    // Revert the change if there's an error
+    task.completed = task.completed === 1 ? 0 : 1;
+
+    console.error('Error updating task:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to update task';
+
+    const toast = await toastController.create({
+      message: errorMessage,
+      duration: 2000,
+      color: 'danger',
+      position: 'bottom',
+      cssClass: 'custom-toast'
     });
     await toast.present();
   }
@@ -317,10 +379,6 @@ const toggleTaskCompletion = async (task: Task) => {
 // Navigation functions
 const goToAddTask = () => {
   router.push('/tabs/tasks/add');
-};
-
-const editTask = (task: Task) => {
-  router.push(`/tabs/tasks/edit/${task.id}`);
 };
 
 // Delete task functions
@@ -442,7 +500,7 @@ const formatTime = (dateString: string): string => {
 
 // Add viewTask function
 const viewTask = (task: Task) => {
-  selectedTask.value = task;
+  router.push(`/tabs/tasks/view/${task.id}`);
 };
 
 // Add getDueDateClass function
@@ -461,6 +519,41 @@ const getDueDateClass = (task: Task) => {
   return '';
 };
 
+// Present sort popover
+const presentSortPopover = async (ev: Event) => {
+  const popover = await popoverController.create({
+    component: 'ion-list',
+    event: ev,
+    translucent: true,
+    cssClass: 'sort-popover'
+  });
+
+  // Create list items for each sort option
+  const list = document.createElement('ion-list');
+  sortOptions.forEach(option => {
+    const item = document.createElement('ion-item');
+    item.button = true;
+    item.innerHTML = `
+      <ion-label>${option.label}</ion-label>
+      <ion-icon name="checkmark" color="primary" slot="end" style="display: ${currentSort.value === option.value ? 'block' : 'none'}"></ion-icon>
+    `;
+    item.addEventListener('click', () => {
+      currentSort.value = option.value;
+      popover.dismiss();
+    });
+    list.appendChild(item);
+  });
+
+  popover.appendChild(list);
+  await popover.present();
+};
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  // Remove the global function
+  delete window.refreshTaskList;
+});
+
 // Fetch tasks on component mount
 onMounted(() => {
   fetchTasks();
@@ -473,10 +566,32 @@ onMounted(() => {
   color: var(--ion-color-medium);
 }
 
+.task-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 8px 0;
+  --background: var(--ion-color-light);
+  transition: all 0.3s ease;
+  min-height: 72px;
+}
+
+.task-item .completed {
+  transition: all 0.3s ease;
+}
+
+.task-description {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .task-due {
   font-size: 0.8rem;
   color: var(--ion-color-medium);
-  font-weight: 500;
 }
 
 .task-due.completed-task {
@@ -501,82 +616,6 @@ onMounted(() => {
   --min-height: 40px;
 }
 
-.empty-state {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  color: var(--ion-color-medium);
-  margin-bottom: 1rem;
-}
-
-.empty-state h2 {
-  margin: 0;
-  color: var(--ion-color-dark);
-  font-size: 1.5rem;
-}
-
-.empty-state p {
-  margin: 0.5rem 0 2rem;
-  color: var(--ion-color-medium);
-}
-
-.create-task-btn {
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.task-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin-bottom: 0.5rem;
-}
-
-ion-chip {
-  text-transform: capitalize;
-}
-
-ion-fab {
-  bottom: 72px !important; /* Height of tab bar (56px) + 16px margin */
-  right: 16px !important;
-  position: fixed !important;
-}
-
-ion-fab-button {
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin: 0;
-}
-
-.ion-padding-bottom {
-  padding-bottom: 96px; /* Height of FAB (56px) + bottom margin to tab bar (16px) + extra padding (24px) */
-}
-
-ion-segment {
-  --background: var(--ion-color-light);
-}
-
-ion-segment-button {
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --padding-top: 4px;
-  --padding-bottom: 4px;
-  min-width: auto;
-}
-
-ion-badge {
-  --padding-start: 6px;
-  --padding-end: 6px;
-  --padding-top: 2px;
-  --padding-bottom: 2px;
-  font-size: 0.7rem;
-}
-
 .segment-label {
   display: flex;
   flex-direction: column;
@@ -585,134 +624,98 @@ ion-badge {
 }
 
 .label-text {
-  margin-bottom: 2px;
+  font-size: 0.9rem;
 }
 
-ion-item-divider {
+ion-segment {
   --background: var(--ion-color-light);
-  --padding-start: 16px;
-  font-weight: 600;
+  margin: 8px 16px;
 }
 
-.task-description {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 250px;
+ion-segment-button {
+  --indicator-color: var(--ion-color-primary);
+  --color: var(--ion-color-medium);
+  --color-checked: var(--ion-color-primary);
+  min-height: 48px;
+}
+
+ion-searchbar {
+  --background: var(--ion-color-light);
+  margin: 8px 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
   color: var(--ion-color-medium);
+  margin-bottom: 16px;
 }
 
-.task-actions {
-  display: none;
+.empty-state h2 {
+  font-size: 1.2rem;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 0;
 }
 
 .custom-fab {
-  margin-bottom: 1rem;
-  margin-right: 1rem;
-}
-
-ion-modal {
-  --height: auto;
-  --max-height: 90%;
-}
-
-ion-item-sliding {
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  --ion-item-sliding-transition-duration: 300ms;
-  --ion-item-sliding-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin-bottom: 0.5rem;
-  --background: var(--ion-color-light);
-  --border-radius: 8px;
-  --transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --min-height: 72px; /* Set a consistent height for items */
-}
-
-ion-item-options {
-  border-radius: 8px;
-  overflow: hidden;
-  background: transparent;
-  width: 140px; /* Set a fixed width for the options container */
-}
-
-ion-item-option {
-  --padding-start: 1rem;
-  --padding-end: 1rem;
   --background: var(--ion-color-primary);
-  --background-hover: var(--ion-color-primary-shade);
-  --background-activated: var(--ion-color-primary-shade);
-  --color: white;
-  --color-hover: white;
-  --color-activated: white;
-  --ripple-color: rgba(255, 255, 255, 0.2);
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  width: 70px; /* Set a fixed width for each option */
+  margin: 16px;
 }
 
-ion-item-option:last-child {
-  --background: var(--ion-color-danger);
-  --background-hover: var(--ion-color-danger-shade);
-  --background-activated: var(--ion-color-danger-shade);
+ion-item-divider {
+  --background: transparent;
+  --color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  padding: 8px 16px;
 }
 
-ion-item-option ion-icon {
-  font-size: 1.2rem; /* Slightly smaller icon size */
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  margin: 0; /* Remove any margin */
+ion-checkbox {
+  --size: 20px;
+  --checkbox-background-checked: var(--ion-color-primary);
+  --border-color: var(--ion-color-medium);
+  --border-color-checked: var(--ion-color-primary);
+  margin-right: 12px;
+  transition: all 0.2s ease;
 }
 
-ion-item-option:hover ion-icon {
-  transform: scale(1.1);
+ion-checkbox::part(container) {
+  border-radius: 4px;
+  border-width: 2px;
 }
 
-/* Improve the button appearance */
-ion-item-option::part(native) {
-  padding: 0;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+ion-checkbox.ion-checked {
+  animation: checkmark 0.2s ease-in-out;
 }
 
-/* Add a subtle gradient to the buttons */
-ion-item-option:first-child::part(native) {
-  background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+@keyframes checkmark {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-ion-item-option:last-child::part(native) {
-  background: linear-gradient(45deg, var(--ion-color-danger), var(--ion-color-danger-shade));
-}
-
-/* Ensure the sliding item has proper spacing */
-ion-item-sliding {
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  --ion-item-sliding-transition-duration: 300ms;
-  --ion-item-sliding-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin-bottom: 0.5rem;
-  --background: var(--ion-color-light);
-  --border-radius: 8px;
-  --transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --min-height: 72px; /* Set a consistent height for items */
-}
-
-ion-buttons {
-  display: flex;
-  gap: 4px;
+ion-badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
 }
 
 ion-button {
@@ -721,34 +724,113 @@ ion-button {
 }
 
 ion-button ion-icon {
-  font-size: 1.2rem;
+  font-size: 18px;
 }
 
-/* Add hover effect for task items */
-.task-item {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+/* Basic responsive adjustments */
+@media (min-width: 768px) {
+  ion-content {
+    --padding-start: 24px;
+    --padding-end: 24px;
+  }
+
+  ion-segment {
+    margin: 12px 24px;
+  }
+
+  ion-searchbar {
+    margin: 12px 24px;
+  }
 }
 
-.task-item:hover {
+.sort-popover {
+  --width: 250px;
+}
+
+.sort-option ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.sort-option ion-button:hover {
+  --color: var(--ion-color-primary);
+}
+
+/* Add styles for the popover */
+:deep(.sort-popover) {
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.sort-popover ion-item) {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --min-height: 48px;
+  font-size: 0.9rem;
+}
+
+:deep(.sort-popover ion-item:hover) {
   --background: var(--ion-color-light-shade);
 }
 
-/* Style the task details alert */
-:deep(.alert-wrapper) {
-  max-width: 90%;
+:deep(.sort-popover ion-icon) {
+  font-size: 18px;
 }
 
-:deep(.alert-message) {
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-:deep(.alert-button) {
+/* Toast styling */
+:deep(.custom-toast) {
+  --background: var(--ion-color-success);
+  --color: white;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --min-height: 48px;
+  --min-width: 200px;
+  --max-width: 300px;
+  text-align: center;
   font-weight: 500;
 }
 
-:deep(.alert-button[role="destructive"]) {
-  color: var(--ion-color-danger);
+.action-button {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  margin: 0 4px;
+  height: 36px;
+  font-size: 0.9rem;
+}
+
+.action-button ion-icon {
+  font-size: 18px;
+  margin-right: 4px;
+}
+
+/* Update task item to accommodate larger buttons */
+.task-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 8px 0;
+  --background: var(--ion-color-light);
+  transition: all 0.3s ease;
+  min-height: 72px;
+}
+
+/* Add responsive styles for buttons */
+@media (max-width: 360px) {
+  .action-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }
+  
+  .action-button ion-icon {
+    margin-right: 0;
+  }
+  
+  .action-button span {
+    display: none;
+  }
 }
 </style>

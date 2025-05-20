@@ -41,6 +41,10 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../views/EditTaskPage.vue')
       },
       {
+        path: 'tasks/view/:id',
+        component: () => import('../views/TaskView.vue')
+      },
+      {
         path: 'projects',
         component: () => import('../views/ProjectsPage.vue')
       },
