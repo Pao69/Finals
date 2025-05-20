@@ -40,27 +40,19 @@
         <div class="form-section">
           <h2>Schedule</h2>
           
-          <ion-item class="date-item">
+          <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
             <ion-label position="stacked">Due Date <ion-text color="danger">*</ion-text></ion-label>
-            <div class="date-button-wrapper">
-              <ion-datetime-button datetime="due-datetime"></ion-datetime-button>
-            </div>
-            <ion-note v-if="errors.due_date" color="danger">{{ errors.due_date }}</ion-note>
-          </ion-item>
-          
-          <ion-modal :keep-contents-mounted="true" class="date-modal" ref="modal">
             <ion-datetime
-              id="due-datetime"
               v-model="taskForm.due_date"
-              presentation="date"
+              presentation="date-time"
               :min="minDateTime"
-              locale="en-US"
-              :first-day-of-week="0"
+              required
+              :buttons="true"
+              button-text="Done"
+              cancel-text="Cancel"
               class="custom-datetime"
-              :show-default-buttons="true"
-              @ionChange="confirmDate"
             ></ion-datetime>
-          </ion-modal>
+          </ion-item>
         </div>
 
         <div class="form-section">
@@ -298,7 +290,6 @@ ion-datetime {
 
 .custom-datetime {
   width: 100%;
-  margin-top: 0.5rem;
 }
 
 .submit-section {
@@ -337,16 +328,36 @@ ion-note {
 
 .custom-datetime {
   width: 100%;
-  padding: 16px;
 }
 
-ion-datetime {
+:deep(.custom-datetime) {
   --background: var(--ion-color-light);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+:deep(.custom-datetime .datetime-buttons) {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ion-color-light-shade);
+}
+
+:deep(.custom-datetime .datetime-buttons button) {
+  font-weight: 500;
+  padding: 8px 16px;
   border-radius: 8px;
 }
 
-.date-modal::part(content) {
-  --height: auto;
+:deep(.custom-datetime .datetime-buttons button:first-child) {
+  color: var(--ion-color-medium);
+}
+
+:deep(.custom-datetime .datetime-buttons button:last-child) {
+  color: var(--ion-color-primary);
 }
 
 /* Make the date picker more prominent */

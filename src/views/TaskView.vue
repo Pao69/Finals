@@ -1,5 +1,5 @@
 <template>
-  <ion-page :key="String(route.params.id)">
+  <ion-page>
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
@@ -9,53 +9,50 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <ion-content :fullscreen="true">
       <div v-if="task" class="task-details">
         <div class="task-header">
+          <ion-checkbox 
+            :modelValue="task.completed === 1"
+            @update:modelValue="toggleTaskCompletion"
+            class="task-checkbox"
+          ></ion-checkbox>
           <h1>{{ task.title }}</h1>
-          <ion-badge :color="task.completed === 1 ? 'success' : 'warning'" class="status-badge">
-            {{ task.completed === 1 ? 'Completed' : 'Pending' }}
-          </ion-badge>
         </div>
 
-        <ion-item lines="none" class="detail-item" v-if="task.description">
-          <ion-icon :icon="documentTextOutline" slot="start" color="primary"></ion-icon>
-          <ion-label class="ion-text-wrap">
-            <h2>Description</h2>
-            <p>{{ task.description }}</p>
-          </ion-label>
-        </ion-item>
+        <div class="task-info">
+          <div class="info-section">
+            <ion-icon :icon="calendarOutline"></ion-icon>
+            <div class="info-content">
+              <h3>Due Date</h3>
+              <p :class="getDueDateClass(task)">{{ formatDate(task.due_date) }}</p>
+            </div>
+          </div>
 
-        <ion-item lines="none" class="detail-item">
-          <ion-icon :icon="calendarOutline" slot="start" color="primary"></ion-icon>
-          <ion-label>
-            <h2>Due Date</h2>
-            <p>{{ formatDate(task.due_date) }}</p>
-          </ion-label>
-        </ion-item>
-
-        <div class="action-buttons">
-          <ion-button expand="block" :color="task.completed === 1 ? 'warning' : 'success'" @click="toggleCompletion">
-            <ion-icon :icon="task.completed === 1 ? closeCircleOutline : checkmarkCircleOutline" slot="start"></ion-icon>
-            {{ task.completed === 1 ? 'Mark as Pending' : 'Mark as Complete' }}
-          </ion-button>
-        </div>
-
-        <div class="bottom-actions">
-          <ion-button @click="editTask" color="primary" class="action-button">
-            <ion-icon :icon="createOutline" slot="start"></ion-icon>
-            Edit
-          </ion-button>
-          <ion-button @click="confirmDelete" color="danger" class="action-button">
-            <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-            Delete
-          </ion-button>
+          <div class="info-section">
+            <ion-icon :icon="documentTextOutline"></ion-icon>
+            <div class="info-content">
+              <h3>Description</h3>
+              <p class="task-description">{{ task.description || 'No description provided' }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div v-else class="loading-state">
         <ion-spinner name="crescent"></ion-spinner>
         <p>Loading task details...</p>
+      </div>
+
+      <div class="action-buttons">
+        <ion-button expand="block" @click="editTask" class="edit-button">
+          <ion-icon :icon="createOutline" slot="start"></ion-icon>
+          Edit Task
+        </ion-button>
+        <ion-button expand="block" @click="confirmDelete" color="danger" class="delete-button">
+          <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+          Delete Task
+        </ion-button>
       </div>
     </ion-content>
 
@@ -85,40 +82,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import { useTaskStore } from '../stores/taskStore';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonButton,
-  IonButtons,
-  IonBackButton,
-  IonIcon,
-  IonBadge,
-  IonSpinner,
-  IonAlert,
-  toastController
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonButtons, IonBackButton, IonButton, IonIcon,
+  IonCheckbox, IonAlert, IonSpinner, toastController
 } from '@ionic/vue';
-import {
-  createOutline,
-  calendarOutline,
-  documentTextOutline,
-  timeOutline,
-  refreshOutline,
-  checkmarkCircleOutline,
-  closeCircleOutline,
-  trashOutline
+import { 
+  createOutline, trashOutline, calendarOutline,
+  documentTextOutline
 } from 'ionicons/icons';
 
 interface Task {
   id: number;
+  user_id: number;
   title: string;
   description: string;
   due_date: string;
@@ -127,55 +106,13 @@ interface Task {
   updated_at: string;
 }
 
-// Declare global function type
-declare global {
-  interface Window {
-    updateTaskData: (task: Task) => void;
-    refreshTaskList: () => void;
-  }
-}
-
-const router = useRouter();
 const route = useRoute();
-const taskStore = useTaskStore();
+const router = useRouter();
 const task = ref<Task | null>(null);
 const showDeleteAlert = ref(false);
 
-// Function to update task data
-const updateTaskData = (updatedTask: Task) => {
-  task.value = { ...updatedTask };
-  // Also refresh the task list in the parent component
-  if (window.refreshTaskList) {
-    window.refreshTaskList();
-  }
-};
-
-// Make the update function available globally
-window.updateTaskData = updateTaskData;
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
-
-const formatDateTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-const fetchTask = async () => {
+// Fetch task details
+const fetchTaskDetails = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -183,22 +120,19 @@ const fetchTask = async () => {
       return;
     }
 
-    const taskId = route.params.id;
-    const response = await axios.get<{success: boolean; task: Task}>(
-      `http://localhost/codes/PROJ/dbConnect/tasks.php?taskId=${taskId}`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
+    const response = await axios.get(`http://localhost/codes/PROJ/dbConnect/tasks.php?taskId=${route.params.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-    if (response.data.success && response.data.task) {
+    if (response.data.success) {
       task.value = response.data.task;
     } else {
-      throw new Error('Task not found');
+      throw new Error(response.data.message || 'Failed to fetch task details');
     }
   } catch (error: any) {
+    console.error('Error fetching task:', error);
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to fetch task',
+      message: 'Failed to fetch task details',
       duration: 2000,
       color: 'danger'
     });
@@ -207,64 +141,36 @@ const fetchTask = async () => {
   }
 };
 
-// Watch for route changes to refresh task data
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    fetchTask();
-  }
-}, { immediate: true });
-
-// Cleanup on unmount
-onBeforeUnmount(() => {
-  if (showDeleteAlert.value) {
-    showDeleteAlert.value = false;
-  }
-  // Remove focus from any focused elements
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-  // Remove the global function
-  delete window.updateTaskData;
-});
-
-const toggleCompletion = async () => {
+// Toggle task completion
+const toggleTaskCompletion = async (completed: boolean) => {
   if (!task.value) return;
 
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/tasks.php',
       {
         id: task.value.id,
-        completed: task.value.completed === 1 ? 0 : 1
+        completed: completed ? 1 : 0
       },
       {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       }
     );
 
     if (response.data.success) {
-      taskStore.setCurrentTask({ ...task.value, completed: task.value.completed === 1 ? 0 : 1 });
+      task.value.completed = completed ? 1 : 0;
       const toast = await toastController.create({
-        message: `Task marked as ${task.value.completed === 1 ? 'completed' : 'pending'}`,
+        message: 'Task updated successfully',
         duration: 2000,
         color: 'success'
       });
       await toast.present();
-    } else {
-      throw new Error(response.data.message || 'Failed to update task');
     }
   } catch (error: any) {
+    console.error('Error updating task:', error);
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to update task',
+      message: 'Failed to update task',
       duration: 2000,
       color: 'danger'
     });
@@ -272,21 +178,8 @@ const toggleCompletion = async () => {
   }
 };
 
-const editTask = () => {
-  if (task.value) {
-    // Remove focus from any focused elements before navigation
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-    router.push(`/tabs/tasks/edit/${task.value.id}`);
-  }
-};
-
+// Delete task
 const confirmDelete = () => {
-  // Remove focus from any focused elements before showing alert
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
   showDeleteAlert.value = true;
 };
 
@@ -295,18 +188,10 @@ const deleteTask = async () => {
 
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    const response = await axios.delete(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      {
-        headers: { 'Authorization': `Bearer ${token}` },
-        data: { taskId: task.value.id }
-      }
-    );
+    const response = await axios.delete('http://localhost/codes/PROJ/dbConnect/tasks.php', {
+      headers: { 'Authorization': `Bearer ${token}` },
+      data: { taskId: task.value.id }
+    });
 
     if (response.data.success) {
       const toast = await toastController.create({
@@ -315,19 +200,12 @@ const deleteTask = async () => {
         color: 'success'
       });
       await toast.present();
-      
-      // Refresh the task list before navigating back
-      if (window.refreshTaskList) {
-        window.refreshTaskList();
-      }
-      
       router.back();
-    } else {
-      throw new Error(response.data.message || 'Failed to delete task');
     }
   } catch (error: any) {
+    console.error('Error deleting task:', error);
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to delete task',
+      message: 'Failed to delete task',
       duration: 2000,
       color: 'danger'
     });
@@ -336,85 +214,150 @@ const deleteTask = async () => {
 
   showDeleteAlert.value = false;
 };
+
+// Edit task
+const editTask = () => {
+  if (task.value) {
+    router.push(`/tabs/tasks/edit/${task.value.id}`);
+  }
+};
+
+// Format date
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleString();
+};
+
+// Get due date class
+const getDueDateClass = (task: Task) => {
+  if (task.completed === 1) return 'completed-task';
+  
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const taskDate = new Date(task.due_date);
+  taskDate.setHours(0, 0, 0, 0);
+  
+  if (taskDate.getTime() === now.getTime()) return 'due-today';
+  if (taskDate.getTime() < now.getTime()) return 'overdue';
+  if (taskDate.getTime() > now.getTime()) return 'upcoming';
+  
+  return '';
+};
+
+onMounted(() => {
+  fetchTaskDetails();
+});
 </script>
 
 <style scoped>
 .task-details {
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem;
-  position: relative;
-  min-height: calc(100vh - 120px);
+  padding: 24px 16px 140px;
 }
 
 .task-header {
-  margin-bottom: 2rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+}
+
+.task-checkbox {
+  --size: 28px;
+  --checkbox-background-checked: var(--ion-color-primary);
+  --border-color: var(--ion-color-medium);
+  --border-color-checked: var(--ion-color-primary);
 }
 
 .task-header h1 {
-  font-size: 1.8rem;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
   color: var(--ion-color-dark);
 }
 
-.status-badge {
+.task-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+}
+
+.info-section ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+  margin-top: 2px;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content h3 {
   font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-}
-
-.detail-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  margin-bottom: 1rem;
-}
-
-.detail-item ion-icon {
-  font-size: 1.5rem;
-  margin-right: 1rem;
-}
-
-.detail-item h2 {
-  font-size: 1rem;
+  font-weight: 500;
   color: var(--ion-color-medium);
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 4px 0;
 }
 
-.detail-item p {
-  font-size: 1.1rem;
+.info-content p {
+  font-size: 1rem;
   color: var(--ion-color-dark);
   margin: 0;
 }
 
-.action-buttons {
-  margin: 2rem 0;
+.task-description {
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 
-.bottom-actions {
+.task-due.completed-task {
+  color: var(--ion-color-medium);
+}
+
+.task-due.due-today {
+  color: var(--ion-color-warning);
+}
+
+.task-due.overdue {
+  color: var(--ion-color-danger);
+}
+
+.task-due.upcoming {
+  color: var(--ion-color-success);
+}
+
+.action-buttons {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: var(--ion-background-color);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 12px;
   z-index: 100;
 }
 
-.action-button {
-  --padding-start: 1.5rem;
-  --padding-end: 1.5rem;
-  --padding-top: 0.75rem;
-  --padding-bottom: 0.75rem;
+.edit-button, .delete-button {
+  margin: 0;
   height: 48px;
-  font-size: 1rem;
   font-weight: 500;
   --border-radius: 12px;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.action-button ion-icon {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
 }
 
 .loading-state {
@@ -423,51 +366,36 @@ const deleteTask = async () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 2rem;
-}
-
-.loading-state ion-spinner {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 1rem;
+  color: var(--ion-color-medium);
 }
 
 .loading-state p {
-  color: var(--ion-color-medium);
-  margin: 0;
-  font-size: 1rem;
+  margin-top: 16px;
 }
 
-@media (max-width: 768px) {
-  .bottom-actions {
-    bottom: 1rem;
-    right: 1rem;
+@media (min-width: 768px) {
+  .task-details {
+    padding: 32px 24px 140px;
   }
 
-  .action-button {
-    --padding-start: 1rem;
-    --padding-end: 1rem;
-    height: 40px;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .bottom-actions {
-    bottom: 0.5rem;
-    right: 0.5rem;
+  .task-header {
+    padding: 24px;
   }
 
-  .action-button {
-    --padding-start: 0.75rem;
-    --padding-end: 0.75rem;
-    height: 36px;
-    font-size: 0.85rem;
+  .info-section {
+    padding: 24px;
   }
 
-  .action-button ion-icon {
+  .task-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .info-content h3 {
     font-size: 1rem;
-    margin-right: 0.25rem;
+  }
+
+  .info-content p {
+    font-size: 1.1rem;
   }
 }
 </style> 

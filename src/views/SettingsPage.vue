@@ -11,12 +11,56 @@
         <!-- Profile Section -->
         <div class="profile-section">
           <div class="profile-header">
-            <ion-avatar>
-              <img :src="profileImage" alt="Profile" @error="handleImageError" />
-            </ion-avatar>
+            <div class="avatar-container">
+              <ion-avatar>
+                <img :src="profileImage" alt="Profile" @error="handleImageError" />
+              </ion-avatar>
+              <label for="profile-picture" class="change-photo-btn">
+                <ion-icon :icon="cameraOutline" slot="icon-only"></ion-icon>
+                <input 
+                  id="profile-picture" 
+                  type="file" 
+                  accept="image/*" 
+                  @change="handleProfilePictureSelect"
+                  class="file-input"
+                />
+              </label>
+            </div>
             <h2>{{ profile.username }}</h2>
             <p>{{ profile.email }}</p>
           </div>
+
+          <!-- Preview Modal -->
+          <ion-modal 
+            :is-open="!!selectedImage" 
+            @didDismiss="cancelProfilePicture"
+            class="preview-modal"
+          >
+            <ion-header>
+              <ion-toolbar>
+                <ion-title>Preview Profile Picture</ion-title>
+                <ion-buttons slot="end">
+                  <ion-button @click="cancelProfilePicture">
+                    <ion-icon :icon="closeOutline"></ion-icon>
+                  </ion-button>
+                </ion-buttons>
+              </ion-toolbar>
+            </ion-header>
+
+            <ion-content class="ion-padding">
+              <div class="preview-content">
+                <div class="preview-container">
+                  <img :src="selectedImage || ''" alt="Preview" class="preview-image" />
+                </div>
+                <div class="preview-actions">
+                  <ion-button expand="block" color="success" @click="saveProfilePicture">
+                    <ion-icon :icon="saveOutline" slot="start"></ion-icon>
+                    Save Profile Picture
+                  </ion-button>
+                </div>
+              </div>
+            </ion-content>
+          </ion-modal>
         </div>
 
         <ion-list class="settings-list">
@@ -142,6 +186,16 @@
             ></ion-input>
           </ion-item>
 
+          <ion-item lines="full">
+            <ion-label position="floating">Confirm New Password</ion-label>
+            <ion-input
+              type="password"
+              v-model="passwordForm.confirmPassword"
+              required
+              placeholder="Confirm new password"
+            ></ion-input>
+          </ion-item>
+
           <!-- Password Strength Meter -->
           <div class="password-strength" v-if="passwordForm.newPassword">
             <div class="strength-meter">
@@ -190,6 +244,32 @@
         </form>
       </ion-content>
     </ion-modal>
+
+    <!-- Image Picker Modal -->
+    <ion-modal 
+      :is-open="isImagePickerOpen" 
+      @didDismiss="isImagePickerOpen = false"
+      class="image-picker-modal"
+    >
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Change Profile Picture</ion-title>
+          <ion-buttons slot="end">
+            <ion-button @click="isImagePickerOpen = false">
+              <ion-icon :icon="closeOutline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <ProfilePictureManager
+          :current-image="profileImage"
+          @update="handleProfileImageUpdate"
+          @delete="handleProfileImageDelete"
+        />
+      </ion-content>
+    </ion-modal>
   </ion-page>
 </template>
 
@@ -206,11 +286,22 @@ import {
 import {
   personOutline, mailOutline, callOutline,
   lockClosedOutline, logOutOutline, saveOutline,
-  closeOutline, checkmarkCircle, closeCircle
+  closeOutline, checkmarkCircle, closeCircle,
+  cameraOutline, cloudUploadOutline
 } from 'ionicons/icons';
+import ProfilePictureManager from '@/components/ProfilePictureManager.vue';
+
+// Register components
+const components = {
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonList, IonItem, IonItemGroup, IonItemDivider,
+  IonLabel, IonButton, IonIcon, IonInput, IonModal,
+  IonButtons, IonAvatar
+};
 
 const router = useRouter();
 const isChangePasswordModalOpen = ref(false);
+const isImagePickerOpen = ref(false);
 const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
 
 // Profile state
@@ -238,7 +329,9 @@ const passwordStrength = ref({
   label: 'weak'
 });
 
-// Load user profile
+const selectedImage = ref<string | null>(null);
+
+// Load user profile with image
 onMounted(() => {
   const userData = localStorage.getItem('user');
   if (userData) {
@@ -249,6 +342,9 @@ onMounted(() => {
       phone: user.phone
     };
     profile.value = { ...originalProfile.value };
+    if (user.pfp) {
+      profileImage.value = user.pfp;
+    }
   }
 });
 
@@ -280,7 +376,30 @@ const handleImageError = (e: Event) => {
   target.src = 'https://ionicframework.com/docs/img/demos/avatar.svg';
 };
 
-// Rest of your methods remain the same
+const handleProfileImageUpdate = (imageUrl: string) => {
+  profileImage.value = imageUrl;
+  isImagePickerOpen.value = false;
+  
+  // Update local storage
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  userData.pfp = imageUrl;
+  localStorage.setItem('user', JSON.stringify(userData));
+};
+
+const handleProfileImageDelete = () => {
+  profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  isImagePickerOpen.value = false;
+  
+  // Update local storage
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  userData.pfp = null;
+  localStorage.setItem('user', JSON.stringify(userData));
+};
+
+const openImagePicker = () => {
+  isImagePickerOpen.value = true;
+};
+
 const handleLogout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
@@ -415,6 +534,74 @@ const updatePasswordStrength = () => {
   else if (score >= 20) label = 'weak';
 
   passwordStrength.value = { score, label };
+};
+
+const handleProfilePictureSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    
+    // Create a unique filename
+    const timestamp = new Date().getTime();
+    const filename = `profile_${timestamp}_${file.name}`;
+    
+    // Create a FileReader to preview the image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      selectedImage.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const saveProfilePicture = async () => {
+  if (!selectedImage.value) return;
+
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      'http://localhost/codes/PROJ/dbConnect/tasks.php',
+      {
+        action: 'update_profile_image',
+        img_link: selectedImage.value
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.data.success) {
+      // Update the profile image with the local path
+      const localPath = `/src/images/${response.data.filename}`;
+      profileImage.value = localPath;
+      selectedImage.value = null;
+      
+      // Update local storage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      userData.pfp = localPath;
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      const toast = await toastController.create({
+        message: 'Profile picture updated successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+    }
+  } catch (error: any) {
+    const toast = await toastController.create({
+      message: error.response?.data?.message || 'Failed to update profile picture',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+};
+
+const cancelProfilePicture = () => {
+  selectedImage.value = null;
 };
 </script>
 
@@ -599,6 +786,77 @@ ion-item {
 
 @media (min-width: 768px) {
   .password-modal {
+    --height: auto;
+    --width: 400px;
+  }
+}
+
+.avatar-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.change-photo-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0.5rem;
+  background: var(--ion-color-primary);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+}
+
+.change-photo-btn ion-icon {
+  font-size: 1.2rem;
+  color: white;
+}
+
+.file-input {
+  display: none;
+}
+
+.preview-modal {
+  --height: auto;
+  --width: 100%;
+  --max-width: 400px;
+  --border-radius: 16px;
+}
+
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.preview-container {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--ion-color-light);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-actions {
+  width: 100%;
+  max-width: 300px;
+}
+
+@media (min-width: 768px) {
+  .preview-modal {
     --height: auto;
     --width: 400px;
   }

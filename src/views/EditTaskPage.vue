@@ -49,18 +49,16 @@
 
             <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
               <ion-label position="stacked">Due Date <ion-text color="danger">*</ion-text></ion-label>
-              <ion-datetime-button datetime="due-datetime"></ion-datetime-button>
-              <ion-modal :keep-contents-mounted="true">
-                <ion-datetime
-                  id="due-datetime"
-                  v-model="taskForm.due_date"
-                  presentation="date"
-                  :min="minDateTime"
-                  locale="en-US"
-                  :first-day-of-week="0"
-                  class="custom-datetime"
-                ></ion-datetime>
-              </ion-modal>
+              <ion-datetime
+                v-model="taskForm.due_date"
+                presentation="date-time"
+                :min="minDateTime"
+                required
+                :buttons="true"
+                button-text="Done"
+                cancel-text="Cancel"
+                class="custom-datetime"
+              ></ion-datetime>
             </ion-item>
 
             <ion-item class="form-item toggle-item">
@@ -529,24 +527,37 @@ onBeforeUnmount(async () => {
 }
 
 /* Custom datetime styling */
+.custom-datetime {
+  width: 100%;
+}
+
 :deep(.custom-datetime) {
   --background: var(--ion-color-light);
-  --border-radius: 16px;
-  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
 }
 
-:deep(.custom-datetime ion-datetime) {
-  --background: var(--ion-color-light);
-  --background-rgb: var(--ion-color-light-rgb);
-  --border-radius: 16px;
-  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  font-size: 1rem;
+:deep(.custom-datetime .datetime-buttons) {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ion-color-light-shade);
 }
 
-:deep(.custom-datetime ion-datetime-button) {
-  --padding-start: 12px;
-  --padding-end: 12px;
-  font-size: 0.95rem;
-  color: var(--ion-color-dark);
+:deep(.custom-datetime .datetime-buttons button) {
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+:deep(.custom-datetime .datetime-buttons button:first-child) {
+  color: var(--ion-color-medium);
+}
+
+:deep(.custom-datetime .datetime-buttons button:last-child) {
+  color: var(--ion-color-primary);
 }
 </style>

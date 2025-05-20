@@ -173,7 +173,7 @@ interface Task {
 declare global {
   interface Window {
     updateTaskData: (task: Task) => void;
-    refreshTaskList: () => void;
+    refreshTaskList: (() => void) | undefined;
   }
 }
 
@@ -211,37 +211,21 @@ const fetchTasks = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error('No token found');
       router.push('/login');
       return;
     }
 
-    console.log('Fetching tasks with token:', token);
     const response = await axios.get('http://localhost/codes/PROJ/dbConnect/tasks.php', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
-    console.log('API Response:', response.data);
-
     if (response.data.success) {
       tasks.value = response.data.tasks || [];
-      console.log('Tasks loaded:', tasks.value);
-    } else {
-      throw new Error(response.data.message || 'Failed to fetch tasks');
     }
   } catch (error: any) {
     console.error('Error fetching tasks:', error);
-    console.error('Error details:', error.response || error);
-    
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch tasks';
-    
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
-
     const toast = await toastController.create({
-      message: errorMessage,
+      message: 'Failed to fetch tasks',
       duration: 2000,
       color: 'danger'
     });
@@ -319,58 +303,34 @@ const handleFilterChange = (event: CustomEvent) => {
   selectedFilter.value = event.detail.value;
 };
 
-// Toggle task completion status
-const toggleTaskCompletion = async (task: Task, newValue: boolean) => {
+// Toggle task completion
+const toggleTaskCompletion = async (task: Task, completed: boolean) => {
   try {
-    // Immediately update the UI
-    const newStatus = newValue ? 1 : 0;
-    task.completed = newStatus;
-
     const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No token found');
-    }
-
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/tasks.php',
       {
         id: task.id,
-        completed: newStatus
+        completed: completed ? 1 : 0
       },
       {
         headers: { 'Authorization': `Bearer ${token}` }
       }
     );
 
-    if (!response.data.success) {
-      // Revert the change if the API call fails
-      task.completed = task.completed === 1 ? 0 : 1;
-      throw new Error(response.data.message || 'Failed to update task');
+    if (response.data.success) {
+      // Update the task in the local array
+      const index = tasks.value.findIndex(t => t.id === task.id);
+      if (index !== -1) {
+        tasks.value[index].completed = completed ? 1 : 0;
+      }
     }
-
-    // Show success toast
-    const toast = await toastController.create({
-      message: newStatus === 1 ? 'Task marked as complete' : 'Task marked as incomplete',
-      duration: 2000,
-      color: 'success',
-      position: 'bottom',
-      cssClass: 'custom-toast'
-    });
-    await toast.present();
-
   } catch (error: any) {
-    // Revert the change if there's an error
-    task.completed = task.completed === 1 ? 0 : 1;
-
     console.error('Error updating task:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to update task';
-
     const toast = await toastController.create({
-      message: errorMessage,
+      message: 'Failed to update task',
       duration: 2000,
-      color: 'danger',
-      position: 'bottom',
-      cssClass: 'custom-toast'
+      color: 'danger'
     });
     await toast.present();
   }
@@ -551,7 +511,9 @@ const presentSortPopover = async (ev: Event) => {
 // Cleanup on unmount
 onBeforeUnmount(() => {
   // Remove the global function
-  delete window.refreshTaskList;
+  if (window.refreshTaskList) {
+    window.refreshTaskList = undefined;
+  }
 });
 
 // Fetch tasks on component mount
