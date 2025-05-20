@@ -15,16 +15,27 @@
               <ion-avatar>
                 <img :src="profileImage" alt="Profile" @error="handleImageError" />
               </ion-avatar>
-              <label for="profile-picture" class="change-photo-btn">
-                <ion-icon :icon="cameraOutline" slot="icon-only"></ion-icon>
-                <input 
-                  id="profile-picture" 
-                  type="file" 
-                  accept="image/*" 
-                  @change="handleProfilePictureSelect"
-                  class="file-input"
-                />
-              </label>
+              <div class="avatar-actions">
+                <label for="profile-picture" class="change-photo-btn">
+                  <ion-icon :icon="cameraOutline" slot="icon-only"></ion-icon>
+                  <input 
+                    id="profile-picture" 
+                    type="file" 
+                    accept="image/*" 
+                    @change="handleProfilePictureSelect"
+                    class="file-input"
+                  />
+                </label>
+                <ion-button 
+                  fill="clear" 
+                  color="danger" 
+                  class="remove-photo-btn"
+                  @click="deleteProfilePicture"
+                  v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'"
+                >
+                  <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
             </div>
             <h2>{{ profile.username }}</h2>
             <p>{{ profile.email }}</p>
@@ -34,8 +45,7 @@
           <ion-modal 
             :is-open="!!selectedImage" 
             @didDismiss="cancelProfilePicture"
-            class="preview-modal"
-          >
+            class="preview-modal">
             <ion-header>
               <ion-toolbar>
                 <ion-title>Preview Profile Picture</ion-title>
@@ -137,6 +147,14 @@
               <ion-label>Account Actions</ion-label>
             </ion-item-divider>
 
+            <ion-item button @click="deleteProfile" lines="full" class="delete-button">
+              <ion-icon :icon="trashOutline" slot="start" color="danger"></ion-icon>
+              <ion-label color="danger">
+                <h2>Delete Account</h2>
+                <p>Permanently delete your account and all data</p>
+              </ion-label>
+            </ion-item>
+
             <ion-item button @click="handleLogout" lines="full" class="logout-button">
               <ion-icon :icon="logOutOutline" slot="start" color="danger"></ion-icon>
               <ion-label color="danger">Logout</ion-label>
@@ -150,8 +168,7 @@
     <ion-modal 
       :is-open="isChangePasswordModalOpen" 
       @didDismiss="isChangePasswordModalOpen = false"
-      class="password-modal"
-    >
+      class="password-modal">
       <ion-header>
         <ion-toolbar>
           <ion-title>Change Password</ion-title>
@@ -165,39 +182,57 @@
 
       <ion-content class="ion-padding">
         <form @submit.prevent="changePassword" class="password-form">
-          <ion-item lines="full">
-            <ion-label position="floating">Current Password</ion-label>
-            <ion-input
-              type="password"
-              v-model="passwordForm.currentPassword"
-              required
-              placeholder="Enter current password"
-            ></ion-input>
-          </ion-item>
+          <div class="form-group">
+            <ion-item lines="full" class="custom-input-item">
+              <ion-icon :icon="lockClosedOutline" slot="start" color="primary"></ion-icon>
+              <ion-label position="floating">Current Password</ion-label>
+              <ion-input
+                type="password"
+                v-model="passwordForm.currentPassword"
+                required
+                placeholder="Enter current password"
+                class="custom-input"
+              ></ion-input>
+            </ion-item>
+          </div>
 
-          <ion-item lines="full">
-            <ion-label position="floating">New Password</ion-label>
-            <ion-input
-              type="password"
-              v-model="passwordForm.newPassword"
-              required
-              placeholder="Enter new password"
-              @input="updatePasswordStrength"
-            ></ion-input>
-          </ion-item>
+          <div class="form-group">
+            <ion-item lines="full" class="custom-input-item">
+              <ion-icon :icon="keyOutline" slot="start" color="primary"></ion-icon>
+              <ion-label position="floating">New Password</ion-label>
+              <ion-input
+                type="password"
+                v-model="passwordForm.newPassword"
+                required
+                placeholder="Enter new password"
+                @input="updatePasswordStrength"
+                class="custom-input"
+              ></ion-input>
+            </ion-item>
+          </div>
 
-          <ion-item lines="full">
-            <ion-label position="floating">Confirm New Password</ion-label>
-            <ion-input
-              type="password"
-              v-model="passwordForm.confirmPassword"
-              required
-              placeholder="Confirm new password"
-            ></ion-input>
-          </ion-item>
+          <div class="form-group">
+            <ion-item lines="full" class="custom-input-item">
+              <ion-icon :icon="checkmarkCircleOutline" slot="start" color="primary"></ion-icon>
+              <ion-label position="floating">Confirm New Password</ion-label>
+              <ion-input
+                type="password"
+                v-model="passwordForm.confirmPassword"
+                required
+                placeholder="Confirm new password"
+                class="custom-input"
+              ></ion-input>
+            </ion-item>
+          </div>
 
           <!-- Password Strength Meter -->
-          <div class="password-strength" v-if="passwordForm.newPassword">
+          <div class="password-strength-container" v-if="passwordForm.newPassword">
+            <div class="strength-header">
+              <span>Password Strength</span>
+              <span class="strength-label" :class="passwordStrength.label">
+                {{ passwordStrength.label }}
+              </span>
+            </div>
             <div class="strength-meter">
               <div 
                 class="strength-meter-fill" 
@@ -205,32 +240,32 @@
                 :class="passwordStrength.label"
               ></div>
             </div>
-            <div class="strength-label" :class="passwordStrength.label">
-              {{ passwordStrength.label }}
-            </div>
           </div>
 
           <div class="password-requirements" v-if="passwordForm.newPassword">
-            <p :class="{ valid: hasMinLength }">
-              <ion-icon :icon="hasMinLength ? checkmarkCircle : closeCircle"></ion-icon>
-              At least 8 characters
-            </p>
-            <p :class="{ valid: hasUpperCase }">
-              <ion-icon :icon="hasUpperCase ? checkmarkCircle : closeCircle"></ion-icon>
-              One uppercase letter
-            </p>
-            <p :class="{ valid: hasLowerCase }">
-              <ion-icon :icon="hasLowerCase ? checkmarkCircle : closeCircle"></ion-icon>
-              One lowercase letter
-            </p>
-            <p :class="{ valid: hasNumber }">
-              <ion-icon :icon="hasNumber ? checkmarkCircle : closeCircle"></ion-icon>
-              One number
-            </p>
-            <p :class="{ valid: passwordsMatch }">
-              <ion-icon :icon="passwordsMatch ? checkmarkCircle : closeCircle"></ion-icon>
-              Passwords match
-            </p>
+            <h3>Password Requirements</h3>
+            <div class="requirements-grid">
+              <div class="requirement-item" :class="{ valid: hasMinLength }">
+                <ion-icon :icon="hasMinLength ? checkmarkCircle : closeCircle"></ion-icon>
+                <span>At least 8 characters</span>
+              </div>
+              <div class="requirement-item" :class="{ valid: hasUpperCase }">
+                <ion-icon :icon="hasUpperCase ? checkmarkCircle : closeCircle"></ion-icon>
+                <span>One uppercase letter</span>
+              </div>
+              <div class="requirement-item" :class="{ valid: hasLowerCase }">
+                <ion-icon :icon="hasLowerCase ? checkmarkCircle : closeCircle"></ion-icon>
+                <span>One lowercase letter</span>
+              </div>
+              <div class="requirement-item" :class="{ valid: hasNumber }">
+                <ion-icon :icon="hasNumber ? checkmarkCircle : closeCircle"></ion-icon>
+                <span>One number</span>
+              </div>
+              <div class="requirement-item" :class="{ valid: passwordsMatch }">
+                <ion-icon :icon="passwordsMatch ? checkmarkCircle : closeCircle"></ion-icon>
+                <span>Passwords match</span>
+              </div>
+            </div>
           </div>
 
           <ion-button 
@@ -238,7 +273,9 @@
             type="submit" 
             class="submit-button"
             :disabled="!isPasswordFormValid"
+            :color="isPasswordFormValid ? 'primary' : 'medium'"
           >
+            <ion-icon :icon="saveOutline" slot="start"></ion-icon>
             Update Password
           </ion-button>
         </form>
@@ -249,8 +286,7 @@
     <ion-modal 
       :is-open="isImagePickerOpen" 
       @didDismiss="isImagePickerOpen = false"
-      class="image-picker-modal"
-    >
+      class="image-picker-modal">
       <ion-header>
         <ion-toolbar>
           <ion-title>Change Profile Picture</ion-title>
@@ -281,13 +317,14 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
-  IonButtons, toastController, IonAvatar
+  IonButtons, toastController, IonAvatar, alertController
 } from '@ionic/vue';
 import {
   personOutline, mailOutline, callOutline,
   lockClosedOutline, logOutOutline, saveOutline,
   closeOutline, checkmarkCircle, closeCircle,
-  cameraOutline, cloudUploadOutline
+  cameraOutline, cloudUploadOutline, keyOutline,
+  checkmarkCircleOutline, trashOutline, warningOutline
 } from 'ionicons/icons';
 import ProfilePictureManager from '@/components/ProfilePictureManager.vue';
 
@@ -342,8 +379,8 @@ onMounted(() => {
       phone: user.phone
     };
     profile.value = { ...originalProfile.value };
-    if (user.pfp) {
-      profileImage.value = user.pfp;
+    if (user.image_link) {
+      profileImage.value = user.image_link;
     }
   }
 });
@@ -382,7 +419,7 @@ const handleProfileImageUpdate = (imageUrl: string) => {
   
   // Update local storage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  userData.pfp = imageUrl;
+  userData.image_link = imageUrl;
   localStorage.setItem('user', JSON.stringify(userData));
 };
 
@@ -392,7 +429,7 @@ const handleProfileImageDelete = () => {
   
   // Update local storage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  userData.pfp = null;
+  userData.image_link = null;
   localStorage.setItem('user', JSON.stringify(userData));
 };
 
@@ -409,12 +446,28 @@ const handleLogout = () => {
 const updateProfile = async () => {
   try {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(profile.value.email)) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    // Validate phone format (optional)
+    if (profile.value.phone && !/^\+?[\d\s-]{10,}$/.test(profile.value.phone)) {
+      throw new Error('Please enter a valid phone number');
+    }
+
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/update_profile.php',
       profile.value,
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       }
     );
@@ -428,18 +481,86 @@ const updateProfile = async () => {
       const toast = await toastController.create({
         message: 'Profile updated successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
     }
   } catch (error: any) {
     const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to update profile',
-      duration: 2000,
-      color: 'danger'
+      message: error.response?.data?.message || error.message || 'Failed to update profile',
+      duration: 3000,
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }
+};
+
+const deleteProfile = async () => {
+  const alert = await alertController.create({
+    header: 'Delete Account',
+    message: 'Are you sure you want to delete your account? This action cannot be undone.',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        cssClass: 'secondary'
+      },
+      {
+        text: 'Delete',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              throw new Error('No authentication token found');
+            }
+
+            const response = await axios.delete(
+              'http://localhost/codes/PROJ/dbConnect/delete_profile.php',
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+
+            if (response.data.success) {
+              // Clear local storage
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+
+              const toast = await toastController.create({
+                message: 'Account deleted successfully',
+                duration: 2000,
+                color: 'success',
+                position: 'top',
+                icon: checkmarkCircle
+              });
+              await toast.present();
+
+              // Redirect to login page
+              router.push('/login');
+            }
+          } catch (error: any) {
+            const toast = await toastController.create({
+              message: error.response?.data?.message || 'Failed to delete account',
+              duration: 3000,
+              color: 'danger',
+              position: 'top',
+              icon: closeCircle
+            });
+            await toast.present();
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
 };
 
 const openChangePasswordModal = () => {
@@ -456,15 +577,25 @@ const changePassword = async () => {
 
   try {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Additional password validation
+    if (passwordForm.value.newPassword === passwordForm.value.currentPassword) {
+      throw new Error('New password must be different from current password');
+    }
+
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/change_password.php',
       {
-        currentPassword: passwordForm.value.currentPassword,
-        newPassword: passwordForm.value.newPassword
+        current_password: passwordForm.value.currentPassword,
+        new_password: passwordForm.value.newPassword
       },
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       }
     );
@@ -473,45 +604,41 @@ const changePassword = async () => {
       isChangePasswordModalOpen.value = false;
       
       const toast = await toastController.create({
-        message: response.data.message,
+        message: 'Password changed successfully',
         duration: 3000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
 
-      // Handle required relogin
-      if (response.data.requireRelogin) {
-        // Clear local storage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        // Show additional toast
-        const reloginToast = await toastController.create({
-          message: 'Please log in again with your new password',
-          duration: 3000,
-          color: 'warning'
-        });
-        await reloginToast.present();
+      // Clear local storage and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      const reloginToast = await toastController.create({
+        message: 'Please log in again with your new password',
+        duration: 3000,
+        color: 'warning',
+        position: 'top',
+        icon: warningOutline
+      });
+      await reloginToast.present();
 
-        // Redirect to login after a short delay
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
-      }
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     }
   } catch (error: any) {
     const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to change password',
+      message: error.response?.data?.message || error.message || 'Failed to change password',
       duration: 3000,
       color: 'danger',
-      position: 'top'
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
-
-    // Handle rate limiting
-    if (error.response?.status === 429) {
-      isChangePasswordModalOpen.value = false;
-    }
   }
 };
 
@@ -541,6 +668,32 @@ const handleProfilePictureSelect = async (event: Event) => {
   if (input.files && input.files[0]) {
     const file = input.files[0];
     
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      const toast = await toastController.create({
+        message: 'Please select an image file',
+        duration: 2000,
+        color: 'danger',
+        position: 'top',
+        icon: closeCircle
+      });
+      await toast.present();
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      const toast = await toastController.create({
+        message: 'Image size should be less than 5MB',
+        duration: 2000,
+        color: 'danger',
+        position: 'top',
+        icon: closeCircle
+      });
+      await toast.present();
+      return;
+    }
+    
     // Create a unique filename
     const timestamp = new Date().getTime();
     const filename = `profile_${timestamp}_${file.name}`;
@@ -559,34 +712,43 @@ const saveProfilePicture = async () => {
 
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.put(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      {
-        action: 'update_profile_image',
-        img_link: selectedImage.value
-      },
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('profile_image', selectedImage.value);
+    formData.append('action', 'update_profile_image');
+
+    const response = await axios.post(
+      'http://localhost/codes/PROJ/dbConnect/upload_profile.php',
+      formData,
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       }
     );
 
     if (response.data.success) {
-      // Update the profile image with the local path
-      const localPath = `/src/images/${response.data.filename}`;
-      profileImage.value = localPath;
+      // Update the profile image with the new URL
+      const imageUrl = `/images/pfp/${response.data.filename}`;
+      profileImage.value = imageUrl;
       selectedImage.value = null;
       
       // Update local storage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      userData.pfp = localPath;
+      userData.image_link = imageUrl;
       localStorage.setItem('user', JSON.stringify(userData));
 
       const toast = await toastController.create({
         message: 'Profile picture updated successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
     }
@@ -594,10 +756,79 @@ const saveProfilePicture = async () => {
     const toast = await toastController.create({
       message: error.response?.data?.message || 'Failed to update profile picture',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }
+};
+
+const deleteProfilePicture = async () => {
+  const alert = await alertController.create({
+    header: 'Remove Profile Picture',
+    message: 'Are you sure you want to remove your profile picture?',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        cssClass: 'secondary'
+      },
+      {
+        text: 'Remove',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              throw new Error('No authentication token found');
+            }
+
+            const response = await axios.post(
+              'http://localhost/codes/PROJ/dbConnect/delete_profile_picture.php',
+              {},
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+
+            if (response.data.success) {
+              // Reset to default avatar
+              profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+              
+              // Update local storage
+              const userData = JSON.parse(localStorage.getItem('user') || '{}');
+              userData.image_link = null;
+              localStorage.setItem('user', JSON.stringify(userData));
+
+              const toast = await toastController.create({
+                message: 'Profile picture removed successfully',
+                duration: 2000,
+                color: 'success',
+                position: 'top',
+                icon: checkmarkCircle
+              });
+              await toast.present();
+            }
+          } catch (error: any) {
+            const toast = await toastController.create({
+              message: error.response?.data?.message || 'Failed to remove profile picture',
+              duration: 2000,
+              color: 'danger',
+              position: 'top',
+              icon: closeCircle
+            });
+            await toast.present();
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
 };
 
 const cancelProfilePicture = () => {
@@ -679,30 +910,61 @@ ion-item {
 }
 
 .password-modal {
-  --height: 100%;
+  --height: auto;
   --width: 100%;
+  --max-width: 500px;
+  --border-radius: 16px;
 }
 
 .password-form {
-  padding: 1rem 0;
+  padding: 1rem;
 }
 
-.password-strength {
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.custom-input-item {
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --inner-padding-end: 0;
+  margin-bottom: 0.5rem;
+}
+
+.custom-input-item ion-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.password-strength-container {
+  background: var(--ion-color-light);
   padding: 1rem;
-  margin-top: 0.5rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
 }
 
 .strength-meter {
-  height: 4px;
-  background-color: var(--ion-color-light);
-  border-radius: 2px;
+  height: 6px;
+  background-color: var(--ion-color-light-shade);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .strength-meter-fill {
   height: 100%;
-  transition: width 0.3s ease;
-  border-radius: 2px;
+  transition: all 0.3s ease;
+  border-radius: 3px;
 }
 
 .strength-meter-fill.weak {
@@ -722,9 +984,7 @@ ion-item {
 }
 
 .strength-label {
-  text-align: right;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
+  font-weight: 600;
   text-transform: capitalize;
 }
 
@@ -745,49 +1005,51 @@ ion-item {
 }
 
 .password-requirements {
-  padding: 1rem;
-  margin: 1rem 0;
   background: var(--ion-color-light);
+  padding: 1.5rem;
   border-radius: 8px;
+  margin: 1rem 0;
 }
 
-.password-requirements p {
-  margin: 0.5rem 0;
+.password-requirements h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
   color: var(--ion-color-medium);
-  font-size: 0.9rem;
+}
+
+.requirements-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.requirement-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
-.password-requirements p.valid {
+.requirement-item.valid {
   color: var(--ion-color-success);
 }
 
-.password-requirements ion-icon {
+.requirement-item ion-icon {
   font-size: 1.2rem;
 }
 
-.password-requirements p.valid ion-icon {
-  color: var(--ion-color-success);
-}
-
-.password-requirements p:not(.valid) ion-icon {
-  color: var(--ion-color-medium);
-}
-
-.last-input {
-  margin-bottom: 1rem;
-}
-
 .submit-button {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  --border-radius: 8px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
   .password-modal {
     --height: auto;
-    --width: 400px;
+    --width: 500px;
   }
 }
 
@@ -796,10 +1058,16 @@ ion-item {
   margin-bottom: 0.5rem;
 }
 
-.change-photo-btn {
+.avatar-actions {
   position: absolute;
   bottom: 0;
   right: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.change-photo-btn {
+  position: relative;
   padding: 0.5rem;
   background: var(--ion-color-primary);
   border-radius: 50%;
@@ -812,7 +1080,17 @@ ion-item {
   margin: 0;
 }
 
-.change-photo-btn ion-icon {
+.remove-photo-btn {
+  --padding-start: 0.5rem;
+  --padding-end: 0.5rem;
+  --background: var(--ion-color-danger);
+  --border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+
+.change-photo-btn ion-icon,
+.remove-photo-btn ion-icon {
   font-size: 1.2rem;
   color: white;
 }
@@ -860,5 +1138,19 @@ ion-item {
     --height: auto;
     --width: 400px;
   }
+}
+
+.delete-button {
+  --background: var(--ion-color-danger-light);
+  margin-bottom: 0.5rem;
+}
+
+.delete-button ion-label h2 {
+  font-weight: 600;
+}
+
+.delete-button ion-label p {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 </style>
