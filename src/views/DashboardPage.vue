@@ -196,7 +196,10 @@ const viewTask = (task: Task) => {
 };
 
 const filterTasks = (filter: string) => {
-  router.push(`/tabs/tasks?filter=${filter}`);
+  router.push({
+    path: '/tabs/tasks',
+    query: { filter }
+  });
 };
 
 // Fetch tasks on component mount

@@ -135,7 +135,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
@@ -175,6 +175,7 @@ declare global {
 }
 
 const router = useRouter();
+const route = useRoute();
 const tasks = ref<Task[]>([]);
 const showDeleteAlert = ref(false);
 const taskToDelete = ref<Task | null>(null);
@@ -521,9 +522,23 @@ onBeforeUnmount(() => {
   }
 });
 
-// Fetch tasks on component mount
+// Watch for route changes to update the filter
+watch(
+  () => route.query.filter,
+  (newFilter) => {
+    if (newFilter) {
+      selectedFilter.value = newFilter as string;
+    }
+  }
+);
+
+// Update onMounted to set initial filter from URL
 onMounted(() => {
   fetchTasks();
+  // Set initial filter from URL if present
+  if (route.query.filter) {
+    selectedFilter.value = route.query.filter as string;
+  }
 });
 </script>
 
