@@ -96,7 +96,6 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
-import { useTaskStore } from '../stores/taskStore';
 import {
   IonPage,
   IonHeader,
@@ -126,7 +125,9 @@ import {
   saveOutline,
   closeOutline,
   checkmarkCircleOutline,
-  timeOutline
+  timeOutline,
+  checkmarkCircle,
+  closeCircle
 } from 'ionicons/icons';
 
 interface TaskForm {
@@ -166,7 +167,6 @@ interface Task {
 
 const router = useRouter();
 const route = useRoute();
-const taskStore = useTaskStore();
 const taskForm = ref<TaskForm | null>(null);
 
 // Compute minimum date time (current time)
@@ -233,7 +233,7 @@ const fetchTask = async () => {
 };
 
 const handleSubmit = async () => {
-  if (!taskForm.value) return;
+  if (!taskForm.value || !isFormValid.value) return;
 
   try {
     const token = localStorage.getItem('token');
@@ -242,16 +242,26 @@ const handleSubmit = async () => {
       return;
     }
 
+    // Format the date to YYYY-MM-DD HH:mm:ss as required by the backend
+    const formattedDate = new Date(taskForm.value.due_date)
+      .toISOString()
+      .slice(0, 19)
+      .replace('T', ' ');
+
+    // Prepare the request data
+    const requestData = {
+      id: taskForm.value.id,
+      title: taskForm.value.title.trim(),
+      description: taskForm.value.description.trim(),
+      due_date: formattedDate,
+      completed: taskForm.value.completed ? 1 : 0
+    };
+
+    console.log('Sending update request with data:', requestData); // Debug log
+
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      {
-        id: taskForm.value.id,
-        user_id: taskForm.value.user_id,
-        title: taskForm.value.title.trim(),
-        description: taskForm.value.description.trim(),
-        due_date: taskForm.value.due_date,
-        completed: taskForm.value.completed
-      },
+      requestData,
       {
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -260,55 +270,42 @@ const handleSubmit = async () => {
       }
     );
 
-    if (response.data.success) {
-      // Update the task data in the parent component
-      const updatedTask = {
-        id: taskForm.value.id,
-        user_id: taskForm.value.user_id,
-        title: taskForm.value.title.trim(),
-        description: taskForm.value.description.trim(),
-        due_date: taskForm.value.due_date,
-        completed: taskForm.value.completed,
-        created_at: taskForm.value.created_at || '',
-        updated_at: new Date().toISOString()
-      };
-      
-      // Call the global update function
-      if (window.updateTaskData) {
-        window.updateTaskData(updatedTask);
-      }
+    console.log('Server response:', response.data); // Debug log
 
+    if (response.data.success) {
       const toast = await toastController.create({
         message: 'Task updated successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
-      
-      // Close any open modals before navigation
-      const modal = document.querySelector('ion-modal');
-      if (modal) {
-        await modal.dismiss();
-      }
 
-      // Remove focus from any focused elements
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      
-      // Navigate back to task details page
-      router.replace(`/tabs/tasks/view/${taskForm.value.id}`);
+      // Navigate back to tasks page after a shorter delay
+      setTimeout(() => {
+        router.push('/tabs/tasks');
+      }, 200);
     } else {
       throw new Error(response.data.message || 'Failed to update task');
     }
   } catch (error: any) {
-    console.error('Update error:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to update task';
+    console.error('Error updating task:', error);
+    console.error('Error response:', error.response?.data); // Additional error logging
+    
+    let errorMessage = 'Failed to update task';
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     const toast = await toastController.create({
       message: errorMessage,
       duration: 3000,
       color: 'danger',
-      position: 'top'
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }
@@ -331,6 +328,12 @@ onBeforeUnmount(async () => {
   if (document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
   }
+
+  // Remove aria-hidden from parent elements
+  const hiddenElements = document.querySelectorAll('[aria-hidden="true"]');
+  hiddenElements.forEach(el => {
+    el.removeAttribute('aria-hidden');
+  });
 });
 </script>
 

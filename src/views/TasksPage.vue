@@ -155,7 +155,9 @@ import {
   swapVerticalOutline, clipboardOutline,
   calendarOutline,
   checkmarkCircleOutline,
-  documentTextOutline
+  documentTextOutline,
+  checkmarkCircle,
+  closeCircle
 } from 'ionicons/icons';
 
 interface Task {
@@ -319,18 +321,29 @@ const toggleTaskCompletion = async (task: Task, completed: boolean) => {
     );
 
     if (response.data.success) {
-      // Update the task in the local array
-      const index = tasks.value.findIndex(t => t.id === task.id);
-      if (index !== -1) {
-        tasks.value[index].completed = completed ? 1 : 0;
-      }
+      // Show success toast
+      const toast = await toastController.create({
+        message: 'Task updated successfully',
+        duration: 2000,
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
+      });
+      await toast.present();
+
+      // Refresh the page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
   } catch (error: any) {
     console.error('Error updating task:', error);
     const toast = await toastController.create({
       message: 'Failed to update task',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }

@@ -92,7 +92,7 @@ import {
 } from '@ionic/vue';
 import { 
   createOutline, trashOutline, calendarOutline,
-  documentTextOutline
+  documentTextOutline, checkmarkCircle, closeCircle
 } from 'ionicons/icons';
 
 interface Task {
@@ -163,16 +163,25 @@ const toggleTaskCompletion = async (completed: boolean) => {
       const toast = await toastController.create({
         message: 'Task updated successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
+
+      // Refresh the page after a shorter delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 200);
     }
   } catch (error: any) {
     console.error('Error updating task:', error);
     const toast = await toastController.create({
       message: 'Failed to update task',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }
@@ -197,17 +206,25 @@ const deleteTask = async () => {
       const toast = await toastController.create({
         message: 'Task deleted successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
-      router.back();
+
+      // Navigate back after a shorter delay
+      setTimeout(() => {
+        router.push('/tabs/tasks');
+      }, 200);
     }
   } catch (error: any) {
     console.error('Error deleting task:', error);
     const toast = await toastController.create({
       message: 'Failed to delete task',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }

@@ -13,7 +13,12 @@
           <div class="profile-header">
             <div class="avatar-container">
               <ion-avatar>
-                <img :src="profileImage" alt="Profile" @error="handleImageError" />
+                <img 
+                  :src="profileImage" 
+                  alt="Profile" 
+                  @error="handleImageError"
+                  class="profile-avatar-image"
+                />
               </ion-avatar>
               <div class="avatar-actions">
                 <label for="profile-picture" class="change-photo-btn">
@@ -40,37 +45,6 @@
             <h2>{{ profile.username }}</h2>
             <p>{{ profile.email }}</p>
           </div>
-
-          <!-- Preview Modal -->
-          <ion-modal 
-            :is-open="!!selectedImage" 
-            @didDismiss="cancelProfilePicture"
-            class="preview-modal">
-            <ion-header>
-              <ion-toolbar>
-                <ion-title>Preview Profile Picture</ion-title>
-                <ion-buttons slot="end">
-                  <ion-button @click="cancelProfilePicture">
-                    <ion-icon :icon="closeOutline"></ion-icon>
-                  </ion-button>
-                </ion-buttons>
-              </ion-toolbar>
-            </ion-header>
-
-            <ion-content class="ion-padding">
-              <div class="preview-content">
-                <div class="preview-container">
-                  <img :src="selectedImage || ''" alt="Preview" class="preview-image" />
-                </div>
-                <div class="preview-actions">
-                  <ion-button expand="block" color="success" @click="saveProfilePicture">
-                    <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-                    Save Profile Picture
-                  </ion-button>
-                </div>
-              </div>
-            </ion-content>
-          </ion-modal>
         </div>
 
         <ion-list class="settings-list">
@@ -281,38 +255,13 @@
         </form>
       </ion-content>
     </ion-modal>
-
-    <!-- Image Picker Modal -->
-    <ion-modal 
-      :is-open="isImagePickerOpen" 
-      @didDismiss="isImagePickerOpen = false"
-      class="image-picker-modal">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Change Profile Picture</ion-title>
-          <ion-buttons slot="end">
-            <ion-button @click="isImagePickerOpen = false">
-              <ion-icon :icon="closeOutline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-
-      <ion-content class="ion-padding">
-        <ProfilePictureManager
-          :current-image="profileImage"
-          @update="handleProfileImageUpdate"
-          @delete="handleProfileImageDelete"
-        />
-      </ion-content>
-    </ion-modal>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
@@ -326,7 +275,6 @@ import {
   cameraOutline, cloudUploadOutline, keyOutline,
   checkmarkCircleOutline, trashOutline, warningOutline
 } from 'ionicons/icons';
-import ProfilePictureManager from '@/components/ProfilePictureManager.vue';
 
 // Register components
 const components = {
@@ -338,7 +286,6 @@ const components = {
 
 const router = useRouter();
 const isChangePasswordModalOpen = ref(false);
-const isImagePickerOpen = ref(false);
 const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
 
 // Profile state
@@ -366,10 +313,8 @@ const passwordStrength = ref({
   label: 'weak'
 });
 
-const selectedImage = ref<string | null>(null);
-
 // Load user profile with image
-onMounted(() => {
+onMounted(async () => {
   const userData = localStorage.getItem('user');
   if (userData) {
     const user = JSON.parse(userData);
@@ -379,9 +324,9 @@ onMounted(() => {
       phone: user.phone
     };
     profile.value = { ...originalProfile.value };
-    if (user.image_link) {
-      profileImage.value = user.image_link;
-    }
+    
+    // Fetch current profile picture
+    await fetchProfilePicture();
   }
 });
 
@@ -413,28 +358,202 @@ const handleImageError = (e: Event) => {
   target.src = 'https://ionicframework.com/docs/img/demos/avatar.svg';
 };
 
-const handleProfileImageUpdate = (imageUrl: string) => {
-  profileImage.value = imageUrl;
-  isImagePickerOpen.value = false;
-  
-  // Update local storage
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  userData.image_link = imageUrl;
-  localStorage.setItem('user', JSON.stringify(userData));
+const handleProfilePictureSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      const toast = await toastController.create({
+        message: 'Please select an image file',
+        duration: 2000,
+        color: 'danger',
+        position: 'top',
+        icon: closeCircle
+      });
+      await toast.present();
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      const toast = await toastController.create({
+        message: 'Image size should be less than 5MB',
+        duration: 2000,
+        color: 'danger',
+        position: 'top',
+        icon: closeCircle
+      });
+      await toast.present();
+      return;
+    }
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('profile_image', file);
+
+      console.log('Uploading file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
+      // Use the consistent API instance with FormData
+      const response = await api.post('/profile_picture.php', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      console.log('Server response:', response.data);
+
+      if (response.data.success) {
+        // Construct the full URL for the profile image
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost';
+        const imageUrl = response.data.image_link.startsWith('http') 
+          ? response.data.image_link 
+          : `${baseUrl}${response.data.image_link}`;
+        
+        // Update the profile image
+        profileImage.value = imageUrl;
+        
+        // Update local storage
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        userData.pfp = imageUrl;
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        const toast = await toastController.create({
+          message: 'Profile picture updated successfully',
+          duration: 2000,
+          color: 'success',
+          position: 'top',
+          icon: checkmarkCircle
+        });
+        await toast.present();
+
+        // Clear the file input
+        input.value = '';
+
+        // Force a page refresh after a shorter delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 200);
+      } else {
+        const toast = await toastController.create({
+          message: response.data.message || 'Failed to update profile picture',
+          duration: 2000,
+          color: 'danger',
+          position: 'top',
+          icon: closeCircle
+        });
+        await toast.present();
+      }
+    } catch (error: any) {
+      console.error('Upload error details:', error);
+
+      // Get detailed error message
+      let errorMessage = 'Failed to update profile picture';
+      let errorDetails = '';
+
+      if (error.response?.data) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error_details) {
+          const details = error.response.data.error_details;
+          errorDetails = `\nDetails:\n`;
+          if (!details.upload_dir_exists) {
+            errorDetails += '- Upload directory does not exist\n';
+          }
+          if (!details.upload_dir_writable) {
+            errorDetails += '- Upload directory is not writable\n';
+          }
+          if (details.error_code) {
+            errorDetails += `- Error code: ${details.error_code}\n`;
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Show error toast with details if available
+      const toast = await toastController.create({
+        message: errorDetails ? `${errorMessage}\n${errorDetails}` : errorMessage,
+        duration: 5000,
+        color: 'danger',
+        position: 'top',
+        icon: closeCircle
+      });
+      await toast.present();
+
+      // Clear the file input on error
+      input.value = '';
+    }
+  }
 };
 
-const handleProfileImageDelete = () => {
-  profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-  isImagePickerOpen.value = false;
-  
-  // Update local storage
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  userData.image_link = null;
-  localStorage.setItem('user', JSON.stringify(userData));
-};
+const deleteProfilePicture = async () => {
+  const alert = await alertController.create({
+    header: 'Remove Profile Picture',
+    message: 'Are you sure you want to remove your profile picture?',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        cssClass: 'secondary'
+      },
+      {
+        text: 'Remove',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            const response = await api.delete('/profile_picture.php');
 
-const openImagePicker = () => {
-  isImagePickerOpen.value = true;
+            if (response.data.success) {
+              // Reset to default avatar
+              profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+              
+              // Update local storage
+              const userData = JSON.parse(localStorage.getItem('user') || '{}');
+              userData.pfp = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+              localStorage.setItem('user', JSON.stringify(userData));
+
+              const toast = await toastController.create({
+                message: 'Profile picture removed successfully',
+                duration: 2000,
+                color: 'success',
+                position: 'top',
+                icon: checkmarkCircle
+              });
+              await toast.present();
+            }
+
+            // Force a page refresh after a shorter delay, regardless of success or failure
+            setTimeout(() => {
+              window.location.reload();
+            }, 200);
+          } catch (error: any) {
+            console.error('Delete error:', error);
+            const toast = await toastController.create({
+              message: error.message || 'Failed to remove profile picture',
+              duration: 2000,
+              color: 'danger',
+              position: 'top',
+              icon: closeCircle
+            });
+            await toast.present();
+
+            // Still reload the page even if there's an error
+            setTimeout(() => {
+              window.location.reload();
+            }, 200);
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
 };
 
 const handleLogout = () => {
@@ -445,11 +564,6 @@ const handleLogout = () => {
 
 const updateProfile = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(profile.value.email)) {
@@ -461,16 +575,7 @@ const updateProfile = async () => {
       throw new Error('Please enter a valid phone number');
     }
 
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/update_profile.php',
-      profile.value,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const response = await api.post('/update_profile.php', profile.value);
 
     if (response.data.success) {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -489,7 +594,7 @@ const updateProfile = async () => {
     }
   } catch (error: any) {
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to update profile',
+      message: error.message || 'Failed to update profile',
       duration: 3000,
       color: 'danger',
       position: 'top',
@@ -519,14 +624,7 @@ const deleteProfile = async () => {
               throw new Error('No authentication token found');
             }
 
-            const response = await axios.delete(
-              'http://localhost/codes/PROJ/dbConnect/delete_profile.php',
-              {
-                headers: {
-                  'Authorization': `Bearer ${token}`
-                }
-              }
-            );
+            const response = await api.delete('/delete_profile.php');
 
             if (response.data.success) {
               // Clear local storage
@@ -586,19 +684,10 @@ const changePassword = async () => {
       throw new Error('New password must be different from current password');
     }
 
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/change_password.php',
-      {
-        current_password: passwordForm.value.currentPassword,
-        new_password: passwordForm.value.newPassword
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const response = await api.post('/change_password.php', {
+      current_password: passwordForm.value.currentPassword,
+      new_password: passwordForm.value.newPassword
+    });
 
     if (response.data.success) {
       isChangePasswordModalOpen.value = false;
@@ -663,176 +752,24 @@ const updatePasswordStrength = () => {
   passwordStrength.value = { score, label };
 };
 
-const handleProfilePictureSelect = async (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      const toast = await toastController.create({
-        message: 'Please select an image file',
-        duration: 2000,
-        color: 'danger',
-        position: 'top',
-        icon: closeCircle
-      });
-      await toast.present();
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      const toast = await toastController.create({
-        message: 'Image size should be less than 5MB',
-        duration: 2000,
-        color: 'danger',
-        position: 'top',
-        icon: closeCircle
-      });
-      await toast.present();
-      return;
-    }
-    
-    // Create a unique filename
-    const timestamp = new Date().getTime();
-    const filename = `profile_${timestamp}_${file.name}`;
-    
-    // Create a FileReader to preview the image
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      selectedImage.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const saveProfilePicture = async () => {
-  if (!selectedImage.value) return;
-
+const fetchProfilePicture = async () => {
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+    if (!token) return;
 
-    // Create FormData for file upload
-    const formData = new FormData();
-    formData.append('profile_image', selectedImage.value);
-    formData.append('action', 'update_profile_image');
+    const response = await api.get('/profile_picture.php');
 
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/upload_profile.php',
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
-
-    if (response.data.success) {
-      // Update the profile image with the new URL
-      const imageUrl = `/images/pfp/${response.data.filename}`;
-      profileImage.value = imageUrl;
-      selectedImage.value = null;
+    if (response.data.success && response.data.image_link) {
+      profileImage.value = response.data.image_link;
       
       // Update local storage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      userData.image_link = imageUrl;
+      userData.pfp = response.data.image_link;
       localStorage.setItem('user', JSON.stringify(userData));
-
-      const toast = await toastController.create({
-        message: 'Profile picture updated successfully',
-        duration: 2000,
-        color: 'success',
-        position: 'top',
-        icon: checkmarkCircle
-      });
-      await toast.present();
     }
-  } catch (error: any) {
-    const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to update profile picture',
-      duration: 2000,
-      color: 'danger',
-      position: 'top',
-      icon: closeCircle
-    });
-    await toast.present();
+  } catch (error) {
+    console.error('Failed to fetch profile picture:', error);
   }
-};
-
-const deleteProfilePicture = async () => {
-  const alert = await alertController.create({
-    header: 'Remove Profile Picture',
-    message: 'Are you sure you want to remove your profile picture?',
-    buttons: [
-      {
-        text: 'Cancel',
-        role: 'cancel',
-        cssClass: 'secondary'
-      },
-      {
-        text: 'Remove',
-        role: 'destructive',
-        handler: async () => {
-          try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-              throw new Error('No authentication token found');
-            }
-
-            const response = await axios.post(
-              'http://localhost/codes/PROJ/dbConnect/delete_profile_picture.php',
-              {},
-              {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              }
-            );
-
-            if (response.data.success) {
-              // Reset to default avatar
-              profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-              
-              // Update local storage
-              const userData = JSON.parse(localStorage.getItem('user') || '{}');
-              userData.image_link = null;
-              localStorage.setItem('user', JSON.stringify(userData));
-
-              const toast = await toastController.create({
-                message: 'Profile picture removed successfully',
-                duration: 2000,
-                color: 'success',
-                position: 'top',
-                icon: checkmarkCircle
-              });
-              await toast.present();
-            }
-          } catch (error: any) {
-            const toast = await toastController.create({
-              message: error.response?.data?.message || 'Failed to remove profile picture',
-              duration: 2000,
-              color: 'danger',
-              position: 'top',
-              icon: closeCircle
-            });
-            await toast.present();
-          }
-        }
-      }
-    ]
-  });
-
-  await alert.present();
-};
-
-const cancelProfilePicture = () => {
-  selectedImage.value = null;
 };
 </script>
 
@@ -1053,17 +990,27 @@ ion-item {
   }
 }
 
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .avatar-container {
   position: relative;
-  margin-bottom: 0.5rem;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
 }
 
 .avatar-actions {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: -5px;
+  right: -5px;
   display: flex;
   gap: 0.5rem;
+  z-index: 1;
 }
 
 .change-photo-btn {
@@ -1087,6 +1034,7 @@ ion-item {
   --border-radius: 50%;
   width: 32px;
   height: 32px;
+  margin: 0;
 }
 
 .change-photo-btn ion-icon,
@@ -1152,5 +1100,19 @@ ion-item {
 .delete-button ion-label p {
   font-size: 0.8rem;
   opacity: 0.8;
+}
+
+.profile-picture-modal {
+  --height: auto;
+  --width: 100%;
+  --max-width: 400px;
+  --border-radius: 16px;
+}
+
+@media (min-width: 768px) {
+  .profile-picture-modal {
+    --height: auto;
+    --width: 400px;
+  }
 }
 </style>
