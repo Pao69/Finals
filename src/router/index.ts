@@ -66,8 +66,10 @@ router.beforeEach((to, from, next) => {
   const publicPages = ['/login', '/signup'];
   const authRequired = !publicPages.includes(to.path);
   
-  // TODO: Implement proper authentication check
-  const loggedIn = localStorage.getItem('user');
+  // Check both localStorage and sessionStorage for authentication
+  const loggedInPermanent = localStorage.getItem('user');
+  const loggedInSession = sessionStorage.getItem('user');
+  const loggedIn = loggedInPermanent || loggedInSession;
 
   if (authRequired && !loggedIn) {
     return next('/login');
