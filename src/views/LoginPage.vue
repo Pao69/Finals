@@ -448,24 +448,33 @@ input::placeholder {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
 }
+
 .remember-label {
   color: #8c8c8c;
   font-size: 0.98rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.4em;
   cursor: pointer;
+  flex-shrink: 0;
 }
+
 .forgot-link {
   color: #4a90e2;
   font-size: 0.98rem;
   cursor: pointer;
   font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
+
 .forgot-link:hover {
   text-decoration: underline;
 }
+
 .forgot-modal {
   background: #232323;
   color: #fff;
@@ -478,16 +487,19 @@ input::placeholder {
   flex-direction: column;
   align-items: stretch;
 }
+
 .forgot-modal h2 {
   text-align: center;
   color: #4a90e2;
   margin-bottom: 0.5rem;
 }
+
 .forgot-desc {
   text-align: center;
   color: #bdbdbd;
   margin-bottom: 1.2rem;
 }
+
 .forgot-input {
   width: 100%;
   padding: 12px 15px;
@@ -498,12 +510,14 @@ input::placeholder {
   font-size: 1rem;
   margin-bottom: 1rem;
 }
+
 .forgot-message {
   color: #4a90e2;
   text-align: center;
   margin-top: 1rem;
   font-size: 1rem;
 }
+
 .close-modal {
   margin-top: 1.2rem;
   background: none;
@@ -513,6 +527,7 @@ input::placeholder {
   cursor: pointer;
   text-align: center;
 }
+
 .close-modal:hover {
   color: #fff;
 }
@@ -537,10 +552,12 @@ input::placeholder {
   text-align: center;
   display: block;
 }
+
 .resend-link:disabled {
   color: #888;
   cursor: not-allowed;
 }
+
 .resend-timer {
   color: #bdbdbd;
   font-size: 0.95em;
