@@ -140,12 +140,12 @@ const taskCounts = computed(() => {
     today: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() === now.getTime();
+      return taskDate.getTime() === now.getTime() && task.completed === 0;
     }).length,
     upcoming: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() > now.getTime();
+      return taskDate.getTime() > now.getTime() && task.completed === 0;
     }).length,
     complete: tasks.value.filter(task => task.completed === 1).length
   };

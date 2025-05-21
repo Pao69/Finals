@@ -257,14 +257,14 @@ const filteredTasks = computed(() => {
       filtered = filtered.filter(task => {
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === now.getTime();
+        return taskDate.getTime() === now.getTime() && task.completed === 0;
       });
       break;
     case 'upcoming':
       filtered = filtered.filter(task => {
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() > now.getTime();
+        return taskDate.getTime() > now.getTime() && task.completed === 0;
       });
       break;
     case 'complete':
@@ -399,20 +399,17 @@ const taskCounts = computed(() => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
   return {
     all: tasks.value.length,
     today: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() === now.getTime();
+      return taskDate.getTime() === now.getTime() && task.completed === 0;
     }).length,
     upcoming: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() > now.getTime();
+      return taskDate.getTime() > now.getTime() && task.completed === 0;
     }).length,
     complete: tasks.value.filter(task => task.completed === 1).length
   };
