@@ -1,18 +1,18 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar>
+      <ion-toolbar class="dark-toolbar">
         <ion-title>Settings</ion-title>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <ion-content class="ion-padding custom-content dark-theme">
       <div class="settings-container">
-        <!-- Profile Section -->
-        <div class="profile-section">
+        <!-- Profile Card -->
+        <div class="profile-card">
           <div class="profile-header">
             <div class="avatar-container">
-              <ion-avatar>
+              <ion-avatar class="large-avatar">
                 <img 
                   :src="profileImage" 
                   alt="Profile" 
@@ -21,73 +21,69 @@
                 />
               </ion-avatar>
               <div class="avatar-actions">
-                <label for="profile-picture" class="change-photo-btn">
-                  <ion-icon :icon="cameraOutline" slot="icon-only"></ion-icon>
+                <div class="upload-btn-wrapper">
+                  <button class="change-photo-btn">
+                    <ion-icon :icon="cameraOutline" class="camera-icon"></ion-icon>
+                  </button>
                   <input 
-                    id="profile-picture" 
                     type="file" 
+                    id="profile-picture"
                     accept="image/*" 
                     @change="handleProfilePictureSelect"
                     class="file-input"
                   />
-                </label>
+                </div>
                 <ion-button 
                   fill="clear" 
-                  color="danger" 
                   class="remove-photo-btn"
                   @click="deleteProfilePicture"
                   v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'"
                 >
-                  <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
+                  <ion-icon :icon="trashOutline" class="trash-icon"></ion-icon>
                 </ion-button>
               </div>
             </div>
-            <h2>{{ profile.username }}</h2>
-            <p>{{ profile.email }}</p>
+            <h2 class="profile-name">{{ profile.username }}</h2>
+            <p class="profile-email">{{ profile.email }}</p>
           </div>
         </div>
 
-        <ion-list class="settings-list">
-          <!-- Profile Settings -->
-          <ion-item-group>
-            <ion-item-divider>
-              <ion-label>Profile Settings</ion-label>
-            </ion-item-divider>
-
-            <ion-item lines="full">
-              <ion-icon :icon="personOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="stacked">Username</ion-label>
-              <ion-input 
-                v-model="profile.username" 
-                type="text" 
-                placeholder="Enter username"
-                class="custom-input"
-              ></ion-input>
-            </ion-item>
-
-            <ion-item lines="full">
-              <ion-icon :icon="mailOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="stacked">Email</ion-label>
-              <ion-input 
-                v-model="profile.email" 
-                type="email" 
-                placeholder="Enter email"
-                class="custom-input"
-              ></ion-input>
-            </ion-item>
-
-            <ion-item lines="full">
-              <ion-icon :icon="callOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="stacked">Phone</ion-label>
-              <ion-input 
-                v-model="profile.phone" 
-                type="tel" 
-                placeholder="Enter phone"
-                class="custom-input"
-              ></ion-input>
-            </ion-item>
-
-            <div class="button-container">
+        <!-- Settings Sections -->
+        <div class="settings-sections">
+          <!-- Profile Information -->
+          <div class="settings-section">
+            <h3 class="section-title">
+              <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
+              Profile Information
+            </h3>
+            <div class="settings-form">
+              <div class="form-group">
+                <label>Username</label>
+                <ion-input 
+                  v-model="profile.username" 
+                  type="text" 
+                  placeholder="Enter username"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <ion-input 
+                  v-model="profile.email" 
+                  type="email" 
+                  placeholder="Enter email"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <ion-input 
+                  v-model="profile.phone" 
+                  type="tel" 
+                  placeholder="Enter phone"
+                  class="custom-input"
+                ></ion-input>
+              </div>
               <ion-button 
                 expand="block" 
                 @click="updateProfile" 
@@ -98,43 +94,56 @@
                 Save Changes
               </ion-button>
             </div>
-          </ion-item-group>
+          </div>
 
           <!-- Security Settings -->
-          <ion-item-group>
-            <ion-item-divider>
-              <ion-label>Security</ion-label>
-            </ion-item-divider>
-
-            <ion-item button detail @click="openChangePasswordModal" lines="full">
-              <ion-icon :icon="lockClosedOutline" slot="start" color="primary"></ion-icon>
-              <ion-label>
-                <h2>Change Password</h2>
-                <p>Update your account password</p>
-              </ion-label>
-            </ion-item>
-          </ion-item-group>
+          <div class="settings-section">
+            <h3 class="section-title">
+              <ion-icon :icon="lockClosedOutline" class="section-icon"></ion-icon>
+              Security
+            </h3>
+            <div class="security-options">
+              <ion-button 
+                expand="block" 
+                fill="outline" 
+                @click="openChangePasswordModal"
+                class="security-button"
+              >
+                <ion-icon :icon="keyOutline" slot="start"></ion-icon>
+                Change Password
+              </ion-button>
+            </div>
+          </div>
 
           <!-- Account Actions -->
-          <ion-item-group>
-            <ion-item-divider>
-              <ion-label>Account Actions</ion-label>
-            </ion-item-divider>
-
-            <ion-item button @click="deleteProfile" lines="full" class="delete-button">
-              <ion-icon :icon="trashOutline" slot="start" color="danger"></ion-icon>
-              <ion-label color="danger">
-                <h2>Delete Account</h2>
-                <p>Permanently delete your account and all data</p>
-              </ion-label>
-            </ion-item>
-
-            <ion-item button @click="handleLogout" lines="full" class="logout-button">
-              <ion-icon :icon="logOutOutline" slot="start" color="danger"></ion-icon>
-              <ion-label color="danger">Logout</ion-label>
-            </ion-item>
-          </ion-item-group>
-        </ion-list>
+          <div class="settings-section danger-zone">
+            <h3 class="section-title">
+              <ion-icon :icon="warningOutline" class="section-icon"></ion-icon>
+              Account Actions
+            </h3>
+            <div class="danger-actions">
+              <ion-button 
+                expand="block" 
+                color="danger" 
+                fill="outline"
+                @click="deleteProfile"
+                class="danger-button"
+              >
+                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                Delete Account
+              </ion-button>
+              <ion-button 
+                expand="block" 
+                color="medium" 
+                @click="handleLogout"
+                class="logout-button"
+              >
+                <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
+                Logout
+              </ion-button>
+            </div>
+          </div>
+        </div>
       </div>
     </ion-content>
 
@@ -774,233 +783,60 @@ const fetchProfilePicture = async () => {
 </script>
 
 <style scoped>
-.settings-container {
-  max-width: 600px;
-  margin: 0 auto;
+.dark-toolbar {
+  --background: #1a1a1a;
+  --color: #ffffff;
 }
 
-.profile-section {
-  text-align: center;
-  padding: 2rem 0;
-  margin-bottom: 1rem;
+.custom-content {
+  --background: #121212;
+}
+
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.profile-card {
+  background: #1e1e1e;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-bottom: 2rem;
+  border: 1px solid #2a2a2a;
 }
 
 .profile-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  text-align: center;
 }
 
-.profile-header h2 {
-  margin: 0.5rem 0 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.profile-header p {
-  margin: 0;
-  color: var(--ion-color-medium);
-}
-
-ion-avatar {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 0.5rem;
-}
-
-.settings-list {
-  background: transparent;
-}
-
-ion-item-divider {
-  --background: transparent;
-  --color: var(--ion-color-medium);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.05rem;
-  margin-top: 1rem;
-}
-
-ion-item {
-  --padding-start: 0;
-  margin: 0.5rem 0;
-  --background: var(--ion-background-color);
-  --border-color: var(--ion-color-light);
-}
-
-.custom-input {
-  --padding-start: 0;
-}
-
-.button-container {
-  padding: 1rem;
-}
-
-.save-button {
-  margin: 0;
-}
-
-.logout-button {
-  --background: var(--ion-color-danger-light);
-}
-
-.password-modal {
-  --height: auto;
-  --width: 100%;
-  --max-width: 500px;
-  --border-radius: 16px;
-}
-
-.password-form {
-  padding: 1rem;
-}
-
-.form-group {
+.large-avatar {
+  width: 120px;
+  height: 120px;
   margin-bottom: 1rem;
+  border: 3px solid var(--ion-color-primary);
 }
 
-.custom-input-item {
-  --background: var(--ion-color-light);
-  --border-radius: 8px;
-  --padding-start: 1rem;
-  --padding-end: 1rem;
-  --inner-padding-end: 0;
-  margin-bottom: 0.5rem;
-}
-
-.custom-input-item ion-icon {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
-}
-
-.password-strength-container {
-  background: var(--ion-color-light);
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.strength-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--ion-color-medium);
-}
-
-.strength-meter {
-  height: 6px;
-  background-color: var(--ion-color-light-shade);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.strength-meter-fill {
-  height: 100%;
-  transition: all 0.3s ease;
-  border-radius: 3px;
-}
-
-.strength-meter-fill.weak {
-  background-color: var(--ion-color-danger);
-}
-
-.strength-meter-fill.medium {
-  background-color: var(--ion-color-warning);
-}
-
-.strength-meter-fill.good {
-  background-color: var(--ion-color-success-shade);
-}
-
-.strength-meter-fill.strong {
-  background-color: var(--ion-color-success);
-}
-
-.strength-label {
+.profile-name {
+  font-size: 1.8rem;
   font-weight: 600;
-  text-transform: capitalize;
+  margin: 0.5rem 0;
+  color: #ffffff;
 }
 
-.strength-label.weak {
-  color: var(--ion-color-danger);
-}
-
-.strength-label.medium {
-  color: var(--ion-color-warning);
-}
-
-.strength-label.good {
-  color: var(--ion-color-success-shade);
-}
-
-.strength-label.strong {
-  color: var(--ion-color-success);
-}
-
-.password-requirements {
-  background: var(--ion-color-light);
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.password-requirements h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
-  color: var(--ion-color-medium);
-}
-
-.requirements-grid {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.requirement-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
-  transition: color 0.3s ease;
-}
-
-.requirement-item.valid {
-  color: var(--ion-color-success);
-}
-
-.requirement-item ion-icon {
-  font-size: 1.2rem;
-}
-
-.submit-button {
-  margin-top: 1.5rem;
-  --border-radius: 8px;
-  --padding-top: 1rem;
-  --padding-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-  .password-modal {
-    --height: auto;
-    --width: 500px;
-  }
-}
-
-.profile-avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+.profile-email {
+  color: #888888;
+  margin: 0;
 }
 
 .avatar-container {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   margin: 0 auto 1rem;
 }
 
@@ -1013,18 +849,43 @@ ion-item {
   z-index: 1;
 }
 
-.change-photo-btn {
+.upload-btn-wrapper {
   position: relative;
-  padding: 0.5rem;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.change-photo-btn {
   background: var(--ion-color-primary);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border: 2px solid #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 0;
   margin: 0;
+}
+
+.file-input {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.camera-icon {
+  color: white;
+  font-size: 1.2rem;
 }
 
 .remove-photo-btn {
@@ -1032,87 +893,241 @@ ion-item {
   --padding-end: 0.5rem;
   --background: var(--ion-color-danger);
   --border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   margin: 0;
 }
 
-.change-photo-btn ion-icon,
-.remove-photo-btn ion-icon {
+.settings-sections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.settings-section {
+  background: #1e1e1e;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid #2a2a2a;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.2rem;
-  color: white;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: #ffffff;
 }
 
-.file-input {
-  display: none;
+.section-icon {
+  font-size: 1.4rem;
+  color: var(--ion-color-primary);
 }
 
-.preview-modal {
+.settings-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #888888;
+}
+
+.custom-input {
+  --background: #2a2a2a;
+  --color: #ffffff;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --border-radius: 10px;
+  --placeholder-color: #666666;
+  border: 1px solid #333333;
+}
+
+.save-button {
+  margin-top: 1rem;
+  --border-radius: 10px;
+  --background: var(--ion-color-primary);
+}
+
+.security-options, .danger-actions {
+  display: grid;
+  gap: 1rem;
+}
+
+.security-button {
+  --border-radius: 10px;
+  --background: #2a2a2a;
+  --color: #ffffff;
+  --border-color: var(--ion-color-primary);
+}
+
+.danger-zone {
+  border: 1px solid var(--ion-color-danger);
+  background: #1e1e1e;
+}
+
+.danger-button {
+  --border-radius: 10px;
+  --background: transparent;
+  --color: var(--ion-color-danger);
+  --border-color: var(--ion-color-danger);
+}
+
+.logout-button {
+  --border-radius: 10px;
+  --background: #2a2a2a;
+  --color: #ffffff;
+}
+
+/* Password Modal Styles */
+.password-modal {
+  --background: #1a1a1a;
   --height: auto;
   --width: 100%;
-  --max-width: 400px;
+  --max-width: 500px;
   --border-radius: 16px;
 }
 
-.preview-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
+.password-form {
   padding: 1rem;
+  color: #ffffff;
+}
+
+.custom-input-item {
+  --background: #2a2a2a;
+  --color: #ffffff;
+  --border-radius: 8px;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --inner-padding-end: 0;
+  margin-bottom: 0.5rem;
+  border: 1px solid #333333;
+}
+
+.password-strength-container {
+  background: #2a2a2a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid #333333;
+}
+
+.strength-header {
+  color: #888888;
+}
+
+.strength-meter {
+  background-color: #333333;
+}
+
+.password-requirements {
+  background: #2a2a2a;
+  border: 1px solid #333333;
+}
+
+.password-requirements h3 {
+  color: #888888;
+}
+
+.requirement-item {
+  color: #888888;
+}
+
+.requirement-item.valid {
+  color: var(--ion-color-success);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .settings-sections {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .profile-card {
+    grid-column: 1 / -1;
+  }
+  
+  .danger-zone {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .settings-container {
+    padding: 0.5rem;
+  }
+  
+  .profile-card, .settings-section {
+    padding: 1.25rem;
+  }
+}
+
+/* Dark theme overrides for modals */
+ion-modal {
+  --ion-background-color: #1a1a1a;
+  --ion-toolbar-background: #1e1e1e;
+  --ion-toolbar-color: #ffffff;
+}
+
+ion-modal ion-content {
+  --background: #1a1a1a;
+}
+
+ion-modal ion-item {
+  --background: #2a2a2a;
+  --color: #ffffff;
+  --border-color: #333333;
+}
+
+ion-modal ion-input {
+  --color: #ffffff;
+  --placeholder-color: #666666;
+}
+
+/* Additional dark theme styles */
+.preview-modal {
+  --background: #1a1a1a;
 }
 
 .preview-container {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--ion-color-light);
+  border-color: #333333;
 }
 
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.preview-content {
+  background: #1a1a1a;
 }
 
-.preview-actions {
-  width: 100%;
-  max-width: 300px;
+/* Ensure text inputs are visible in dark theme */
+input, textarea {
+  color: #ffffff;
+  background: #2a2a2a;
 }
 
-@media (min-width: 768px) {
-  .preview-modal {
-    --height: auto;
-    --width: 400px;
-  }
+/* Style scrollbars for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.delete-button {
-  --background: var(--ion-color-danger-light);
-  margin-bottom: 0.5rem;
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
 }
 
-.delete-button ion-label h2 {
-  font-weight: 600;
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 4px;
 }
 
-.delete-button ion-label p {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.profile-picture-modal {
-  --height: auto;
-  --width: 100%;
-  --max-width: 400px;
-  --border-radius: 16px;
-}
-
-@media (min-width: 768px) {
-  .profile-picture-modal {
-    --height: auto;
-    --width: 400px;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #444444;
 }
 </style>
