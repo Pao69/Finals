@@ -1,14 +1,5 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/tasks"></ion-back-button>
-        </ion-buttons>
-        <ion-title>Add Task</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
+  <page-layout title="Add Task" :showBackButton="true" backHref="/tabs/tasks">
     <ion-content class="ion-padding">
       <form @submit.prevent="handleSubmit" class="task-form">
         <div class="form-section">
@@ -72,7 +63,7 @@
         </div>
       </form>
     </ion-content>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -80,24 +71,19 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
   IonItem,
   IonLabel,
   IonInput,
   IonTextarea,
   IonButton,
-  IonButtons,
-  IonBackButton,
   IonDatetime,
   IonNote,
   IonText,
   toastController
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 interface TaskForm {
   title: string;

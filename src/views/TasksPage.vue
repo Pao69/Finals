@@ -1,9 +1,6 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>My Tasks</ion-title>
-      </ion-toolbar>
+  <page-layout title="My Tasks">
+    <template #additional-toolbar>
       <ion-toolbar>
         <ion-searchbar
           v-model="searchQuery"
@@ -39,7 +36,7 @@
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
-    </ion-header>
+    </template>
 
     <ion-content :fullscreen="true" class="ion-padding-bottom">
       
@@ -130,7 +127,7 @@
         },
       ]">
       </ion-alert>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -138,13 +135,11 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonList, IonItem, IonItemGroup, IonItemDivider,
+  IonContent, IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonCheckbox, IonFab, IonFabButton,
   IonIcon, IonButton, IonButtons, IonAlert,
   IonSearchbar, IonSegment, IonSegmentButton,
-  toastController, IonBadge,
- 
+  toastController, IonBadge, IonToolbar,
   popoverController,
 } from '@ionic/vue';
 import { 
@@ -154,6 +149,7 @@ import {
   checkmarkCircle,
   closeCircle
 } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 interface Task {
   id: number;

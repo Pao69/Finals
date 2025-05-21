@@ -1,11 +1,5 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar class="dark-toolbar">
-        <ion-title>Settings</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
+  <page-layout title="Settings" :isDark="true">
     <ion-content class="ion-padding custom-content dark-theme">
       <div class="settings-container">
         <!-- Profile Card -->
@@ -256,7 +250,7 @@
         </form>
       </ion-content>
     </ion-modal>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -264,7 +258,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/utils/api';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
   IonButtons, toastController, IonAvatar, alertController
@@ -272,14 +266,15 @@ import {
 import {
   personOutline, mailOutline, callOutline,
   lockClosedOutline, logOutOutline, saveOutline,
-  closeOutline, checkmarkCircle, closeCircle,
-  cameraOutline, cloudUploadOutline, keyOutline,
+  closeOutline, closeCircle, checkmarkCircle,
+  cameraOutline, keyOutline,
   checkmarkCircleOutline, trashOutline, warningOutline
 } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 // Register components
 const components = {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
   IonButtons, IonAvatar
@@ -287,6 +282,8 @@ const components = {
 
 const router = useRouter();
 const isChangePasswordModalOpen = ref(false);
+
+//for default profile
 const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
 
 // Profile state

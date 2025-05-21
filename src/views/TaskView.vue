@@ -1,14 +1,5 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/tasks"></ion-back-button>
-        </ion-buttons>
-        <ion-title>Task Details</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
+  <page-layout title="Task Details" :showBackButton="true" backHref="/tabs/tasks">
     <ion-content :fullscreen="true">
       <div v-if="task" class="task-details">
         <div class="task-header">
@@ -78,7 +69,7 @@
         },
       ]"
     ></ion-alert>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -86,14 +77,14 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButtons, IonBackButton, IonButton, IonIcon,
+  IonContent, IonButton, IonIcon,
   IonCheckbox, IonAlert, IonSpinner, toastController
 } from '@ionic/vue';
 import { 
   createOutline, trashOutline, calendarOutline,
   documentTextOutline, checkmarkCircle, closeCircle
 } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 interface Task {
   id: number;

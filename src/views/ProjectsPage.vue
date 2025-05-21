@@ -1,10 +1,5 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Projects</ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <page-layout title="Projects">
     <ion-content :fullscreen="true" class="ion-padding-bottom">
       <ion-header collapse="condense">
         <ion-toolbar>
@@ -47,15 +42,17 @@
         </ion-fab>
       </div>
     </ion-content>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonGrid, IonRow, IonCol,
+import { IonContent, IonGrid, IonRow, IonCol,
          IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, 
-         IonProgressBar, IonChip, IonIcon, IonLabel, IonFab, IonFabButton } from '@ionic/vue';
+         IonProgressBar, IonChip, IonIcon, IonLabel, IonFab, IonFabButton,
+         IonHeader, IonToolbar, IonTitle } from '@ionic/vue';
 import { peopleOutline, calendarOutline, addOutline } from 'ionicons/icons';
 import { ref } from 'vue';
+import PageLayout from '@/components/PageLayout.vue';
 
 const projects = ref([
   {

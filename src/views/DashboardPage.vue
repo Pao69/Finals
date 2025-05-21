@@ -1,10 +1,5 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Dashboard</ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <page-layout title="Dashboard">
     <ion-content :fullscreen="true" class="ion-padding-horizontal">
       <ion-header collapse="condense">
         <ion-toolbar>
@@ -84,7 +79,7 @@
         </ion-row>
       </ion-grid>
     </ion-content>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -95,6 +90,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonGrid, IonRow, 
          IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem, IonLabel, 
          IonBadge, IonIcon } from '@ionic/vue';
 import { checkmarkCircle, timeOutline } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 interface Task {
   id: number;

@@ -1,11 +1,7 @@
 <template>
-  <ion-page>
-    <ion-header>
+  <page-layout title="Edit Task" :showBackButton="true" backHref="/tabs/tasks">
+    <template #additional-toolbar>
       <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/tasks"></ion-back-button>
-        </ion-buttons>
-        <ion-title>Edit Task</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="handleSubmit" :disabled="!isFormValid" class="save-button">
             <ion-icon :icon="saveOutline" slot="start"></ion-icon>
@@ -13,7 +9,7 @@
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
-    </ion-header>
+    </template>
 
     <ion-content class="ion-padding">
       <div class="edit-task-container">
@@ -89,7 +85,7 @@
         </div>
       </div>
     </ion-content>
-  </ion-page>
+  </page-layout>
 </template>
 
 <script setup lang="ts">
@@ -97,10 +93,6 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
   IonItem,
   IonLabel,
@@ -108,18 +100,12 @@ import {
   IonTextarea,
   IonButton,
   IonButtons,
-  IonBackButton,
   IonDatetime,
-  IonDatetimeButton,
-  IonModal,
   IonToggle,
-  IonSpinner,
-  IonSelect,
-  IonSelectOption,
-  toastController,
-  IonBadge,
   IonIcon,
-  IonText
+  IonBadge,
+  IonText,
+  toastController
 } from '@ionic/vue';
 import {
   saveOutline,
@@ -129,6 +115,7 @@ import {
   checkmarkCircle,
   closeCircle
 } from 'ionicons/icons';
+import PageLayout from '@/components/PageLayout.vue';
 
 interface TaskForm {
   id: number;
