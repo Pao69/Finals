@@ -14,8 +14,7 @@
                 id="username"
                 v-model="username"
                 required
-                placeholder="Enter your username"
-              />
+                placeholder="Enter your username"/>
             </div>
             <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
           </span>
@@ -28,8 +27,7 @@
                 id="password"
                 v-model="password"
                 required
-                placeholder="Enter your password"
-              />
+                placeholder="Enter your password"/>
               <span class="toggle-password" @click="showPassword = !showPassword">
                 {{ showPassword ? '👁️' : '👁️‍🗨️' }}
               </span>
@@ -59,8 +57,7 @@
                 v-model="forgotEmail"
                 required
                 placeholder="Enter your email"
-                class="forgot-input"
-              />
+                class="forgot-input"/>
               <button class="button-submit" type="submit" :disabled="forgotLoading || resendTimer > 0">
                 {{ forgotLoading ? 'Sending...' : 'Send Reset Code' }}
               </button>
@@ -77,22 +74,19 @@
                 v-model="resetCode"
                 required
                 placeholder="Enter reset code"
-                class="forgot-input"
-              />
+                class="forgot-input"/>
               <input
                 type="password"
                 v-model="resetPassword"
                 required
                 placeholder="Enter new password"
-                class="forgot-input"
-              />
+                class="forgot-input"/>
               <input
                 type="password"
                 v-model="resetPasswordConfirm"
                 required
                 placeholder="Confirm new password"
-                class="forgot-input"
-              />
+                class="forgot-input"/>
               <div class="password-requirements" v-if="resetPassword">
                 <p :class="{ valid: resetHasLength }">✓ At least 11 characters</p>
                 <p :class="{ valid: resetHasLetter }">✓ At least one letter</p>
