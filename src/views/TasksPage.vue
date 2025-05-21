@@ -8,8 +8,8 @@
         <ion-searchbar
           v-model="searchQuery"
           placeholder="Search tasks..."
-          @ionInput="handleSearch"
-        ></ion-searchbar>
+          @ionInput="handleSearch">
+        </ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment v-model="selectedFilter" @ionChange="handleFilterChange" scrollable>
@@ -64,8 +64,8 @@
                   slot="start" 
                   :modelValue="task.completed === 1"
                   @update:modelValue="toggleTaskCompletion(task, $event)"
-                  @click.stop
-                ></ion-checkbox>
+                  @click.stop>
+                </ion-checkbox>
                 <ion-label>
                   <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                   <p class="task-description">{{ task.description }}</p>
@@ -81,8 +81,8 @@
                 slot="start" 
                 :modelValue="task.completed === 1"
                 @update:modelValue="toggleTaskCompletion(task, $event)"
-                @click.stop
-              ></ion-checkbox>
+                @click.stop>
+              </ion-checkbox>
               <ion-label>
                 <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                 <p class="task-description">{{ task.description }}</p>
@@ -128,8 +128,8 @@
             deleteTask();
           },
         },
-      ]"
-    ></ion-alert>
+      ]">
+      </ion-alert>
   </ion-page>
 </template>
 
@@ -143,19 +143,14 @@ import {
   IonLabel, IonCheckbox, IonFab, IonFabButton,
   IonIcon, IonButton, IonButtons, IonAlert,
   IonSearchbar, IonSegment, IonSegmentButton,
-  IonChip, toastController, IonBadge,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
-  IonModal,
+  toastController, IonBadge,
+ 
   popoverController,
 } from '@ionic/vue';
 import { 
-  addOutline, createOutline, trashOutline,
-  swapVerticalOutline, clipboardOutline,
-  calendarOutline,
-  checkmarkCircleOutline,
-  documentTextOutline,
+  addOutline,
+  swapVerticalOutline, 
+  clipboardOutline,
   checkmarkCircle,
   closeCircle
 } from 'ionicons/icons';

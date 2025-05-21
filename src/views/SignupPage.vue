@@ -15,8 +15,7 @@
                 v-model="username"
                 required
                 placeholder="Choose a username"
-                @blur="validateUsername"
-              />
+                @blur="validateUsername"/>
             </div>
             <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
           </span>
@@ -30,8 +29,7 @@
                 v-model="email"
                 required
                 placeholder="Enter your email"
-                @blur="validateEmail"
-              />
+                @blur="validateEmail"/>
             </div>
             <span class="error-message" v-if="errors.email">{{ errors.email }}</span>
           </span>
@@ -46,8 +44,7 @@
                 required
                 maxlength="11"
                 placeholder="Enter your phone number"
-                @input="validatePhone"
-              />
+                @input="validatePhone"/>
             </div>
             <span class="error-message" v-if="errors.phone">{{ errors.phone }}</span>
           </span>
@@ -61,8 +58,7 @@
                 v-model="password"
                 required
                 placeholder="Create a password"
-                @input="validatePassword"
-              />
+                @input="validatePassword"/>
               <span class="toggle-password" @click="showPassword = !showPassword">
                 {{ showPassword ? '👁️' : '👁️‍🗨️' }}
               </span>

@@ -14,8 +14,7 @@
                 id="email"
                 v-model="email"
                 required
-                placeholder="Enter your email"
-              />
+                placeholder="Enter your email"/>
             </div>
             <span class="error-message" v-if="error">{{ error }}</span>
           </span>
@@ -38,8 +37,7 @@
                 id="code"
                 v-model="code"
                 required
-                placeholder="Enter reset code"
-              />
+                placeholder="Enter reset code"/>
             </div>
           </span>
           <span class="input-span">
@@ -50,8 +48,7 @@
                 id="newPassword"
                 v-model="newPassword"
                 required
-                placeholder="Enter new password"
-              />
+                placeholder="Enter new password"/>
               <span class="toggle-password" @click="showPassword = !showPassword">
                 {{ showPassword ? '👁️' : '👁️‍🗨️' }}
               </span>
@@ -71,8 +68,7 @@
                 id="confirmPassword"
                 v-model="confirmPassword"
                 required
-                placeholder="Confirm new password"
-              />
+                placeholder="Confirm new password"/>
             </div>
           </span>
           <span class="error-message" v-if="error">{{ error }}</span>
@@ -91,11 +87,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { IonPage, IonContent } from '@ionic/vue';
 
-const router = useRouter();
 const step = ref(1);
 const email = ref('');
 const code = ref('');

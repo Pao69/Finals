@@ -17,8 +17,7 @@
                   :src="profileImage" 
                   alt="Profile" 
                   @error="handleImageError"
-                  class="profile-avatar-image"
-                />
+                  class="profile-avatar-image"/>
               </ion-avatar>
               <div class="avatar-actions">
                 <div class="upload-btn-wrapper">
@@ -30,15 +29,13 @@
                     id="profile-picture"
                     accept="image/*" 
                     @change="handleProfilePictureSelect"
-                    class="file-input"
-                  />
+                    class="file-input"/>
                 </div>
                 <ion-button 
                   fill="clear" 
                   class="remove-photo-btn"
                   @click="deleteProfilePicture"
-                  v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'"
-                >
+                  v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'">
                   <ion-icon :icon="trashOutline" class="trash-icon"></ion-icon>
                 </ion-button>
               </div>
@@ -63,8 +60,8 @@
                   v-model="profile.username" 
                   type="text" 
                   placeholder="Enter username"
-                  class="custom-input"
-                ></ion-input>
+                  class="custom-input">
+                </ion-input>
               </div>
               <div class="form-group">
                 <label>Email</label>
@@ -72,8 +69,8 @@
                   v-model="profile.email" 
                   type="email" 
                   placeholder="Enter email"
-                  class="custom-input"
-                ></ion-input>
+                  class="custom-input">
+                </ion-input>
               </div>
               <div class="form-group">
                 <label>Phone</label>
@@ -81,15 +78,14 @@
                   v-model="profile.phone" 
                   type="tel" 
                   placeholder="Enter phone"
-                  class="custom-input"
-                ></ion-input>
+                  class="custom-input">
+                </ion-input>
               </div>
               <ion-button 
                 expand="block" 
                 @click="updateProfile" 
                 :disabled="!isProfileChanged"
-                class="save-button"
-              >
+                class="save-button">
                 <ion-icon :icon="saveOutline" slot="start"></ion-icon>
                 Save Changes
               </ion-button>
@@ -107,8 +103,7 @@
                 expand="block" 
                 fill="outline" 
                 @click="openChangePasswordModal"
-                class="security-button"
-              >
+                class="security-button">
                 <ion-icon :icon="keyOutline" slot="start"></ion-icon>
                 Change Password
               </ion-button>
@@ -127,8 +122,7 @@
                 color="danger" 
                 fill="outline"
                 @click="deleteProfile"
-                class="danger-button"
-              >
+                class="danger-button">
                 <ion-icon :icon="trashOutline" slot="start"></ion-icon>
                 Delete Account
               </ion-button>
@@ -136,8 +130,7 @@
                 expand="block" 
                 color="medium" 
                 @click="handleLogout"
-                class="logout-button"
-              >
+                class="logout-button">
                 <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
                 Logout
               </ion-button>
@@ -189,8 +182,8 @@
                 required
                 placeholder="Enter new password"
                 @input="updatePasswordStrength"
-                class="custom-input"
-              ></ion-input>
+                class="custom-input">
+              </ion-input>
             </ion-item>
           </div>
 
@@ -203,8 +196,8 @@
                 v-model="passwordForm.confirmPassword"
                 required
                 placeholder="Confirm new password"
-                class="custom-input"
-              ></ion-input>
+                class="custom-input">
+              </ion-input>
             </ion-item>
           </div>
 
@@ -256,8 +249,7 @@
             type="submit" 
             class="submit-button"
             :disabled="!isPasswordFormValid"
-            :color="isPasswordFormValid ? 'primary' : 'medium'"
-          >
+            :color="isPasswordFormValid ? 'primary' : 'medium'">
             <ion-icon :icon="saveOutline" slot="start"></ion-icon>
             Update Password
           </ion-button>

@@ -21,8 +21,8 @@
               type="text"
               placeholder="Enter task title"
               required
-              class="custom-input"
-            ></ion-input>
+              class="custom-input">
+            </ion-input>
             <ion-note v-if="errors.title" color="danger">{{ errors.title }}</ion-note>
           </ion-item>
 
@@ -32,8 +32,8 @@
               v-model="taskForm.description"
               placeholder="Enter task description"
               :rows="4"
-              class="custom-input"
-            ></ion-textarea>
+              class="custom-input">
+            </ion-textarea>
           </ion-item>
         </div>
 
@@ -50,8 +50,8 @@
               :buttons="true"
               button-text="Done"
               cancel-text="Cancel"
-              class="custom-datetime"
-            ></ion-datetime>
+              class="custom-datetime">
+            </ion-datetime>
           </ion-item>
         </div>
 
@@ -93,14 +93,9 @@ import {
   IonButtons,
   IonBackButton,
   IonDatetime,
-  IonDatetimeButton,
-  IonModal,
-  IonSelect,
-  IonSelectOption,
   IonNote,
   IonText,
-  toastController,
-  modalController
+  toastController
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
 
