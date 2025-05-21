@@ -264,11 +264,18 @@ import {
   IonButtons, toastController, IonAvatar, alertController
 } from '@ionic/vue';
 import {
-  personOutline, mailOutline, callOutline,
-  lockClosedOutline, logOutOutline, saveOutline,
-  closeOutline, closeCircle, checkmarkCircle,
-  cameraOutline, keyOutline,
-  checkmarkCircleOutline, trashOutline, warningOutline
+  personOutline,
+  lockClosedOutline, 
+  logOutOutline, 
+  saveOutline,
+  closeOutline, 
+  closeCircle, 
+  checkmarkCircle,
+  cameraOutline, 
+  keyOutline,
+  checkmarkCircleOutline, 
+  trashOutline, 
+  warningOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
