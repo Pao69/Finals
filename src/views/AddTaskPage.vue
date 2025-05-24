@@ -152,69 +152,36 @@ const validateToken = async () => {
   }
 };
 
-const handleSubmit = async () => {
+const handleSubmit = async (event: Event) => {
+  event.preventDefault();
+  
   if (!validateForm()) return;
 
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    
-    // Format the date to YYYY-MM-DD as required by the backend
-    const formattedDate = new Date(taskForm.value.due_date)
-      .toISOString()
-      .split('T')[0];
-
-    // Prepare the request data
-    const requestData = {
-      title: taskForm.value.title.trim(),
-      description: taskForm.value.description.trim(),
-      due_date: formattedDate,
-      completed: taskForm.value.completed ? 1 : 0
-    };
-
-    console.log('Sending request with data:', requestData); // Debug log
-
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      requestData,
+      taskForm.value,
       {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       }
     );
 
-    console.log('Response:', response.data); // Debug log
-
     if (response.data.success) {
       const toast = await toastController.create({
-        message: 'Task added successfully',
+        message: 'Task created successfully',
         duration: 2000,
         color: 'success'
       });
       await toast.present();
-      router.push('/tabs/tasks');
-    } else {
-      throw new Error(response.data.message || 'Failed to add task');
+
+      // Navigate back to tasks list
+      router.replace('/tabs/tasks');
     }
   } catch (error: any) {
-    let errorMessage = error.response?.data?.message || error.message || 'Failed to add task';
-    console.error('Error details:', error.response || error); // Debug log
-    
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-      errorMessage = 'Session expired. Please login again.';
-    }
-    
-    errors.value.general = errorMessage;
-    
+    console.error('Error creating task:', error);
     const toast = await toastController.create({
-      message: errorMessage,
+      message: error.response?.data?.message || 'Failed to create task',
       duration: 2000,
       color: 'danger'
     });

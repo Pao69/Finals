@@ -8,7 +8,7 @@
             @update:modelValue="toggleTaskCompletion"
             class="task-checkbox"
           ></ion-checkbox>
-          <h1>{{ task.title }}</h1>
+          <h1 :class="{ completed: task.completed === 1 }">{{ task.title }}</h1>
         </div>
 
         <div class="task-info">
@@ -27,6 +27,39 @@
               <p class="task-description">{{ task.description || 'No description provided' }}</p>
             </div>
           </div>
+        </div>
+
+        <!-- Linked Resources Section -->
+        <div class="task-resources" v-if="resources.length > 0">
+          <h2>
+            <ion-icon :icon="documentsOutline"></ion-icon>
+            Linked Resources
+          </h2>
+          <ion-list>
+            <ion-item v-for="resource in resources" :key="resource.id" class="resource-item">
+              <ion-thumbnail slot="start" class="resource-thumbnail">
+                <img v-if="isImage(resource.file_type)" :src="getResourceUrl(resource.filename)" alt="Resource thumbnail" />
+                <ion-icon v-else :icon="getFileIcon(resource.file_type)" size="large"></ion-icon>
+              </ion-thumbnail>
+              
+              <ion-label class="ion-text-wrap">
+                <h3>{{ resource.original_filename }}</h3>
+                <p>{{ resource.description }}</p>
+                <p class="resource-meta">
+                  <ion-text color="medium">
+                    {{ formatFileSize(resource.file_size) }} • 
+                    {{ formatDate(resource.upload_date) }}
+                  </ion-text>
+                </p>
+              </ion-label>
+
+              <ion-buttons slot="end">
+                <ion-button @click="downloadResource(resource)">
+                  <ion-icon :icon="downloadOutline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </ion-buttons>
+            </ion-item>
+          </ion-list>
         </div>
       </div>
 
@@ -78,11 +111,14 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import {
   IonContent, IonButton, IonIcon,
-  IonCheckbox, IonAlert, IonSpinner, toastController
+  IonCheckbox, IonAlert, IonSpinner, toastController,
+  IonChip, IonLabel, IonThumbnail, IonList, IonItem, IonButtons
 } from '@ionic/vue';
 import { 
   createOutline, trashOutline, calendarOutline,
-  documentTextOutline, checkmarkCircle, closeCircle
+  documentTextOutline, checkmarkCircle, closeCircle,
+  documentsOutline, downloadOutline, imageOutline,
+  documentOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
@@ -97,9 +133,22 @@ interface Task {
   updated_at: string;
 }
 
+interface Resource {
+  id: number;
+  user_id: number;
+  task_id: number;
+  filename: string;
+  original_filename: string;
+  file_type: string;
+  file_size: number;
+  description: string;
+  upload_date: string;
+}
+
 const route = useRoute();
 const router = useRouter();
 const task = ref<Task | null>(null);
+const resources = ref<Resource[]>([]);
 const showDeleteAlert = ref(false);
 
 // Fetch task details
@@ -117,6 +166,7 @@ const fetchTaskDetails = async () => {
 
     if (response.data.success) {
       task.value = response.data.task;
+      await fetchResources();
     } else {
       throw new Error(response.data.message || 'Failed to fetch task details');
     }
@@ -129,6 +179,22 @@ const fetchTaskDetails = async () => {
     });
     await toast.present();
     router.back();
+  }
+};
+
+// Fetch linked resources
+const fetchResources = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`http://localhost/codes/PROJ/dbConnect/resources.php?task_id=${task.value?.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (response.data.success) {
+      resources.value = response.data.resources || [];
+    }
+  } catch (error) {
+    console.error('Error fetching resources:', error);
   }
 };
 
@@ -252,6 +318,39 @@ const getDueDateClass = (task: Task) => {
   return '';
 };
 
+// Resource utility functions
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const isImage = (fileType: string): boolean => {
+  return fileType.startsWith('image/');
+};
+
+const getFileIcon = (fileType: string) => {
+  if (fileType.startsWith('image/')) return imageOutline;
+  if (fileType.includes('pdf')) return documentOutline;
+  if (fileType.includes('word')) return documentTextOutline;
+  return documentOutline;
+};
+
+const getResourceUrl = (filename: string): string => {
+  return `http://localhost/codes/PROJ/uploads/${filename}`;
+};
+
+const downloadResource = (resource: Resource) => {
+  const link = document.createElement('a');
+  link.href = getResourceUrl(resource.filename);
+  link.download = resource.original_filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 onMounted(() => {
   fetchTaskDetails();
 });
@@ -286,6 +385,11 @@ onMounted(() => {
   font-weight: 600;
   margin: 0;
   color: var(--ion-color-dark);
+}
+
+.task-header h1.completed {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
 }
 
 .task-info {
@@ -345,6 +449,53 @@ onMounted(() => {
 
 .task-due.upcoming {
   color: var(--ion-color-success);
+}
+
+.task-resources {
+  margin: 24px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--ion-color-light);
+}
+
+.task-resources h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  color: var(--ion-color-dark);
+  margin-bottom: 16px;
+}
+
+.task-resources ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+}
+
+.resource-thumbnail {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+}
+
+.resource-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.resource-thumbnail ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-medium);
+}
+
+.resource-meta {
+  font-size: 0.85em;
+  margin-top: 4px;
 }
 
 .action-buttons {

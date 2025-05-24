@@ -97,13 +97,14 @@
         <p>Start by creating a new task</p>
       </div>
 
-      <!-- Floating Action Button -->
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+      
+    </ion-content>
+    <!-- Floating Action Button -->
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button @click="goToAddTask" class="custom-fab">
           <ion-icon :icon="addOutline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
-    </ion-content>
 
     <!-- Delete Confirmation Alert -->
     <ion-alert
@@ -179,6 +180,7 @@ const searchQuery = ref('');
 const selectedFilter = ref('all');
 const sortAscending = ref(true);
 const selectedTask = ref<Task | null>(null);
+const loading = ref(false);
 
 // Add sort options
 const sortOptions = [
@@ -189,6 +191,10 @@ const sortOptions = [
   { label: 'Created Date (Newest)', value: 'created_desc' },
   { label: 'Created Date (Oldest)', value: 'created_asc' }
 ];
+
+onMounted(() => {
+  fetchTasks();
+});
 
 const currentSort = ref('due_date_asc');
 
@@ -202,6 +208,7 @@ window.refreshTaskList = refreshTaskList;
 
 // Fetch tasks from the database
 const fetchTasks = async () => {
+  loading.value = true;
   try {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -224,6 +231,8 @@ const fetchTasks = async () => {
       color: 'danger'
     });
     await toast.present();
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -528,7 +537,18 @@ watch(
   }
 );
 
-// Update onMounted to set initial filter from URL
+// Add navigation watcher
+watch(
+  () => route.fullPath,
+  async (newPath, oldPath) => {
+    // Check if we're coming back from the add task page
+    if (oldPath?.includes('/tasks/add') && !newPath.includes('/tasks/add')) {
+      await fetchTasks();
+    }
+  }
+);
+
+// Update onMounted to also watch for navigation events
 onMounted(() => {
   fetchTasks();
   // Set initial filter from URL if present

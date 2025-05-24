@@ -13,9 +13,9 @@
           <ion-label>Tasks</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="projects" href="/tabs/projects">
-          <ion-icon :icon="folderOutline" />
-          <ion-label>Projects</ion-label>
+        <ion-tab-button tab="resources" href="/tabs/resources">
+          <ion-icon :icon="documentsOutline" />
+          <ion-label>Resources</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="settings" href="/tabs/settings">
@@ -29,5 +29,5 @@
 
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { gridOutline, checkboxOutline, folderOutline, settingsOutline } from 'ionicons/icons';
+import { gridOutline, checkboxOutline, documentsOutline, settingsOutline } from 'ionicons/icons';
 </script>
