@@ -3,7 +3,7 @@
     <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
       <div class="signup-container">
         <h1 class="ion-text-center">Create Account</h1>
-        <p class="ion-text-center subtitle">Sign up to get started</p>
+        <p class="ion-text-center subtitle">Join us to manage your tasks efficiently</p>
 
         <form @submit.prevent="handleSubmit" class="form">
           <span class="input-span">
@@ -14,7 +14,7 @@
                 id="username"
                 v-model="username"
                 required
-                placeholder="Choose a username"
+                placeholder="Enter username"
                 @blur="validateUsername"/>
             </div>
             <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
@@ -28,7 +28,7 @@
                 id="email"
                 v-model="email"
                 required
-                placeholder="Enter your email"
+                placeholder="Enter email"
                 @blur="validateEmail"/>
             </div>
             <span class="error-message" v-if="errors.email">{{ errors.email }}</span>
@@ -42,8 +42,7 @@
                 id="phone"
                 v-model="phone"
                 required
-                maxlength="11"
-                placeholder="Enter your phone number"
+                placeholder="Enter phone"
                 @input="validatePhone"/>
             </div>
             <span class="error-message" v-if="errors.phone">{{ errors.phone }}</span>
@@ -57,10 +56,10 @@
                 id="password"
                 v-model="password"
                 required
-                placeholder="Create a password"
+                placeholder="Enter password"
                 @input="validatePassword"/>
               <span class="toggle-password" @click="showPassword = !showPassword">
-                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+                {{ showPassword ? '🙈' : '👁️' }}
               </span>
             </div>
             <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
@@ -72,9 +71,15 @@
             </div>
           </span>
 
+          <!-- Admin option in development mode -->
+          <span v-if="isDevelopment" class="input-span admin-option">
+            <ion-checkbox v-model="isAdmin">Make this account an admin</ion-checkbox>
+            <ion-note>This option is only available in development mode</ion-note>
+          </span>
+
           <button class="button-submit" type="submit" :disabled="!isFormValid">Sign Up</button>
 
-          <p class="p">Already have an account? <span class="span" @click="goToLogin">Sign In</span></p>
+          <p class="p">Already have an account? <span class="span" @click="goToLogin">Login</span></p>
         </form>
       </div>
     </ion-content>
@@ -85,7 +90,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import { IonPage, IonContent, toastController } from '@ionic/vue';
+import { IonPage, IonContent, toastController, IonCheckbox, IonNote } from '@ionic/vue';
 
 const router = useRouter();
 const username = ref('');
@@ -93,11 +98,14 @@ const email = ref('');
 const phone = ref('');
 const password = ref('');
 const showPassword = ref(false);
+const isAdmin = ref(false);
+const isDevelopment = import.meta.env.MODE === 'development';
 const errors = ref({
   username: '',
   email: '',
   phone: '',
-  password: ''
+  password: '',
+  general: ''
 });
 
 // Password validation computed properties
@@ -169,48 +177,50 @@ const validatePassword = () => {
 };
 
 const handleSubmit = async () => {
-  // Validate all fields before submission
-  await validateUsername();
-  validateEmail();
-  validatePhone();
-  validatePassword();
-
-  if (!isFormValid.value) {
-    const toast = await toastController.create({
-      message: 'Please fix all errors before submitting',
-      duration: 2000,
-      color: 'warning'
-    });
-    await toast.present();
-    return;
-  }
+  // Reset errors
+  errors.value = {
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    general: ''
+  };
 
   try {
     const response = await axios.post('http://localhost/codes/PROJ/dbConnect/signup.php', {
       username: username.value,
       email: email.value,
       phone: phone.value,
-      password: password.value
+      password: password.value,
+      isAdmin: isAdmin.value
     });
 
     if (response.data.message === 'success') {
       const toast = await toastController.create({
-        message: 'Account created successfully!',
+        message: 'Account created successfully! Please login.',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top'
       });
       await toast.present();
-      await router.push('/login');
+      router.push('/login');
     } else {
       throw new Error(response.data.message);
     }
   } catch (error: any) {
+    console.error('Signup error:', error);
+    const errorMessage = error.response?.data?.message || 
+                        (error.message === 'Network Error' ? 
+                          'Cannot connect to server. Please check if XAMPP is running and Apache is started.' : 
+                          error.message);
     const toast = await toastController.create({
-      message: error.message || 'Signup failed. Please try again.',
-      duration: 2000,
-      color: 'danger'
+      message: errorMessage,
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
     });
     await toast.present();
+    errors.value.general = errorMessage;
   }
 };
 
@@ -357,6 +367,26 @@ input::placeholder {
 
 .span:hover {
   text-decoration: underline;
+}
+
+.admin-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #333333;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+ion-checkbox {
+  --size: 20px;
+  --checkbox-background-checked: #4a90e2;
+}
+
+ion-note {
+  font-size: 0.8rem;
+  color: #666666;
 }
 
 /* Dark theme specific styles */

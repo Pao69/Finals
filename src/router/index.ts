@@ -51,6 +51,11 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'settings',
         component: () => import('../views/SettingsPage.vue')
+      },
+      {
+        path: 'admin',
+        component: () => import('../views/AdminDashboard.vue'),
+        meta: { requiresAdmin: true }
       }
     ]
   }
@@ -61,7 +66,7 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard to check authentication
+// Navigation guard to check authentication and roles
 router.beforeEach((to, from, next) => {
   const publicPages = ['/login', '/signup'];
   const authRequired = !publicPages.includes(to.path);
@@ -71,8 +76,17 @@ router.beforeEach((to, from, next) => {
   const loggedInSession = sessionStorage.getItem('user');
   const loggedIn = loggedInPermanent || loggedInSession;
 
+  // If auth is required and user is not logged in
   if (authRequired && !loggedIn) {
     return next('/login');
+  }
+
+  // Check for admin routes
+  if (to.matched.some(record => record.meta.requiresAdmin)) {
+    const user = JSON.parse(loggedInPermanent || loggedInSession || '{}');
+    if (user.role !== 'admin') {
+      return next('/tabs/dashboard');
+    }
   }
 
   next();
