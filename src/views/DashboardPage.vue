@@ -8,7 +8,7 @@
       </ion-header>
       
       <ion-grid class="ion-no-padding">
-        <ion-row>
+        <ion-row class="dashboard-row">
           <ion-col size="12" size-md="6" class="ion-padding-bottom">
             <ion-card class="dashboard-card">
               <ion-card-header>
@@ -44,10 +44,8 @@
               </ion-card-content>
             </ion-card>
           </ion-col>
-        </ion-row>
 
-        <ion-row>
-          <ion-col size="12">
+          <ion-col size="12" size-md="6" class="ion-padding-bottom">
             <ion-card class="dashboard-card">
               <ion-card-header>
                 <ion-card-title class="ion-text-center">Recent Tasks</ion-card-title>
@@ -215,11 +213,15 @@ ion-content {
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   height: 100%;
+  border: 1px solid var(--ion-color-light-shade);
+  overflow: hidden;
+  background: var(--ion-background-color);
 }
 
 ion-card-header {
   padding: 16px;
-  border-bottom: 1px solid var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  background: var(--ion-color-light-tint);
 }
 
 ion-card-title {
@@ -237,6 +239,11 @@ ion-card-content {
   --padding-end: 16px;
   --min-height: 56px;
   --background-hover: var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.dashboard-item:last-child {
+  border-bottom: none;
 }
 
 .task-item {
@@ -244,6 +251,11 @@ ion-card-content {
   --padding-end: 16px;
   --min-height: 72px;
   --background-hover: var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.task-item:last-child {
+  border-bottom: none;
 }
 
 .task-badge {
@@ -303,10 +315,13 @@ ion-card-content {
   ion-content {
     --padding-top: 8px;
     --padding-bottom: 8px;
+    --padding-start: 8px;
+    --padding-end: 8px;
   }
 
   .dashboard-card {
     margin-bottom: 16px;
+    border-radius: 12px;
   }
 
   .dashboard-item, .task-item {
@@ -332,16 +347,47 @@ ion-card-content {
 }
 
 @media (min-width: 768px) {
+  ion-content {
+    --padding-start: 24px;
+    --padding-end: 24px;
+  }
+
   ion-grid {
-    padding: 0;
+    max-width: 1200px;
+    margin: 0 auto;
   }
   
-  ion-row {
-    margin: 0 -8px;
+  .dashboard-row {
+    display: flex;
+    margin: 0 -12px;
   }
   
   ion-col {
-    padding: 0 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-card {
+    flex: 1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ion-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ion-list {
+    flex: 1;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   }
 }
 </style>

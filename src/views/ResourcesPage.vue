@@ -385,18 +385,67 @@ onMounted(() => {
 <style scoped>
 .upload-card {
   margin-bottom: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ion-color-light-shade);
+  overflow: hidden;
+  background: var(--ion-background-color);
+}
+
+ion-card-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  background: var(--ion-color-light-tint);
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
 }
 
 .upload-form {
-  padding: 10px 0;
+  padding: 16px;
 }
 
 .upload-actions {
   margin-top: 20px;
 }
 
+ion-item {
+  --background: var(--ion-color-light);
+  --border-radius: 12px;
+  margin-bottom: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: 1px solid var(--ion-color-light-shade);
+}
+
+ion-input, ion-textarea, ion-select {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin-top: 8px;
+}
+
 .file-input {
   margin: 10px 0;
+  padding: 8px 0;
+}
+
+ion-button {
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 500;
+}
+
+.resource-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 8px 0;
+  --background: var(--ion-color-light);
+  border-radius: 12px;
+  border: 1px solid var(--ion-color-light-shade);
+  transition: all 0.3s ease;
 }
 
 .resource-thumbnail {
@@ -407,13 +456,14 @@ onMounted(() => {
   justify-content: center;
   background: var(--ion-color-light);
   border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ion-color-light-shade);
 }
 
 .resource-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
 }
 
 .resource-thumbnail ion-icon {
@@ -421,30 +471,91 @@ onMounted(() => {
   color: var(--ion-color-medium);
 }
 
+ion-label h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 4px;
+}
+
+ion-label p {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 4px 0;
+}
+
 .resource-meta {
   font-size: 0.85em;
   margin-top: 4px;
-}
-
-.empty-state {
-  padding: 40px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: var(--ion-color-medium);
-}
-
-.empty-state h2 {
-  margin-top: 20px;
-  color: var(--ion-color-dark);
-}
-
-.empty-state p {
   color: var(--ion-color-medium);
 }
 
 ion-chip {
   margin-top: 8px;
+  --background: transparent;
+  border: 1px solid var(--ion-color-primary);
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: var(--ion-color-medium);
+  margin-bottom: 16px;
+}
+
+.empty-state h2 {
+  font-size: 1.2rem;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  ion-content {
+    --padding: 8px;
+  }
+
+  .upload-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .resource-item {
+    margin: 6px 0;
+  }
+
+  ion-button {
+    height: 44px;
+  }
+}
+
+@media (min-width: 768px) {
+  ion-content {
+    --padding: 24px;
+  }
+
+  .upload-card {
+    max-width: 800px;
+    margin: 0 auto 24px;
+  }
+
+  ion-list {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .resource-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
 }
 </style> 
