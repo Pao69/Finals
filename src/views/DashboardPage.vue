@@ -16,7 +16,7 @@
               </ion-card-header>
               <ion-card-content>
                 <ion-list lines="none">
-                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('today')">
+                  <ion-item button class="dashboard-item" @click="filterTasks('today')">
                     <ion-icon :icon="timeOutline" slot="start" color="warning"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Tasks Due Today</h2>
@@ -24,7 +24,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="warning" class="task-badge">{{ taskCounts.today }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('upcoming')">
+                  <ion-item button class="dashboard-item" @click="filterTasks('upcoming')">
                     <ion-icon :icon="calendarOutline" slot="start" color="success"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Upcoming Tasks</h2>
@@ -32,7 +32,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="success" class="task-badge">{{ taskCounts.upcoming }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('complete')">
+                  <ion-item button class="dashboard-item" @click="filterTasks('complete')">
                     <ion-icon :icon="checkmarkCircle" slot="start" color="medium"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Completed Tasks</h2>
@@ -40,7 +40,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="medium" class="task-badge">{{ taskCounts.complete }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('all')">
+                  <ion-item button class="dashboard-item" @click="filterTasks('all')">
                     <ion-icon :icon="listOutline" slot="start" color="primary"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Total Tasks</h2>
@@ -63,7 +63,7 @@
                   <ion-item v-for="task in recentTasks" 
                            :key="task.id" 
                            button 
-                           class="task-item animate-item"
+                           class="task-item"
                            @click="viewTask(task)">
                     <div class="task-status-indicator" :class="{ 'completed': task.completed === 1 }"></div>
                     <ion-label class="ion-text-wrap">
@@ -146,16 +146,19 @@ const taskCounts = computed(() => {
   
   return {
     all: tasks.value.length,
+
     today: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
       return taskDate.getTime() === now.getTime() && task.completed === 0;
     }).length,
+
     upcoming: tasks.value.filter(task => {
       const taskDate = new Date(task.due_date);
       taskDate.setHours(0, 0, 0, 0);
       return taskDate.getTime() > now.getTime() && task.completed === 0;
     }).length,
+    
     complete: tasks.value.filter(task => task.completed === 1).length
   };
 });

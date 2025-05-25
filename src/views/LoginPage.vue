@@ -159,10 +159,13 @@ const handleSubmit = async () => {
         const targetRoute = isAdmin ? '/tabs/admin' : '/tabs/dashboard';
         router.replace(targetRoute);
       }, 100);
-    } else {
+    } 
+    
+    else {
       throw new Error(response.data.message || 'Invalid username or password');
     }
-  } catch (error: any) {
+  } 
+  catch (error: any) {
     console.error('Login error:', error);
     const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please try again.';
     const toast = await toastController.create({
