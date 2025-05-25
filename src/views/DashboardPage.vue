@@ -17,26 +17,34 @@
               <ion-card-content>
                 <ion-list lines="none">
                   <ion-item button class="dashboard-item" @click="filterTasks('today')">
+                    <ion-icon :icon="timeOutline" slot="start" color="warning"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Tasks Due Today</h2>
+                      <p>Tasks that need your attention today</p>
                     </ion-label>
                     <ion-badge slot="end" color="warning" class="task-badge">{{ taskCounts.today }}</ion-badge>
                   </ion-item>
                   <ion-item button class="dashboard-item" @click="filterTasks('upcoming')">
+                    <ion-icon :icon="calendarOutline" slot="start" color="success"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Upcoming Tasks</h2>
+                      <p>Tasks scheduled for future dates</p>
                     </ion-label>
                     <ion-badge slot="end" color="success" class="task-badge">{{ taskCounts.upcoming }}</ion-badge>
                   </ion-item>
                   <ion-item button class="dashboard-item" @click="filterTasks('complete')">
+                    <ion-icon :icon="checkmarkCircle" slot="start" color="medium"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Completed Tasks</h2>
+                      <p>Tasks you've already finished</p>
                     </ion-label>
                     <ion-badge slot="end" color="medium" class="task-badge">{{ taskCounts.complete }}</ion-badge>
                   </ion-item>
                   <ion-item button class="dashboard-item" @click="filterTasks('all')">
+                    <ion-icon :icon="listOutline" slot="start" color="primary"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Total Tasks</h2>
+                      <p>All your tasks</p>
                     </ion-label>
                     <ion-badge slot="end" color="primary" class="task-badge">{{ taskCounts.all }}</ion-badge>
                   </ion-item>
@@ -70,6 +78,11 @@
                       </p>
                     </ion-label>
                   </ion-item>
+
+                  <div v-if="recentTasks.length === 0" class="empty-state">
+                    <ion-icon :icon="documentTextOutline" class="empty-icon"></ion-icon>
+                    <p>No tasks yet</p>
+                  </div>
                 </ion-list>
               </ion-card-content>
             </ion-card>
@@ -81,13 +94,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonGrid, IonRow, IonCol, 
          IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem, IonLabel, 
          IonBadge, IonIcon } from '@ionic/vue';
-import { checkmarkCircle, timeOutline } from 'ionicons/icons';
+import { checkmarkCircle, timeOutline, calendarOutline, listOutline, documentTextOutline } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
 interface Task {
@@ -106,7 +119,7 @@ const tasks = ref<Task[]>([]);
 // Fetch tasks from the database
 const fetchTasks = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
@@ -196,9 +209,19 @@ const filterTasks = (filter: string) => {
   });
 };
 
-// Fetch tasks on component mount
+// Add auto-refresh functionality
+let refreshInterval: number | undefined;
+
 onMounted(() => {
   fetchTasks();
+  // Refresh tasks every minute
+  refreshInterval = window.setInterval(fetchTasks, 60000);
+});
+
+onBeforeUnmount(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
 });
 </script>
 
@@ -237,13 +260,40 @@ ion-card-content {
 .dashboard-item {
   --padding-start: 16px;
   --padding-end: 16px;
-  --min-height: 56px;
+  --min-height: 72px;
   --background-hover: var(--ion-color-light);
   border-bottom: 1px solid var(--ion-color-light-shade);
+  transition: background-color 0.2s ease;
 }
 
 .dashboard-item:last-child {
   border-bottom: none;
+}
+
+.dashboard-item ion-icon {
+  font-size: 24px;
+  margin-right: 16px;
+}
+
+.dashboard-item h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.dashboard-item p {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+.task-badge {
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 12px;
+  min-width: 32px;
+  text-align: center;
 }
 
 .task-item {
@@ -256,14 +306,6 @@ ion-card-content {
 
 .task-item:last-child {
   border-bottom: none;
-}
-
-.task-badge {
-  font-size: 1rem;
-  padding: 6px 12px;
-  border-radius: 12px;
-  min-width: 32px;
-  text-align: center;
 }
 
 .task-icon {
@@ -289,9 +331,8 @@ ion-card-content {
 }
 
 .task-due-date {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  text-align: right;
   margin: 0;
 }
 
@@ -311,6 +352,22 @@ ion-card-content {
   color: var(--ion-color-success);
 }
 
+.empty-state {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--ion-color-medium);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   ion-content {
     --padding-top: 8px;
@@ -324,7 +381,7 @@ ion-card-content {
     border-radius: 12px;
   }
 
-  .dashboard-item, .task-item {
+  .dashboard-item {
     --min-height: 64px;
   }
 
@@ -333,16 +390,12 @@ ion-card-content {
     padding: 4px 8px;
   }
 
-  .task-title {
-    font-size: 0.95rem;
+  .dashboard-item h2 {
+    font-size: 1rem;
   }
 
-  .task-description {
+  .dashboard-item p {
     font-size: 0.85rem;
-  }
-
-  .task-due-date {
-    font-size: 0.75rem;
   }
 }
 
@@ -388,6 +441,39 @@ ion-card-content {
   .dashboard-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .dashboard-item:hover {
+    --background: var(--ion-color-light);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .dashboard-card {
+    border-color: var(--ion-color-dark);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  ion-card-header {
+    background: rgba(var(--ion-color-light-rgb), 0.05);
+    border-color: var(--ion-color-dark);
+  }
+
+  .dashboard-item {
+    border-color: var(--ion-color-dark);
+  }
+
+  .dashboard-item h2 {
+    color: var(--ion-color-light);
+  }
+
+  .task-title {
+    color: var(--ion-color-light);
+  }
+
+  .empty-state {
+    color: var(--ion-color-medium-shade);
   }
 }
 </style>

@@ -17,6 +17,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/SignupPage.vue')
   },
   {
+    path: '/forgot-password',
+    component: () => import('../views/ForgotPasswordPage.vue')
+  },
+  {
     path: '/tabs/',
     component: TabsPage,
     children: [
@@ -78,18 +82,16 @@ const router = createRouter({
 
 // Navigation guard to check authentication and roles
 router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/signup'];
+  const publicPages = ['/login', '/signup', '/forgot-password'];
   const authRequired = !publicPages.includes(to.path);
   
-  // Get user data from the appropriate storage
-  const loggedInPermanent = localStorage.getItem('user');
-  const loggedInSession = sessionStorage.getItem('user');
+  // Get user data and token from the appropriate storage
+  const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+  const token = storage.getItem('token');
+  const userData = storage.getItem('user');
   
-  // Only use one storage source to prevent conflicts
-  const userData = loggedInPermanent || loggedInSession;
-  
-  // If auth is required and user is not logged in
-  if (authRequired && !userData) {
+  // If auth is required and no token/user data
+  if (authRequired && (!token || !userData)) {
     // Clear both storages to ensure clean state
     localStorage.clear();
     sessionStorage.clear();
@@ -98,7 +100,12 @@ router.beforeEach((to, from, next) => {
 
   if (userData) {
     const user = JSON.parse(userData);
-    
+
+    // Handle root path redirect
+    if (to.path === '/tabs/') {
+      return next(user.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard');
+    }
+
     // Check for admin routes
     if (to.matched.some(record => record.meta.requiresAdmin)) {
       if (user.role !== 'admin') {
@@ -111,6 +118,16 @@ router.beforeEach((to, from, next) => {
       if (user.role === 'admin') {
         return next('/tabs/admin');
       }
+    }
+
+    // Redirect admin users trying to access regular dashboard
+    if (user.role === 'admin' && to.path === '/tabs/dashboard') {
+      return next('/tabs/admin');
+    }
+
+    // Redirect regular users trying to access admin dashboard
+    if (user.role !== 'admin' && to.path === '/tabs/admin') {
+      return next('/tabs/dashboard');
     }
   }
 

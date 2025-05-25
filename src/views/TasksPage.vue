@@ -79,25 +79,24 @@
                 :modelValue="task.completed === 1"
                 @update:modelValue="toggleTaskCompletion(task, $event)"
                 @click.stop>
-              </ion-checkbox>
-              <ion-label>
-                <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
-                <p class="task-description">{{ task.description }}</p>
-                <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
-              </ion-label>
-            </ion-item>
-          </template>
-        </ion-item-group>
-      </ion-list>
+                </ion-checkbox>
+                <ion-label>
+                  <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
+                  <p class="task-description">{{ task.description }}</p>
+                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+                </ion-label>
+              </ion-item>
+            </template>
+          </ion-item-group>
+        </ion-list>
 
-      <!-- Empty State -->
-      <div v-else class="empty-state ion-text-center">
-        <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
-        <h2>No Tasks Found</h2>
-        <p>Start by creating a new task</p>
-      </div>
+        <!-- Empty State -->
+        <div v-else class="empty-state ion-text-center">
+          <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
+          <h2>No Tasks Found</h2>
+          <p>Start by creating a new task</p>
+        </div>
 
-      
     </ion-content>
     <!-- Floating Action Button -->
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -136,19 +135,33 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import {
-  IonContent, IonList, IonItem, IonItemGroup, IonItemDivider,
-  IonLabel, IonCheckbox, IonFab, IonFabButton,
-  IonIcon, IonButton, IonButtons, IonAlert,
-  IonSearchbar, IonSegment, IonSegmentButton,
-  toastController, IonBadge, IonToolbar,
+  IonContent,
+  IonList,
+  IonItem,
+  IonItemGroup,
+  IonItemDivider,
+  IonLabel,
+  IonCheckbox,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonButton,
+  IonAlert,
+  IonSearchbar,
+  IonSegment,
+  IonSegmentButton,
+  IonBadge,
+  IonToolbar,
   popoverController,
+  toastController
 } from '@ionic/vue';
-import { 
+import {
   addOutline,
-  swapVerticalOutline, 
+  swapVerticalOutline,
   clipboardOutline,
   checkmarkCircle,
-  closeCircle
+  closeCircle,
+  checkmarkOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
@@ -576,18 +589,26 @@ ion-searchbar {
 
 ion-segment {
   --background: var(--ion-color-light);
-  margin: 8px 16px;
   border-radius: 12px;
-  border: 1px solid var(--ion-color-light-shade);
+  padding: 4px;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 ion-segment-button {
-  --indicator-color: var(--ion-color-primary);
-  --color: var(--ion-color-medium);
-  --color-checked: var(--ion-color-primary);
-  min-height: 48px;
-  --border-radius: 12px;
-  transition: all 0.2s ease;
+  --background-checked: var(--ion-color-primary);
+  --color-checked: var(--ion-color-primary-contrast);
+  --indicator-color: transparent;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  min-height: 50px;
+  font-size: 1rem;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
 }
 
 .segment-label {
@@ -598,13 +619,18 @@ ion-segment-button {
 }
 
 .label-text {
-  font-size: 0.9rem;
+  font-size: 1rem;
+  margin-bottom: 4px;
 }
 
 ion-badge {
-  font-size: 0.7rem;
-  padding: 4px 8px;
-  border-radius: 12px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 6px;
 }
 
 .sort-option {
@@ -796,6 +822,24 @@ ion-checkbox {
   .empty-state {
     max-width: 800px;
     margin: 32px auto;
+  }
+
+  ion-segment {
+    max-width: 800px;
+  }
+
+  ion-segment-button {
+    min-width: 180px;
+    font-size: 1.1rem;
+    min-height: 60px;
+  }
+
+  .label-text {
+    font-size: 1.1rem;
+  }
+
+  ion-badge {
+    font-size: 1rem;
   }
 }
 </style>

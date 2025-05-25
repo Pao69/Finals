@@ -1,4 +1,5 @@
 import axios from 'axios';
+import router from '../router';
 
 const baseURL = 'http://localhost/Codes/PROJ/dbConnect';
 
@@ -13,9 +14,20 @@ const api = axios.create({
 // Add request interceptor to add token to all requests
 api.interceptors.request.use(
   (config) => {
+    // Try to get token from the storage that contains it
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // If no token is found, check if we're on a public route
+      const publicRoutes = ['/login.php', '/signup.php', '/request_reset.php', '/reset_password.php'];
+      const isPublicRoute = publicRoutes.some(route => config.url?.endsWith(route));
+      
+      if (!isPublicRoute) {
+        // For non-public routes without token, redirect to login
+        router.push('/login');
+        return Promise.reject('No auth token found');
+      }
     }
     return config;
   },
@@ -25,38 +37,17 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle errors consistently
+// Add response interceptor to handle token expiration
 api.interceptors.response.use(
-  (response) => {
-    // Handle successful responses
-    if (response.data?.success === false) {
-      return Promise.reject({
-        message: response.data.message || 'Operation failed',
-        response: response,
-        status: response.status
-      });
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('Response error:', error);
-    
-    // Handle network errors
-    if (!error.response) {
-      return Promise.reject({
-        message: 'Network error. Please check your connection.',
-        status: 0
-      });
+    if (error.response?.status === 401) {
+      // Clear both storages on unauthorized
+      localStorage.clear();
+      sessionStorage.clear();
+      router.push('/login');
     }
-
-    // Handle API errors
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-    return Promise.reject({
-      message: errorMessage,
-      response: error.response,
-      status: error.response?.status,
-      headers: error.response?.headers
-    });
+    return Promise.reject(error);
   }
 );
 

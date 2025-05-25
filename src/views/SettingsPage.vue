@@ -317,7 +317,10 @@ const isProfileChanged = computed(() => {
 
 // Load user profile with image
 onMounted(async () => {
-  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  // Get user data from the storage that contains it
+  const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+  const userData = storage.getItem('user');
+  
   if (userData) {
     const user = JSON.parse(userData);
     originalProfile.value = {
@@ -582,8 +585,9 @@ const deleteProfilePicture = async () => {
 
 //Logout
 const handleLogout = () => {
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
+  // Clear both storages to ensure clean state
+  localStorage.clear();
+  sessionStorage.clear();
   router.push('/login');
 };
 
@@ -615,7 +619,7 @@ const updateProfile = async () => {
         phone: profile.value.phone
       };
       
-      // Store updated user data
+      // Store updated user data in the same storage
       storage.setItem('user', JSON.stringify(updatedUser));
       originalProfile.value = { ...profile.value };
 

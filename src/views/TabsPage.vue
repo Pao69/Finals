@@ -3,13 +3,20 @@
     <ion-tabs>
       <ion-router-outlet :aria-hidden="false"></ion-router-outlet>
       <ion-tab-bar slot="bottom">
+        <!-- Admin View -->
         <template v-if="isAdmin">
           <ion-tab-button tab="admin" href="/tabs/admin">
             <ion-icon :icon="shieldOutline" />
             <ion-label>Admin</ion-label>
           </ion-tab-button>
+          
+          <ion-tab-button tab="settings" href="/tabs/settings">
+            <ion-icon :icon="settingsOutline" />
+            <ion-label>Settings</ion-label>
+          </ion-tab-button>
         </template>
 
+        <!-- Regular User View -->
         <template v-else>
           <ion-tab-button tab="dashboard" href="/tabs/dashboard">
             <ion-icon :icon="gridOutline" />
@@ -25,25 +32,37 @@
             <ion-icon :icon="documentsOutline" />
             <ion-label>Resources</ion-label>
           </ion-tab-button>
-        </template>
 
-        <ion-tab-button tab="settings" href="/tabs/settings">
-          <ion-icon :icon="settingsOutline" />
-          <ion-label>Settings</ion-label>
-        </ion-tab-button>
+          <ion-tab-button tab="settings" href="/tabs/settings">
+            <ion-icon :icon="settingsOutline" />
+            <ion-label>Settings</ion-label>
+          </ion-tab-button>
+        </template>
       </ion-tab-bar>
     </ion-tabs>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
 import { gridOutline, checkboxOutline, documentsOutline, settingsOutline, shieldOutline } from 'ionicons/icons';
 
 const isAdmin = ref(false);
 
+// Add watch effect to update isAdmin when storage changes
+watch(
+  () => localStorage.getItem('user') || sessionStorage.getItem('user'),
+  (newUserData) => {
+    if (newUserData) {
+      const user = JSON.parse(newUserData);
+      isAdmin.value = user.role === 'admin';
+    }
+  }
+);
+
 onMounted(() => {
+  // Check both storages for user data
   const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
   if (userData) {
     const user = JSON.parse(userData);

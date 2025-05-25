@@ -18,17 +18,21 @@
             </div>
             <span class="error-message" v-if="error">{{ error }}</span>
           </span>
-          <button class="button-submit" type="submit" :disabled="loading || resendTimer > 0">
+          <ion-button 
+            expand="block" 
+            type="submit" 
+            :disabled="loading || resendTimer > 0"
+            class="submit-button">
             {{ loading ? 'Sending...' : 'Send Reset Code' }}
-          </button>
+          </ion-button>
           <div v-if="resendTimer > 0" class="resend-timer">You can resend in {{ resendTimer }}s</div>
         </form>
 
         <div v-if="devResetCode && step === 2 && isDevMode" class="dev-reset-code">
-          <strong>Reset Code (dev):</strong> <span>{{ devResetCode }}</span>
+          Reset Code (dev): {{ devResetCode }}
         </div>
 
-        <form v-if="step === 2" @submit.prevent="handleResetPassword" class="form">
+        <form v-if="step === 2" @submit.prevent="showConfirmModal = true" class="form">
           <span class="input-span">
             <label for="code" class="label">Reset Code</label>
             <div class="inputForm">
@@ -72,23 +76,54 @@
             </div>
           </span>
           <span class="error-message" v-if="error">{{ error }}</span>
-          <button class="button-submit" type="submit" :disabled="loading">
-            {{ loading ? 'Resetting...' : 'Reset Password' }}
-          </button>
-          <button v-if="resendTimer === 0" class="resend-link" type="button" @click="handleRequestCode" :disabled="loading">Resend Code</button>
+          
+          <div class="button-group">
+            <ion-button 
+              expand="block" 
+              type="submit" 
+              :disabled="loading || !isFormValid"
+              class="submit-button">
+              Reset Password
+            </ion-button>
+            <ion-button 
+              v-if="resendTimer === 0" 
+              expand="block" 
+              fill="outline" 
+              @click="handleRequestCode" 
+              :disabled="loading"
+              class="resend-button">
+              Resend Code
+            </ion-button>
+          </div>
         </form>
 
         <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
         <router-link to="/login" class="back-link">Back to Login</router-link>
       </div>
     </ion-content>
+
+    <!-- Confirmation Modal -->
+    <ion-modal :is-open="showConfirmModal" @didDismiss="showConfirmModal = false" class="confirmation-modal">
+      <ion-content class="ion-padding">
+        <div class="modal-content">
+          <h2>Confirm Password Reset</h2>
+          <p>Are you sure you want to reset your password?</p>
+          <div class="modal-buttons">
+            <ion-button fill="outline" @click="showConfirmModal = false">Cancel</ion-button>
+            <ion-button @click="handleResetPassword" :disabled="loading">
+              {{ loading ? 'Resetting...' : 'Confirm Reset' }}
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ion-modal>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import axios from 'axios';
-import { IonPage, IonContent } from '@ionic/vue';
+import { IonPage, IonContent, IonModal, IonButton } from '@ionic/vue';
 
 const step = ref(1);
 const email = ref('');
@@ -102,12 +137,24 @@ const loading = ref(false);
 const devResetCode = ref('');
 const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const resendTimer = ref(0);
+const showConfirmModal = ref(false);
 let resendInterval: any = null;
 
 const hasLength = computed(() => newPassword.value.length >= 11);
 const hasLetter = computed(() => /[A-Za-z]/.test(newPassword.value));
 const hasNumber = computed(() => /[0-9]/.test(newPassword.value));
 const hasSpecial = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(newPassword.value));
+
+const isFormValid = computed(() => {
+  return code.value &&
+         newPassword.value &&
+         confirmPassword.value &&
+         hasLength.value &&
+         hasLetter.value &&
+         hasNumber.value &&
+         hasSpecial.value &&
+         newPassword.value === confirmPassword.value;
+});
 
 function startResendTimer() {
   resendTimer.value = 30;
@@ -220,11 +267,13 @@ h1 {
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: #4a90e2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
   color: #8c8c8c;
   margin-bottom: 2rem;
+  font-size: 1.1rem;
 }
 
 .form {
@@ -233,8 +282,9 @@ h1 {
   background-color: #2a2a2a;
   padding: 2rem;
   border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   margin-bottom: 1.5rem;
+  border: 1px solid #3a3a3a;
 }
 
 .input-span {
@@ -247,6 +297,7 @@ h1 {
   margin-bottom: 0.5rem;
   color: #4a90e2;
   font-weight: 500;
+  font-size: 1rem;
 }
 
 .inputForm {
@@ -259,6 +310,7 @@ h1 {
 
 .inputForm:focus-within {
   border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
 }
 
 input {
@@ -282,11 +334,17 @@ input::placeholder {
   transform: translateY(-50%);
   cursor: pointer;
   user-select: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1;
 }
 
 .error-message {
   color: #ff4d4d;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   margin-top: 0.5rem;
   display: block;
 }
@@ -296,81 +354,135 @@ input::placeholder {
   font-size: 1rem;
   text-align: center;
   margin-bottom: 1rem;
+  padding: 10px 15px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
 .password-requirements {
   margin-top: 1rem;
   font-size: 0.9rem;
+  background-color: #333333;
+  padding: 12px 15px;
+  border-radius: 8px;
 }
 
 .password-requirements p {
   color: #ff4d4d;
   margin: 0.3rem 0;
   transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .password-requirements p.valid {
   color: #4CAF50;
 }
 
-.button-submit {
-  width: 100%;
-  padding: 14px;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
+.button-group {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.submit-button {
+  margin: 0;
+  --background: #4a90e2;
+  --background-hover: #357abd;
+  --background-activated: #357abd;
+  --border-radius: 10px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
 }
 
-.button-submit:hover:not(:disabled) {
-  background-color: #357abd;
+.resend-button {
+  margin: 0;
+  --border-color: #4a90e2;
+  --color: #4a90e2;
+  --background: transparent;
+  --background-hover: rgba(74, 144, 226, 0.1);
+  --background-activated: rgba(74, 144, 226, 0.2);
+  --border-radius: 10px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
 }
 
-.button-submit:disabled {
-  background-color: #333333;
-  cursor: not-allowed;
-}
-
-.resend-link {
-  background: none;
-  border: none;
-  color: #4a90e2;
-  font-size: 1rem;
-  margin: 0.5em 0 1em 0;
-  cursor: pointer;
-  text-align: center;
-  display: block;
-}
-.resend-link:disabled {
-  color: #888;
-  cursor: not-allowed;
-}
 .resend-timer {
-  color: #bdbdbd;
-  font-size: 0.95em;
-  margin-top: 0.5em;
+  color: #8c8c8c;
+  font-size: 0.95rem;
+  margin-top: 1rem;
   text-align: center;
+  background-color: #333333;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
+
 .dev-reset-code {
   background: #222;
   color: #4a90e2;
-  padding: 0.7em 1em;
+  padding: 12px 16px;
   border-radius: 8px;
-  margin: 1em 0 0.5em 0;
+  margin: 1rem 0;
   text-align: center;
-  font-size: 1.1em;
+  font-size: 1.1rem;
+  border: 1px solid #333;
+  max-width: 400px;
+  width: 100%;
 }
+
 .back-link {
   color: #4a90e2;
   text-align: center;
   display: block;
   margin-top: 1.5rem;
   font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.back-link:hover {
+  color: #357abd;
   text-decoration: underline;
+}
+
+.confirmation-modal {
+  --height: auto;
+  --width: 90%;
+  max-width: 400px;
+}
+
+.modal-content {
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.modal-content h2 {
+  color: #4a90e2;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content p {
+  color: #ffffff;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-buttons ion-button {
+  flex: 1;
+  max-width: 150px;
 }
 </style> 

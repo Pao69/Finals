@@ -126,16 +126,7 @@
                 <ion-card-content>
                   <ion-grid class="ion-no-padding">
                     <ion-row class="ion-align-items-center">
-                      <ion-col size="auto">
-                        <div class="task-status-icon" :class="{ 'completed': task.completed }">
-                          <ion-icon 
-                            :icon="task.completed ? checkmarkCircleOutline : timeOutline"
-                            :color="task.completed ? 'success' : 'warning'"
-                            size="large">
-                          </ion-icon>
-                        </div>
-                      </ion-col>
-                      <ion-col size="12" size-md="8">
+                      <ion-col size="12">
                         <div class="task-content">
                           <div class="task-header">
                             <h3 class="task-title">{{ task.title }}</h3>
@@ -154,16 +145,6 @@
                             </ion-chip>
                           </div>
                         </div>
-                      </ion-col>
-                      <ion-col size="12" size-md="3" class="ion-text-md-end">
-                        <ion-button
-                          fill="outline"
-                          color="danger"
-                          @click="confirmDeleteTask(task)"
-                          class="delete-button">
-                          <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                          Delete
-                        </ion-button>
                       </ion-col>
                     </ion-row>
                   </ion-grid>
@@ -249,17 +230,43 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { 
-  IonContent, IonSegment, IonSegmentButton, IonLabel, IonIcon,
-  IonSearchbar, IonList, IonItem, IonButton, IonCard, IonCardContent,
-  IonGrid, IonRow, IonCol, IonText, IonChip, IonBadge,
-  IonItemDivider, IonItemGroup, IonThumbnail, IonSelect, IonSelectOption,
-  alertController, toastController, loadingController
+import {
+  IonContent,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonIcon,
+  IonSearchbar,
+  IonList,
+  IonItem,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonText,
+  IonChip,
+  IonBadge,
+  IonItemDivider,
+  IonItemGroup,
+  IonThumbnail,
+  IonSelect,
+  IonSelectOption,
+  alertController,
+  toastController,
+  loadingController
 } from '@ionic/vue';
-import { 
-  trashOutline, documentOutline, timeOutline, calendarOutline,
-  peopleOutline, checkboxOutline, folderOutline, personCircleOutline,
-  personOutline, shieldOutline, checkmarkCircleOutline, closeCircleOutline
+import {
+  trashOutline,
+  documentOutline,
+  timeOutline,
+  calendarOutline,
+  peopleOutline,
+  checkboxOutline,
+  folderOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 import api from '@/utils/api';
@@ -682,9 +689,18 @@ const deleteResource = async (resourceId: number) => {
 
 // Utility functions
 const formatDate = (dateString: string): string => {
-  if (!dateString) return 'Never';
   const date = new Date(dateString);
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return `Tomorrow at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else {
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 };
 
 const formatFileSize = (bytes: number): string => {
@@ -1047,26 +1063,6 @@ onMounted(() => {
 }
 
 /* Task Styles */
-.task-status-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--ion-color-warning-rgb), 0.1);
-  margin-right: 16px;
-  transition: all 0.2s ease;
-}
-
-.task-status-icon.completed {
-  background: rgba(var(--ion-color-success-rgb), 0.1);
-}
-
-.task-status-icon ion-icon {
-  font-size: 24px;
-}
-
 .task-content {
   padding: 8px 0;
 }
@@ -1076,6 +1072,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .task-title {
@@ -1101,8 +1098,10 @@ onMounted(() => {
   margin-top: 12px;
 }
 
-.task-status {
+.status-chip {
   margin: 0;
+  min-width: 100px;
+  justify-content: center;
 }
 
 .completed-chip {
@@ -1117,16 +1116,14 @@ onMounted(() => {
   border: 1px solid var(--ion-color-warning);
 }
 
+.time-chip {
+  --background: rgba(var(--ion-color-medium-rgb), 0.1);
+  --color: var(--ion-color-medium);
+  border: 1px solid var(--ion-color-medium);
+}
+
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
-  .task-status-icon {
-    background: rgba(var(--ion-color-warning-rgb), 0.15);
-  }
-
-  .task-status-icon.completed {
-    background: rgba(var(--ion-color-success-rgb), 0.15);
-  }
-
   .task-title {
     color: var(--ion-color-light);
   }
@@ -1137,6 +1134,10 @@ onMounted(() => {
 
   .pending-chip {
     --background: rgba(var(--ion-color-warning-rgb), 0.15);
+  }
+
+  .time-chip {
+    --background: rgba(var(--ion-color-medium-rgb), 0.15);
   }
 }
 

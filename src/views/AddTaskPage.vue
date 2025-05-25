@@ -139,7 +139,7 @@ onMounted(() => {
 });
 
 const validateToken = async () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (!token) {
     const toast = await toastController.create({
       message: 'Please login to add tasks',
@@ -158,7 +158,7 @@ const handleSubmit = async (event: Event) => {
   if (!validateForm()) return;
 
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await axios.post(
       'http://localhost/codes/PROJ/dbConnect/tasks.php',
       taskForm.value,

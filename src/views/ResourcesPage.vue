@@ -123,8 +123,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import {
   IonContent, IonList, IonItem, IonLabel, IonButton, IonButtons,
@@ -159,6 +159,7 @@ interface Task {
 }
 
 const router = useRouter();
+const route = useRoute();
 const resources = ref<Resource[]>([]);
 const tasks = ref<Task[]>([]);
 const searchQuery = ref('');
@@ -180,7 +181,7 @@ const canModifyResource = (resource: Resource) => {
 // Fetch resources
 const fetchResources = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
@@ -207,7 +208,7 @@ const fetchResources = async () => {
 // Fetch tasks for the select dropdown
 const fetchTasks = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await axios.get('http://localhost/codes/PROJ/dbConnect/tasks.php', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -382,10 +383,36 @@ const viewTask = (taskId: number) => {
   router.push(`/tabs/tasks/view/${taskId}`);
 };
 
-// Initialize component
-onMounted(() => {
-  fetchResources();
-  fetchTasks();
+// Add watch effect for route changes
+watch(
+  () => route.fullPath,
+  async () => {
+    await fetchTasks();
+  }
+);
+
+// Add onMounted to fetch data when component loads
+onMounted(async () => {
+  await Promise.all([fetchResources(), fetchTasks()]);
+});
+
+// Add global refresh function
+window.refreshResourceList = async () => {
+  await Promise.all([fetchResources(), fetchTasks()]);
+};
+
+// Update global function type declaration
+declare global {
+  interface Window {
+    refreshResourceList?: () => Promise<void>;
+  }
+}
+
+// Add cleanup on unmount
+onBeforeUnmount(() => {
+  if (window.refreshResourceList) {
+    window.refreshResourceList = undefined;
+  }
 });
 </script>
 

@@ -161,10 +161,15 @@ const canModifyTask = computed(() => {
   );
 });
 
+// Add onMounted to fetch task details when component loads
+onMounted(async () => {
+  await fetchTaskDetails();
+});
+
 // Fetch task details
 const fetchTaskDetails = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
@@ -195,7 +200,7 @@ const fetchTaskDetails = async () => {
 // Fetch linked resources
 const fetchResources = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await axios.get(`http://localhost/codes/PROJ/dbConnect/resources.php?task_id=${task.value?.id}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -360,10 +365,6 @@ const downloadResource = (resource: Resource) => {
   link.click();
   document.body.removeChild(link);
 };
-
-onMounted(() => {
-  fetchTaskDetails();
-});
 </script>
 
 <style scoped>

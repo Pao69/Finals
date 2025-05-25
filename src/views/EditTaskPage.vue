@@ -172,10 +172,15 @@ const handleCompletedChange = (checked: boolean) => {
   }
 };
 
+// Add onMounted to fetch task data when component loads
+onMounted(async () => {
+  await fetchTask();
+});
+
 // Fetch task data
 const fetchTask = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
@@ -297,11 +302,6 @@ const handleSubmit = async () => {
     await toast.present();
   }
 };
-
-// Fetch task data on component mount
-onMounted(() => {
-  fetchTask();
-});
 
 // Add cleanup for modal and focus
 onBeforeUnmount(async () => {
