@@ -103,21 +103,44 @@ const handleSubmit = async () => {
 
     if (response.data.message === 'success') {
       const user = response.data.user;
-      const targetRoute = user.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard';
+      console.log('Response user data:', user);
+      
+      // Explicitly check and preserve admin status
+      const isAdmin = user.role === 'admin';
+      console.log('Is admin?', isAdmin);
+      console.log('Original role:', user.role);
+      
+      // Clear everything first
+      localStorage.clear();
+      sessionStorage.clear();
+      delete axios.defaults.headers.common['Authorization'];
+      
+      // Create a new user object with explicit role preservation
+      const userToStore = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        role: user.role // Use the exact role from the response
+      };
+      console.log('User data to store:', userToStore);
       
       // Store user data and token in the appropriate storage
       const storage = rememberMe.value ? localStorage : sessionStorage;
+      console.log('Using storage:', rememberMe.value ? 'localStorage' : 'sessionStorage');
       
-      // Clear the other storage to prevent conflicts
-      const otherStorage = rememberMe.value ? sessionStorage : localStorage;
-      otherStorage.clear();
+      // Set the token first
+      const token = response.data.token;
+      storage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Store the data in the selected storage
-      storage.setItem('user', JSON.stringify(user));
-      storage.setItem('token', response.data.token);
-
-      // Set the token for axios requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      // Then set the user data
+      storage.setItem('user', JSON.stringify(userToStore));
+      
+      // Verify stored data
+      const storedUserData = storage.getItem('user');
+      const storedUser = storedUserData ? JSON.parse(storedUserData) : null;
+      console.log('Stored user data:', storedUser);
       
       // Show success message
       const toast = await toastController.create({
@@ -128,9 +151,13 @@ const handleSubmit = async () => {
       });
       await toast.present();
 
-      // Navigate after a short delay to ensure storage is set
+      // Force a clean navigation state
+      await router.replace('/login');
+      
+      // Then navigate to the correct route
       setTimeout(() => {
-        router.push(targetRoute);
+        const targetRoute = isAdmin ? '/tabs/admin' : '/tabs/dashboard';
+        router.replace(targetRoute);
       }, 100);
     } else {
       throw new Error(response.data.message || 'Invalid username or password');

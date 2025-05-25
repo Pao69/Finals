@@ -17,7 +17,7 @@
         </template>
 
         <!-- Regular User View -->
-        <template v-else>
+        <template v-if="!isAdmin">
           <ion-tab-button tab="dashboard" href="/tabs/dashboard">
             <ion-icon :icon="gridOutline" />
             <ion-label>Dashboard</ion-label>
@@ -33,11 +33,12 @@
             <ion-label>Resources</ion-label>
           </ion-tab-button>
 
-          <ion-tab-button tab="settings" href="/tabs/settings">
-            <ion-icon :icon="settingsOutline" />
-            <ion-label>Settings</ion-label>
-          </ion-tab-button>
+        <ion-tab-button tab="settings" href="/tabs/settings">
+          <ion-icon :icon="settingsOutline" />
+          <ion-label>Settings</ion-label>
+        </ion-tab-button>
         </template>
+
       </ion-tab-bar>
     </ion-tabs>
   </ion-page>
@@ -50,23 +51,35 @@ import { gridOutline, checkboxOutline, documentsOutline, settingsOutline, shield
 
 const isAdmin = ref(false);
 
+// Function to check admin status
+const checkAdminStatus = () => {
+  console.log('Checking admin status...');
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  console.log('User data from storage:', userData);
+  
+  if (userData) {
+    const user = JSON.parse(userData);
+    console.log('Parsed user data:', user);
+    console.log('User role:', user.role);
+    isAdmin.value = user.role === 'admin';
+    console.log('Is admin?', isAdmin.value);
+  } else {
+    console.log('No user data found');
+    isAdmin.value = false;
+  }
+};
+
 // Add watch effect to update isAdmin when storage changes
 watch(
   () => localStorage.getItem('user') || sessionStorage.getItem('user'),
-  (newUserData) => {
-    if (newUserData) {
-      const user = JSON.parse(newUserData);
-      isAdmin.value = user.role === 'admin';
-    }
+  () => {
+    console.log('Storage changed, rechecking admin status');
+    checkAdminStatus();
   }
 );
 
 onMounted(() => {
-  // Check both storages for user data
-  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-  if (userData) {
-    const user = JSON.parse(userData);
-    isAdmin.value = user.role === 'admin';
-  }
+  console.log('TabsPage mounted');
+  checkAdminStatus();
 });
 </script>

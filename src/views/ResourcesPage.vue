@@ -479,7 +479,6 @@ ion-button {
   --background: var(--ion-color-light);
   border-radius: 12px;
   border: 1px solid var(--ion-color-light-shade);
-  transition: all 0.3s ease;
 }
 
 .resource-thumbnail {
@@ -588,8 +587,8 @@ ion-chip {
   }
 
   .resource-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: none;
   }
 }
 </style> 

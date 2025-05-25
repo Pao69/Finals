@@ -64,11 +64,10 @@ onMounted(() => {
 <style scoped>
 .profile-avatar {
   cursor: pointer;
-  transition: transform 0.2s ease;
 }
 
 .profile-avatar:hover {
-  transform: scale(1.1);
+  transform: none;
 }
 
 .avatar-image {

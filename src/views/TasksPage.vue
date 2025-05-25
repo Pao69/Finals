@@ -155,9 +155,9 @@ import {
   popoverController,
   toastController
 } from '@ionic/vue';
-import {
+import { 
   addOutline,
-  swapVerticalOutline,
+  swapVerticalOutline, 
   clipboardOutline,
   checkmarkCircle,
   closeCircle,
@@ -652,7 +652,6 @@ ion-badge {
   --background: var(--ion-color-light);
   border-radius: 12px;
   border: 1px solid var(--ion-color-light-shade);
-  transition: all 0.3s ease;
 }
 
 ion-item-divider {
@@ -671,7 +670,6 @@ ion-checkbox {
   --border-color: var(--ion-color-medium);
   --border-color-checked: var(--ion-color-primary);
   margin-right: 12px;
-  transition: all 0.2s ease;
   border-radius: 4px;
 }
 
@@ -815,8 +813,8 @@ ion-checkbox {
   }
 
   .task-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: none;
   }
 
   .empty-state {

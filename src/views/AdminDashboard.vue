@@ -71,7 +71,7 @@
                             </ion-text>
                             <ion-select
                               v-model="user.role"
-                              interface="action-sheet"
+                              interface="popover"
                               @ionChange="handleRoleChange($event, user)"
                               :disabled="user.id === currentUser.id || getRoleChangeStatus(user.id) === 'loading'"
                               class="role-select"
@@ -79,8 +79,14 @@
                                 'select-error': lastRoleChangeError && roleChangeState?.userId === user.id,
                                 'select-success': !lastRoleChangeError && roleChangeState?.userId === user.id
                               }">
-                              <ion-select-option value="user">Regular User</ion-select-option>
-                              <ion-select-option value="admin">Administrator</ion-select-option>
+                              <ion-select-option value="user">
+                                <ion-icon :icon="personOutline"></ion-icon>
+                                Regular User
+                              </ion-select-option>
+                              <ion-select-option value="admin">
+                                <ion-icon :icon="shieldOutline"></ion-icon>
+                                Administrator
+                              </ion-select-option>
                             </ion-select>
                             <div class="role-status" v-if="getRoleChangeStatus(user.id) === 'loading'">
                               <ion-spinner name="crescent" color="primary"></ion-spinner>
@@ -266,7 +272,9 @@ import {
   checkboxOutline,
   folderOutline,
   checkmarkCircleOutline,
-  closeCircleOutline
+  closeCircleOutline,
+  shieldOutline,
+  personOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 import api from '@/utils/api';
@@ -754,7 +762,6 @@ onMounted(() => {
   text-transform: none;
   letter-spacing: 0;
   font-weight: 500;
-  transition: all 0.2s ease;
 }
 
 .segment-button ion-icon {
@@ -788,12 +795,11 @@ onMounted(() => {
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   width: 100%;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .custom-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* User Info */
@@ -897,27 +903,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: all 0.2s ease;
-}
-
-.role-select-wrapper.is-loading {
-  background: rgba(var(--ion-color-primary-rgb), 0.05);
-}
-
-.role-status {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.select-label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  white-space: nowrap;
+  border: 1px solid var(--ion-color-light-shade);
 }
 
 .role-select {
@@ -928,17 +914,25 @@ onMounted(() => {
   min-width: 160px;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  --placeholder-color: var(--ion-color-medium);
+  --placeholder-opacity: 1;
 }
 
-.select-error {
-  --highlight-color: var(--ion-color-danger);
-  color: var(--ion-color-danger);
+.select-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ion-color-medium);
 }
 
-.select-success {
-  --highlight-color: var(--ion-color-success);
-  color: var(--ion-color-success);
+.role-status {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-button {
@@ -981,11 +975,7 @@ onMounted(() => {
   }
 
   .custom-card:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  }
-
-  .role-select-wrapper.is-loading {
-    background: rgba(var(--ion-color-primary-rgb), 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .avatar-content {

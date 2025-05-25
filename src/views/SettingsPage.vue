@@ -230,11 +230,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/utils/api';
+import axios from 'axios';
 import {
   IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
-  IonButtons, toastController, IonAvatar, alertController
+  IonButtons, toastController, IonAvatar, alertController,
+  loadingController
 } from '@ionic/vue';
 import {
   personOutline,
@@ -584,11 +586,25 @@ const deleteProfilePicture = async () => {
 };
 
 //Logout
-const handleLogout = () => {
+const handleLogout = async () => {
   // Clear both storages to ensure clean state
   localStorage.clear();
   sessionStorage.clear();
-  router.push('/login');
+  
+  // Clear axios default headers
+  delete axios.defaults.headers.common['Authorization'];
+  
+  // Show loading indicator
+  const loading = await loadingController.create({
+    message: 'Logging out...',
+    duration: 1000
+  });
+  await loading.present();
+  
+  // Use router.replace instead of push to clear navigation history
+  setTimeout(() => {
+    router.replace('/login');
+  }, 100);
 };
 
 const updateProfile = async () => {
@@ -985,7 +1001,6 @@ ion-button {
 .password-requirements p {
   color: var(--ion-color-danger);
   margin: 4px 0;
-  transition: color 0.3s ease;
 }
 
 .password-requirements p.valid {
@@ -1038,8 +1053,8 @@ ion-button {
   }
 
   .settings-section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 }
 

@@ -261,13 +261,7 @@ ion-card-content {
   --padding-start: 16px;
   --padding-end: 16px;
   --min-height: 72px;
-  --background-hover: var(--ion-color-light);
   border-bottom: 1px solid var(--ion-color-light-shade);
-  transition: background-color 0.2s ease;
-}
-
-.dashboard-item:last-child {
-  border-bottom: none;
 }
 
 .dashboard-item ion-icon {
@@ -423,7 +417,6 @@ ion-card-content {
 
   .dashboard-card {
     flex: 1;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
   }
@@ -439,8 +432,8 @@ ion-card-content {
   }
 
   .dashboard-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .dashboard-item:hover {

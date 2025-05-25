@@ -374,12 +374,11 @@ onBeforeUnmount(async () => {
   --padding-end: 16px;
   margin: 0;
   border: 1px solid var(--ion-color-medium-shade);
-  transition: all 0.2s ease;
 }
 
 .form-item:hover {
-  border-color: var(--ion-color-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: var(--ion-color-medium-shade);
+  box-shadow: none;
 }
 
 .form-item.ion-valid {
@@ -389,7 +388,7 @@ onBeforeUnmount(async () => {
 }
 
 .form-item.ion-valid:hover {
-  border-color: var(--ion-color-primary);
+  border-color: var(--ion-color-medium-shade);
 }
 
 .form-item ion-label {

@@ -33,6 +33,11 @@ const routes: Array<RouteRecordRaw> = [
         }
       },
       {
+        path: 'admin',
+        component: () => import('../views/AdminDashboard.vue'),
+        meta: { requiresAdmin: true }
+      },
+      {
         path: 'dashboard',
         component: () => import('../views/DashboardPage.vue'),
         meta: { requiresNonAdmin: true }
@@ -65,11 +70,6 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'settings',
         component: () => import('../views/SettingsPage.vue')
-      },
-      {
-        path: 'admin',
-        component: () => import('../views/AdminDashboard.vue'),
-        meta: { requiresAdmin: true }
       }
     ]
   }
@@ -86,9 +86,8 @@ router.beforeEach((to, from, next) => {
   const authRequired = !publicPages.includes(to.path);
   
   // Get user data and token from the appropriate storage
-  const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-  const token = storage.getItem('token');
-  const userData = storage.getItem('user');
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   
   // If auth is required and no token/user data
   if (authRequired && (!token || !userData)) {
@@ -100,34 +99,33 @@ router.beforeEach((to, from, next) => {
 
   if (userData) {
     const user = JSON.parse(userData);
+    const isAdmin = user.role === 'admin';
 
-    // Handle root path redirect
-    if (to.path === '/tabs/') {
-      return next(user.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard');
+    // Force admin users to admin route and non-admin users to dashboard
+    if (isAdmin && to.path === '/tabs/dashboard') {
+      return next('/tabs/admin');
+    }
+    if (!isAdmin && to.path === '/tabs/admin') {
+      return next('/tabs/dashboard');
     }
 
+    // Handle root paths
+    if (to.path === '/tabs/' || to.path === '/tabs') {
+      return next(isAdmin ? '/tabs/admin' : '/tabs/dashboard');
+    }
+    
     // Check for admin routes
     if (to.matched.some(record => record.meta.requiresAdmin)) {
-      if (user.role !== 'admin') {
+      if (!isAdmin) {
         return next('/tabs/dashboard');
       }
     }
 
     // Check for non-admin routes
     if (to.matched.some(record => record.meta.requiresNonAdmin)) {
-      if (user.role === 'admin') {
+      if (isAdmin) {
         return next('/tabs/admin');
       }
-    }
-
-    // Redirect admin users trying to access regular dashboard
-    if (user.role === 'admin' && to.path === '/tabs/dashboard') {
-      return next('/tabs/admin');
-    }
-
-    // Redirect regular users trying to access admin dashboard
-    if (user.role !== 'admin' && to.path === '/tabs/admin') {
-      return next('/tabs/dashboard');
     }
   }
 
