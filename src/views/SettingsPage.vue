@@ -1,5 +1,5 @@
 <template>
-  <page-layout title="Settings">
+  <page-layout title="Settings" :show-back-button="false">
     <ion-content class="ion-padding">
       <div class="settings-container">
         <!-- Profile Card -->
@@ -13,194 +13,123 @@
                   @error="handleImageError"
                   class="profile-avatar-image"/>
               </ion-avatar>
-              <div class="avatar-actions">
-                <ion-button 
-                  fill="clear" 
-                  class="upload-photo-btn"
-                  @click="triggerFileInput">
-                  <ion-icon :icon="cameraOutline" class="camera-icon"></ion-icon>
-                  <span>Change Photo</span>
-                </ion-button>
-                <input 
-                  type="file" 
-                  ref="fileInput"
-                  id="profile-picture"
-                  accept="image/*" 
-                  @change="handleProfilePictureSelect"
-                  class="file-input"
-                  style="display: none"/>
-                <ion-button 
-                  v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'"
-                  fill="clear" 
-                  color="danger"
-                  class="remove-photo-btn"
-                  @click="deleteProfilePicture">
-                  <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                  <span>Remove</span>
-                </ion-button>
-              </div>
             </div>
-            <h2 class="profile-name">{{ profile.username }}</h2>
-            <p class="profile-email">{{ profile.email }}</p>
+            <div class="profile-info">
+              <h2 class="profile-name">{{ profile.username }}</h2>
+              <p class="profile-email">{{ profile.email }}</p>
+            </div>
+            <div class="avatar-actions">
+              <ion-button 
+                fill="clear" 
+                class="upload-photo-btn"
+                @click="triggerFileInput">
+                <ion-icon :icon="cameraOutline" class="camera-icon"></ion-icon>
+                <span>Change Photo</span>
+              </ion-button>
+              <input 
+                type="file" 
+                ref="fileInput"
+                id="profile-picture"
+                accept="image/*" 
+                @change="handleProfilePictureSelect"
+                class="file-input"
+                style="display: none"/>
+              <ion-button 
+                v-if="profileImage !== 'https://ionicframework.com/docs/img/demos/avatar.svg'"
+                fill="clear" 
+                color="danger"
+                class="remove-photo-btn"
+                @click="deleteProfilePicture">
+                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                <span>Remove</span>
+              </ion-button>
+            </div>
           </div>
         </ion-card>
 
-        <!-- Profile Information -->
-        <ion-card class="settings-section">
-          <ion-card-header>
-            <ion-card-title>
-              <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
-              Profile Information
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="settings-form">
-              <ion-item>
-                <ion-label position="stacked">Username</ion-label>
-                <ion-input 
-                  v-model="profile.username" 
-                  type="text" 
-                  placeholder="Enter username"
-                  class="custom-input">
-                </ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label position="stacked">Email</ion-label>
-                <ion-input 
-                  v-model="profile.email" 
-                  type="email" 
-                  placeholder="Enter email"
-                  class="custom-input">
-                </ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label position="stacked">Phone</ion-label>
-                <ion-input 
-                  v-model="profile.phone" 
-                  type="tel" 
-                  placeholder="Enter phone"
-                  class="custom-input">
-                </ion-input>
-              </ion-item>
-              <ion-button 
-                expand="block" 
-                @click="updateProfile" 
-                :disabled="!isProfileChanged"
-                class="save-button">
-                <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-                Save Changes
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
+        <!-- Settings Sections -->
+        <div class="settings-sections">
+          <!-- Profile Information -->
+          <ion-card class="settings-section">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
+                Profile Information
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="settings-form">
+                <ion-item>
+                  <ion-label position="stacked">Username</ion-label>
+                  <ion-input 
+                    v-model="profile.username" 
+                    type="text" 
+                    placeholder="Enter username"
+                    class="custom-input">
+                  </ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-label position="stacked">Email</ion-label>
+                  <ion-input 
+                    v-model="profile.email" 
+                    type="email" 
+                    placeholder="Enter email"
+                    class="custom-input">
+                  </ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-label position="stacked">Phone</ion-label>
+                  <ion-input 
+                    v-model="profile.phone" 
+                    type="tel" 
+                    placeholder="Enter phone"
+                    class="custom-input">
+                  </ion-input>
+                </ion-item>
+                <ion-button 
+                  expand="block" 
+                  @click="updateProfile" 
+                  :disabled="!isProfileChanged"
+                  class="save-button">
+                  <ion-icon :icon="saveOutline" slot="start"></ion-icon>
+                  Save Changes
+                </ion-button>
+              </div>
+            </ion-card-content>
+          </ion-card>
 
-        <!-- Security Settings -->
-        <ion-card class="settings-section">
-          <ion-card-header>
-            <ion-card-title>
-              <ion-icon :icon="lockClosedOutline" class="section-icon"></ion-icon>
-              Security
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-button 
-              expand="block"
-              @click="openPasswordModal"
-              color="primary"
-              class="action-button">
-              <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
-              Change Password
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-
-        <!-- Account Actions -->
-        <ion-card class="settings-section danger-zone">
-          <ion-card-header>
-            <ion-card-title>
-              <ion-icon :icon="warningOutline" class="section-icon"></ion-icon>
-              Account Actions
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="danger-actions">
-              <ion-button 
-                expand="block" 
-                color="danger" 
-                fill="outline"
-                @click="deleteProfile"
-                class="danger-button">
-                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                Delete Account
-              </ion-button>
-              <ion-button 
-                expand="block" 
-                color="medium" 
-                @click="handleLogout"
-                class="logout-button">
-                <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
-                Logout
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
+          <!-- Account Actions -->
+          <ion-card class="settings-section danger-zone">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon :icon="warningOutline" class="section-icon"></ion-icon>
+                Account Actions
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="danger-actions">
+                <ion-button 
+                  expand="block" 
+                  color="danger" 
+                  fill="outline"
+                  @click="deleteProfile"
+                  class="danger-button">
+                  <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                  Delete Account
+                </ion-button>
+                <ion-button 
+                  expand="block" 
+                  color="medium" 
+                  @click="handleLogout"
+                  class="logout-button">
+                  <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
+                  Logout
+                </ion-button>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </div>
       </div>
-
-      <!-- Password Change Modal -->
-      <ion-modal :is-open="isPasswordModalOpen" @didDismiss="closePasswordModal" class="password-modal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>Change Password</ion-title>
-            <ion-buttons slot="end">
-              <ion-button @click="closePasswordModal">
-                <ion-icon :icon="closeOutline"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <form @submit.prevent="handlePasswordChange" class="password-form">
-            <ion-item>
-              <ion-label position="stacked">Current Password</ion-label>
-              <ion-input 
-                type="password"
-                v-model="passwordForm.currentPassword"
-                placeholder="Enter current password"
-                required>
-              </ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">New Password</ion-label>
-              <ion-input 
-                type="password"
-                v-model="passwordForm.newPassword"
-                placeholder="Enter new password"
-                required>
-              </ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Confirm New Password</ion-label>
-              <ion-input 
-                type="password"
-                v-model="passwordForm.confirmPassword"
-                placeholder="Confirm new password"
-                required>
-              </ion-input>
-            </ion-item>
-
-            <div class="modal-buttons">
-              <ion-button type="button" fill="outline" @click="closePasswordModal">
-                Cancel
-              </ion-button>
-              <ion-button type="submit" :disabled="isChangingPassword">
-                {{ isChangingPassword ? 'Changing...' : 'Change Password' }}
-              </ion-button>
-            </div>
-          </form>
-        </ion-content>
-      </ion-modal>
     </ion-content>
   </page-layout>
 </template>
@@ -215,18 +144,24 @@ import {
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
   IonButtons, toastController, IonAvatar, alertController,
-  loadingController, IonHeader, IonToolbar, IonTitle
+  loadingController,
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent
 } from '@ionic/vue';
 import {
   personOutline,
-  lockClosedOutline, 
   logOutOutline, 
   saveOutline,
   closeOutline, 
   closeCircle, 
   checkmarkCircle,
   cameraOutline, 
-  keyOutline,
   checkmarkCircleOutline, 
   trashOutline, 
   warningOutline,
@@ -239,7 +174,15 @@ const components = {
   IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
-  IonButtons, IonAvatar, IonHeader, IonToolbar, IonTitle
+  IonButtons, IonAvatar,
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent
 };
 
 const router = useRouter();
@@ -269,30 +212,55 @@ const isProfileChanged = computed(() => {
 
 // Load user profile with image
 onMounted(async () => {
-  // Get user data from the storage that contains it
-  const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-  const userData = storage.getItem('user');
-  
-  if (userData) {
-    const user = JSON.parse(userData);
-    originalProfile.value = {
-      username: user.username || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      role: user.role || 'user'
-    };
-    profile.value = { ...originalProfile.value };
+  try {
+    // Get user data from the storage that contains it
+    const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+    const userData = storage.getItem('user');
     
-    // Set profile image if it exists in user data
-    if (user.pfp) {
-      profileImage.value = user.pfp;
+    if (userData) {
+      const user = JSON.parse(userData);
+      
+      // Fetch latest user data from the server
+      const response = await api.get('/profile.php');
+      if (response.data.success) {
+        const serverUser = response.data.user;
+        originalProfile.value = {
+          username: serverUser.username || user.username || '',
+          email: serverUser.email || user.email || '',
+          phone: serverUser.phone || user.phone || '',
+          role: serverUser.role || user.role || 'user'
+        };
+        profile.value = { ...originalProfile.value };
+      } else {
+        // Fallback to stored data if server fetch fails
+        originalProfile.value = {
+          username: user.username || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          role: user.role || 'user'
+        };
+        profile.value = { ...originalProfile.value };
+      }
+      
+      // Set profile image if it exists in user data
+      if (user.pfp) {
+        profileImage.value = user.pfp;
+      }
+      
+      // Fetch current profile picture in case it was updated
+      await fetchProfilePicture();
+    } else {
+      // If no user data is found, redirect to login
+      router.push('/login');
     }
-    
-    // Fetch current profile picture in case it was updated
-    await fetchProfilePicture();
-  } else {
-    // If no user data is found, redirect to login
-    router.push('/login');
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    const toast = await toastController.create({
+      message: 'Failed to load profile data',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
   }
 });
 
@@ -664,6 +632,15 @@ const fetchProfilePicture = async () => {
     if (!profileImage.value) {
       profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
     }
+    
+    // Show error message to user
+    const toast = await toastController.create({
+      message: 'Failed to fetch profile picture',
+      duration: 2000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
   }
 };
 
@@ -674,86 +651,6 @@ const triggerFileInput = () => {
   }
 };
 
-// Password change state
-const isPasswordModalOpen = ref(false);
-const isChangingPassword = ref(false);
-const passwordForm = ref({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-});
-
-const openPasswordModal = () => {
-  isPasswordModalOpen.value = true;
-};
-
-const closePasswordModal = () => {
-  isPasswordModalOpen.value = false;
-  // Reset form
-  passwordForm.value = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
-};
-
-const handlePasswordChange = async () => {
-  // Basic validation
-  if (!passwordForm.value.currentPassword || 
-      !passwordForm.value.newPassword || 
-      !passwordForm.value.confirmPassword) {
-    const toast = await toastController.create({
-      message: 'Please fill in all password fields',
-      duration: 2000,
-      color: 'warning',
-      position: 'top'
-    });
-    await toast.present();
-    return;
-  }
-
-  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-    const toast = await toastController.create({
-      message: 'New passwords do not match',
-      duration: 2000,
-      color: 'warning',
-      position: 'top'
-    });
-    await toast.present();
-    return;
-  }
-
-  isChangingPassword.value = true;
-  try {
-    const response = await api.post('/dbConnect/change_password.php', {
-      currentPassword: passwordForm.value.currentPassword,
-      newPassword: passwordForm.value.newPassword
-    });
-
-    if (response.data.success) {
-      const toast = await toastController.create({
-        message: 'Password changed successfully',
-        duration: 2000,
-        color: 'success',
-        position: 'top',
-        icon: checkmarkCircle
-      });
-      await toast.present();
-      closePasswordModal();
-    }
-  } catch (error: any) {
-    const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to change password',
-      duration: 3000,
-      color: 'danger',
-      position: 'top',
-      icon: closeCircle
-    });
-    await toast.present();
-  } finally {
-    isChangingPassword.value = false;
-  }
-};
 </script>
 
 <style scoped>
@@ -761,26 +658,23 @@ const handlePasswordChange = async () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .profile-card {
-  margin: 0;
+  margin: 0 0 16px 0;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--ion-color-light-shade);
   overflow: hidden;
-  background: var(--ion-background-color);
+  background: var(--ion-card-background);
 }
 
 .profile-header {
   padding: 32px 16px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 24px;
+  background: var(--ion-background-color);
 }
 
 .avatar-section {
@@ -791,73 +685,81 @@ const handlePasswordChange = async () => {
 }
 
 .large-avatar {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border: 3px solid var(--ion-color-primary);
   overflow: hidden;
+}
+
+.profile-info {
+  flex: 1;
 }
 
 .profile-name {
   font-size: 1.5rem;
   font-weight: 600;
-  margin: 0.5rem 0;
-  color: var(--ion-color-dark);
+  margin: 0;
+  color: var(--ion-text-color);
 }
 
 .profile-email {
   color: var(--ion-color-medium);
-  margin: 0;
+  margin: 4px 0 0 0;
   font-size: 0.95rem;
 }
 
 .avatar-actions {
   display: flex;
   gap: 8px;
-  justify-content: center;
+  margin-top: 8px;
 }
 
-.upload-photo-btn {
-  --padding-start: 12px;
-  --padding-end: 12px;
-  height: 36px;
-  font-size: 0.9rem;
-  --color: var(--ion-color-primary);
-  text-transform: none;
-}
-
-.upload-photo-btn .camera-icon {
-  margin-right: 8px;
-  font-size: 1.1rem;
-}
-
+.upload-photo-btn,
 .remove-photo-btn {
   --padding-start: 12px;
   --padding-end: 12px;
   height: 36px;
   font-size: 0.9rem;
-  --color: var(--ion-color-danger);
   text-transform: none;
+  --border-radius: 10px;
+}
+
+.upload-photo-btn {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+}
+
+.remove-photo-btn {
+  --background: transparent;
+  --color: var(--ion-color-danger);
+  --border-color: var(--ion-color-danger);
+}
+
+.settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .settings-section {
   margin: 0;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--ion-color-light-shade);
   overflow: hidden;
-  background: var(--ion-background-color);
+  background: var(--ion-card-background);
 }
 
 ion-card-header {
   padding: 16px;
   border-bottom: 1px solid var(--ion-color-light-shade);
-  background: var(--ion-color-light-tint);
+  background: var(--ion-background-color);
 }
 
 ion-card-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: var(--ion-text-color);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -873,39 +775,42 @@ ion-card-content {
 }
 
 .settings-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
 ion-item {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
+  --background: var(--ion-background-color);
+  --border-radius: 10px;
   margin: 0;
   --padding-start: 16px;
   --padding-end: 16px;
-  border: 1px solid var(--ion-color-light-shade);
+  border: 2px solid var(--ion-color-light-shade);
+}
+
+ion-item:focus-within {
+  border-color: var(--ion-color-primary);
 }
 
 ion-input {
   --padding-start: 0;
   --padding-end: 0;
   margin-top: 8px;
+  --placeholder-color: var(--ion-color-medium);
+  --color: var(--ion-text-color);
 }
 
 ion-button {
-  --border-radius: 12px;
-  height: 48px;
+  --border-radius: 10px;
+  height: 44px;
   font-weight: 500;
   margin: 8px 0 0 0;
 }
 
-.danger-actions {
-  display: grid;
-  gap: 12px;
-}
-
 .danger-zone {
   border: 1px solid var(--ion-color-danger);
+  margin-top: 16px;
 }
 
 .danger-button {
@@ -915,8 +820,32 @@ ion-button {
 }
 
 .logout-button {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
+  --background: var(--ion-color-medium);
+  --color: var(--ion-color-light);
+  margin-top: 12px;
+}
+
+.password-requirements {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  padding-left: 16px;
+}
+
+.password-requirements p {
+  color: var(--ion-color-danger);
+  margin: 4px 0;
+}
+
+.password-requirements p.valid {
+  color: var(--ion-color-success);
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  padding-left: 16px;
+  margin-bottom: 8px;
 }
 
 .save-button {
@@ -925,29 +854,50 @@ ion-button {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  ion-content {
-    --padding: 16px;
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 16px;
+  }
+
+  .profile-info {
+    text-align: center;
+  }
+
+  .avatar-actions {
+    justify-content: center;
+  }
+
+  .settings-container {
+    padding: 16px;
   }
 
   .profile-card,
   .settings-section {
-    border-radius: 12px;
+    margin-bottom: 16px;
   }
 
   ion-button {
-    height: 44px;
+    height: 42px;
   }
 }
 
 @media (min-width: 768px) {
-  ion-content {
-    --padding: 24px;
+  .settings-container {
+    padding: 24px;
   }
 
   .settings-section:hover {
     transform: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+}
+
+.password-actions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .action-button {
@@ -957,7 +907,7 @@ ion-button {
 }
 
 @media (max-width: 480px) {
-  .danger-actions {
+  .password-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -975,39 +925,5 @@ ion-button {
   cursor: pointer;
   user-select: none;
   z-index: 1;
-}
-
-.password-modal {
-  --height: auto;
-  --max-height: 400px;
-}
-
-.password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-ion-modal ion-toolbar {
-  --background: var(--ion-color-light);
-}
-
-ion-modal ion-item {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
-  margin-bottom: 8px;
-}
-
-ion-modal ion-input {
-  --padding-start: 0;
-  --padding-end: 0;
-  margin-top: 8px;
 }
 </style>

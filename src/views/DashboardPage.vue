@@ -1,5 +1,5 @@
 <template>
-  <page-layout title="Dashboard">
+  <page-layout title="Dashboard" :show-back-button="false">
     <ion-content :fullscreen="true" class="ion-padding-horizontal">
       <ion-header collapse="condense">
         <ion-toolbar>
@@ -10,13 +10,13 @@
       <ion-grid class="ion-no-padding">
         <ion-row class="dashboard-row">
           <ion-col size="12" size-md="6" class="ion-padding-bottom">
-            <ion-card class="dashboard-card">
+            <ion-card class="dashboard-card animate-card">
               <ion-card-header>
                 <ion-card-title class="ion-text-center">Tasks Overview</ion-card-title>
               </ion-card-header>
               <ion-card-content>
                 <ion-list lines="none">
-                  <ion-item button class="dashboard-item" @click="filterTasks('today')">
+                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('today')">
                     <ion-icon :icon="timeOutline" slot="start" color="warning"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Tasks Due Today</h2>
@@ -24,7 +24,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="warning" class="task-badge">{{ taskCounts.today }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item" @click="filterTasks('upcoming')">
+                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('upcoming')">
                     <ion-icon :icon="calendarOutline" slot="start" color="success"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Upcoming Tasks</h2>
@@ -32,7 +32,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="success" class="task-badge">{{ taskCounts.upcoming }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item" @click="filterTasks('complete')">
+                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('complete')">
                     <ion-icon :icon="checkmarkCircle" slot="start" color="medium"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Completed Tasks</h2>
@@ -40,7 +40,7 @@
                     </ion-label>
                     <ion-badge slot="end" color="medium" class="task-badge">{{ taskCounts.complete }}</ion-badge>
                   </ion-item>
-                  <ion-item button class="dashboard-item" @click="filterTasks('all')">
+                  <ion-item button class="dashboard-item animate-item" @click="filterTasks('all')">
                     <ion-icon :icon="listOutline" slot="start" color="primary"></ion-icon>
                     <ion-label class="ion-text-wrap">
                       <h2>Total Tasks</h2>
@@ -54,7 +54,7 @@
           </ion-col>
 
           <ion-col size="12" size-md="6" class="ion-padding-bottom">
-            <ion-card class="dashboard-card">
+            <ion-card class="dashboard-card animate-card">
               <ion-card-header>
                 <ion-card-title class="ion-text-center">Recent Tasks</ion-card-title>
               </ion-card-header>
@@ -63,23 +63,25 @@
                   <ion-item v-for="task in recentTasks" 
                            :key="task.id" 
                            button 
-                           class="task-item"
+                           class="task-item animate-item"
                            @click="viewTask(task)">
-                    <ion-icon :icon="task.completed === 1 ? checkmarkCircle : timeOutline" 
-                             slot="start" 
-                             :color="task.completed === 1 ? 'success' : 'warning'"
-                             class="task-icon">
-                    </ion-icon>
+                    <div class="task-status-indicator" :class="{ 'completed': task.completed === 1 }"></div>
                     <ion-label class="ion-text-wrap">
                       <h2 class="task-title">{{ task.title }}</h2>
                       <p class="task-description">{{ task.description }}</p>
-                      <p class="task-due-date" :class="getDueDateClass(task)">
-                        Due {{ formatDate(task.due_date) }}
-                      </p>
+                      <div class="task-meta">
+                        <span class="task-due-date" :class="getDueDateClass(task)">
+                          <ion-icon :icon="calendarOutline" class="meta-icon"></ion-icon>
+                          {{ formatDate(task.due_date) }}
+                        </span>
+                        <ion-chip :color="task.completed === 1 ? 'success' : 'warning'" class="status-chip">
+                          {{ task.completed === 1 ? 'Completed' : 'Pending' }}
+                        </ion-chip>
+                      </div>
                     </ion-label>
                   </ion-item>
 
-                  <div v-if="recentTasks.length === 0" class="empty-state">
+                  <div v-if="recentTasks.length === 0" class="empty-state animate-fade">
                     <ion-icon :icon="documentTextOutline" class="empty-icon"></ion-icon>
                     <p>No tasks yet</p>
                   </div>
@@ -99,7 +101,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonGrid, IonRow, IonCol, 
          IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem, IonLabel, 
-         IonBadge, IonIcon } from '@ionic/vue';
+         IonBadge, IonIcon, IonChip } from '@ionic/vue';
 import { checkmarkCircle, timeOutline, calendarOutline, listOutline, documentTextOutline } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
@@ -234,23 +236,22 @@ ion-content {
 .dashboard-card {
   margin: 0;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  border: 1px solid var(--ion-color-light-shade);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: var(--ion-card-background);
   overflow: hidden;
-  background: var(--ion-background-color);
 }
 
 ion-card-header {
-  padding: 16px;
+  padding: 20px;
   border-bottom: 1px solid var(--ion-color-light-shade);
-  background: var(--ion-color-light-tint);
+  background: var(--ion-background-color);
 }
 
 ion-card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  letter-spacing: -0.02em;
 }
 
 ion-card-content {
@@ -261,7 +262,9 @@ ion-card-content {
   --padding-start: 16px;
   --padding-end: 16px;
   --min-height: 72px;
-  border-bottom: 1px solid var(--ion-color-light-shade);
+  margin: 8px;
+  border-radius: 8px;
+  background: var(--ion-background-color);
 }
 
 .dashboard-item ion-icon {
@@ -270,126 +273,151 @@ ion-card-content {
 }
 
 .dashboard-item h2 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 4px 0;
+  color: var(--ion-text-color);
+  margin: 0 0 6px 0;
+  line-height: 1.3;
 }
 
 .dashboard-item p {
-  font-size: 0.9rem;
-  color: var(--ion-color-medium);
+  font-size: 0.95rem;
+  color: var(--ion-text-color);
+  opacity: 0.8;
   margin: 0;
+  line-height: 1.4;
 }
 
 .task-badge {
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 6px 12px;
   border-radius: 12px;
   min-width: 32px;
   text-align: center;
+  font-weight: 600;
 }
 
 .task-item {
   --padding-start: 16px;
   --padding-end: 16px;
-  --min-height: 72px;
-  --background-hover: var(--ion-color-light);
-  border-bottom: 1px solid var(--ion-color-light-shade);
+  --min-height: 84px;
+  margin: 8px;
+  border-radius: 8px;
+  position: relative;
+  background: var(--ion-background-color);
 }
 
-.task-item:last-child {
-  border-bottom: none;
+.task-status-indicator {
+  width: 4px;
+  height: 48px;
+  background-color: var(--ion-color-warning);
+  border-radius: 2px;
+  margin-right: 16px;
 }
 
-.task-icon {
-  font-size: 24px;
-  margin-right: 12px;
+.task-status-indicator.completed {
+  background-color: var(--ion-color-success);
 }
 
 .task-title {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 600;
-  color: var(--ion-color-dark);
-  margin-bottom: 4px;
+  color: var(--ion-text-color);
+  margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .task-description {
-  font-size: 0.9rem;
-  color: var(--ion-color-medium);
-  margin-bottom: 4px;
+  font-size: 0.95rem;
+  color: var(--ion-text-color);
+  opacity: 0.8;
+  margin-bottom: 10px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.4;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .task-due-date {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ion-text-color);
+  opacity: 0.8;
+}
+
+.meta-icon {
+  font-size: 16px;
+}
+
+.status-chip {
+  height: 26px;
+  font-size: 0.85rem;
+  font-weight: 600;
   margin: 0;
-}
-
-.completed-task {
-  color: var(--ion-color-medium);
-}
-
-.due-today {
-  color: var(--ion-color-warning);
-}
-
-.overdue {
-  color: var(--ion-color-danger);
-}
-
-.upcoming {
-  color: var(--ion-color-success);
+  --background: transparent;
+  --color: inherit;
 }
 
 .empty-state {
-  padding: 32px 16px;
+  padding: 48px 16px;
   text-align: center;
-  color: var(--ion-color-medium);
+  color: var(--ion-text-color);
+  opacity: 0.8;
 }
 
 .empty-icon {
   font-size: 48px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  opacity: 0.7;
 }
 
 .empty-state p {
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 @media (max-width: 768px) {
   ion-content {
-    --padding-top: 8px;
-    --padding-bottom: 8px;
-    --padding-start: 8px;
-    --padding-end: 8px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --padding-start: 12px;
+    --padding-end: 12px;
   }
 
   .dashboard-card {
     margin-bottom: 16px;
-    border-radius: 12px;
   }
 
   .dashboard-item {
-    --min-height: 64px;
+    --min-height: 68px;
   }
 
   .task-badge {
     font-size: 0.9rem;
-    padding: 4px 8px;
+    padding: 4px 10px;
   }
 
-  .dashboard-item h2 {
-    font-size: 1rem;
+  .dashboard-item h2,
+  .task-title {
+    font-size: 1.1rem;
   }
 
-  .dashboard-item p {
-    font-size: 0.85rem;
+  .dashboard-item p,
+  .task-description {
+    font-size: 0.9rem;
   }
 }
 
@@ -431,12 +459,8 @@ ion-card-content {
     flex: 1;
   }
 
-  .dashboard-card:hover {
-    transform: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .dashboard-item:hover {
+  .dashboard-item:active,
+  .task-item:active {
     --background: var(--ion-color-light);
   }
 }
@@ -444,29 +468,44 @@ ion-card-content {
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .dashboard-card {
-    border-color: var(--ion-color-dark);
+    background: var(--ion-card-background);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   ion-card-header {
-    background: rgba(var(--ion-color-light-rgb), 0.05);
-    border-color: var(--ion-color-dark);
+    background: var(--ion-card-background);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
-  .dashboard-item {
-    border-color: var(--ion-color-dark);
-  }
-
-  .dashboard-item h2 {
-    color: var(--ion-color-light);
-  }
-
-  .task-title {
-    color: var(--ion-color-light);
-  }
-
+  ion-card-title,
+  .dashboard-item h2,
+  .task-title,
+  .task-description,
+  .dashboard-item p,
+  .task-due-date,
   .empty-state {
-    color: var(--ion-color-medium-shade);
+    color: #ffffff;
+  }
+
+  .dashboard-item,
+  .task-item {
+    background: var(--ion-card-background);
+  }
+
+  .task-description,
+  .dashboard-item p,
+  .task-due-date,
+  .empty-state {
+    opacity: 0.9;
+  }
+
+  .task-status-indicator {
+    opacity: 1;
+  }
+
+  .dashboard-item:active,
+  .task-item:active {
+    --background: rgba(255, 255, 255, 0.05);
   }
 }
 </style>

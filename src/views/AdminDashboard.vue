@@ -1,5 +1,5 @@
 <template>
-  <page-layout title="Admin Dashboard">
+  <page-layout title="Admin Dashboard" :show-back-button="false">
     <ion-content class="ion-padding">
       <!-- Segment Tabs -->
        <div>
@@ -33,78 +33,70 @@
       <div v-if="selectedTab === 'users'" class="ion-padding-bottom fade-in">
         <ion-list class="custom-list">
           <ion-item-group>
-            <ion-item v-for="user in filteredUsers" :key="user.id" class="custom-item ion-margin-bottom">
-              <ion-card class="custom-card ion-no-margin">
+            <ion-item v-for="user in filteredUsers" :key="user.id" class="custom-item">
+              <ion-card class="custom-card">
                 <ion-card-content>
-                  <ion-grid class="ion-no-padding">
-                    <ion-row class="ion-align-items-center">
-                      <ion-col size="12" size-md="7">
-                        <div class="user-info">
-                          <div class="user-header">
-                            <ion-avatar class="user-avatar">
-                              <div class="avatar-content">
-                                {{ user.username.charAt(0).toUpperCase() }}
-                              </div>
-                            </ion-avatar>
-                            <div class="user-details">
-                              <h2 class="user-name">{{ user.username }}</h2>
-                              <p class="user-email">{{ user.email }}</p>
-                            </div>
-                          </div>
-                          <div class="user-meta">
-                            <ion-chip :class="['status-chip', user.role === 'admin' ? 'admin-chip' : 'user-chip']">
-                              <ion-icon :icon="user.role === 'admin' ? 'shield' : 'person'"></ion-icon>
-                              <ion-label>{{ user.role === 'admin' ? 'Administrator' : 'Regular User' }}</ion-label>
-                            </ion-chip>
-                            <ion-chip class="time-chip">
-                              <ion-icon :icon="timeOutline"></ion-icon>
-                              <ion-label>{{ formatDate(user.last_login) }}</ion-label>
-                            </ion-chip>
-                          </div>
+                  <div class="user-info">
+                    <div class="user-header">
+                      <ion-avatar class="user-avatar">
+                        <div class="avatar-content">
+                          {{ user.username.charAt(0).toUpperCase() }}
                         </div>
-                      </ion-col>
-                      <ion-col size="12" size-md="5" class="action-column">
-                        <div class="action-wrapper">
-                          <div class="role-select-wrapper" :class="{ 'is-loading': getRoleChangeStatus(user.id) === 'loading' }">
-                            <ion-text color="medium" class="select-label">
-                              Change Role
-                            </ion-text>
-                            <ion-select
-                              v-model="user.role"
-                              interface="popover"
-                              @ionChange="handleRoleChange($event, user)"
-                              :disabled="user.id === currentUser.id || getRoleChangeStatus(user.id) === 'loading'"
-                              class="role-select"
-                              :class="{
-                                'select-error': lastRoleChangeError && roleChangeState?.userId === user.id,
-                                'select-success': !lastRoleChangeError && roleChangeState?.userId === user.id
-                              }">
-                              <ion-select-option value="user">
-                                <ion-icon :icon="personOutline"></ion-icon>
-                                Regular User
-                              </ion-select-option>
-                              <ion-select-option value="admin">
-                                <ion-icon :icon="shieldOutline"></ion-icon>
-                                Administrator
-                              </ion-select-option>
-                            </ion-select>
-                            <div class="role-status" v-if="getRoleChangeStatus(user.id) === 'loading'">
-                              <ion-spinner name="crescent" color="primary"></ion-spinner>
-                            </div>
-                          </div>
-                          <ion-button
-                            fill="outline"
-                            color="danger"
-                            @click="confirmDeleteUser(user)"
-                            :disabled="user.id === currentUser.id"
-                            class="delete-button">
-                            <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                            Delete
-                          </ion-button>
+                      </ion-avatar>
+                      <div class="user-details">
+                        <h2 class="user-name">{{ user.username }}</h2>
+                        <p class="user-email">{{ user.email }}</p>
+                        <div class="user-meta">
+                          <ion-chip :class="['status-chip', user.role === 'admin' ? 'admin-chip' : 'user-chip']">
+                            <ion-icon :icon="user.role === 'admin' ? 'shield' : 'person'"></ion-icon>
+                            <ion-label>{{ user.role === 'admin' ? 'Administrator' : 'Regular User' }}</ion-label>
+                          </ion-chip>
+                          <ion-chip class="time-chip">
+                            <ion-icon :icon="timeOutline"></ion-icon>
+                            <ion-label>{{ formatDate(user.last_login) }}</ion-label>
+                          </ion-chip>
                         </div>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
+                      </div>
+                    </div>
+                    <div class="action-wrapper">
+                      <div class="role-select-wrapper" :class="{ 'is-loading': getRoleChangeStatus(user.id) === 'loading' }">
+                        <ion-text color="medium" class="select-label">
+                          Change Role
+                        </ion-text>
+                        <ion-select
+                          v-model="user.role"
+                          interface="popover"
+                          @ionChange="handleRoleChange($event, user)"
+                          :disabled="user.id === currentUser.id || getRoleChangeStatus(user.id) === 'loading'"
+                          class="role-select"
+                          :class="{
+                            'select-error': lastRoleChangeError && roleChangeState?.userId === user.id,
+                            'select-success': !lastRoleChangeError && roleChangeState?.userId === user.id
+                          }">
+                          <ion-select-option value="user">
+                            <ion-icon :icon="personOutline"></ion-icon>
+                            Regular User
+                          </ion-select-option>
+                          <ion-select-option value="admin">
+                            <ion-icon :icon="shieldOutline"></ion-icon>
+                            Administrator
+                          </ion-select-option>
+                        </ion-select>
+                        <div class="role-status" v-if="getRoleChangeStatus(user.id) === 'loading'">
+                          <ion-spinner name="crescent" color="primary"></ion-spinner>
+                        </div>
+                      </div>
+                      <ion-button
+                        fill="outline"
+                        color="danger"
+                        @click="confirmDeleteUser(user)"
+                        :disabled="user.id === currentUser.id"
+                        class="delete-button">
+                        <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                        Delete
+                      </ion-button>
+                    </div>
+                  </div>
                 </ion-card-content>
               </ion-card>
             </ion-item>
@@ -127,33 +119,27 @@
               </ion-label>
             </ion-item-divider>
 
-            <ion-item v-for="task in userTasks.tasks" :key="task.id" class="custom-item ion-margin-bottom">
-              <ion-card class="custom-card ion-no-margin">
+            <ion-item v-for="task in userTasks.tasks" :key="task.id" class="custom-item">
+              <ion-card class="custom-card">
                 <ion-card-content>
-                  <ion-grid class="ion-no-padding">
-                    <ion-row class="ion-align-items-center">
-                      <ion-col size="12">
-                        <div class="task-content">
-                          <div class="task-header">
-                            <h3 class="task-title">{{ task.title }}</h3>
-                            <ion-chip 
-                              :class="['status-chip', task.completed ? 'completed-chip' : 'pending-chip']"
-                              class="task-status">
-                              <ion-icon :icon="task.completed ? checkmarkCircleOutline : timeOutline"></ion-icon>
-                              <ion-label>{{ task.completed ? 'Completed' : 'Pending' }}</ion-label>
-                            </ion-chip>
-                          </div>
-                          <p class="task-description">{{ task.description }}</p>
-                          <div class="task-meta">
-                            <ion-chip class="time-chip">
-                              <ion-icon :icon="calendarOutline"></ion-icon>
-                              <ion-label>Due: {{ formatDate(task.due_date) }}</ion-label>
-                            </ion-chip>
-                          </div>
-                        </div>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
+                  <div class="task-content">
+                    <div class="task-header">
+                      <h3 class="task-title">{{ task.title }}</h3>
+                      <ion-chip 
+                        :class="['status-chip', task.completed ? 'completed-chip' : 'pending-chip']"
+                        class="task-status">
+                        <ion-icon :icon="task.completed ? checkmarkCircleOutline : timeOutline"></ion-icon>
+                        <ion-label>{{ task.completed ? 'Completed' : 'Pending' }}</ion-label>
+                      </ion-chip>
+                    </div>
+                    <p class="task-description">{{ task.description }}</p>
+                    <div class="task-meta">
+                      <ion-chip class="time-chip">
+                        <ion-icon :icon="calendarOutline"></ion-icon>
+                        <ion-label>Due: {{ formatDate(task.due_date) }}</ion-label>
+                      </ion-chip>
+                    </div>
+                  </div>
                 </ion-card-content>
               </ion-card>
             </ion-item>
@@ -176,54 +162,50 @@
               </ion-label>
             </ion-item-divider>
 
-            <ion-item v-for="resource in userResources.resources" :key="resource.id" class="ion-margin-bottom">
-              <ion-card class="ion-no-margin ion-margin-vertical full-width">
+            <ion-item v-for="resource in userResources.resources" :key="resource.id" class="custom-item">
+              <ion-card class="custom-card">
                 <ion-card-content>
-                  <ion-grid>
-                    <ion-row class="ion-align-items-center">
-                      <ion-col size="auto">
-                        <ion-thumbnail>
-                          <img
-                            v-if="isImage(resource.file_type)"
-                            :src="getResourceUrl(resource.filename)"
-                            alt="Resource thumbnail"
-                          />
-                          <ion-icon
-                            v-else
-                            :icon="documentOutline"
-                            size="large"
-                            class="thumbnail-icon">
-                          </ion-icon>
-                        </ion-thumbnail>
-                      </ion-col>
-                      <ion-col>
-                        <ion-text color="dark">
-                          <h3 class="ion-no-margin">{{ resource.original_filename }}</h3>
-                        </ion-text>
-                        <ion-text color="medium">
-                          <p class="ion-no-margin ion-margin-vertical">{{ resource.description }}</p>
-                        </ion-text>
-                        <ion-chip color="tertiary" outline>
-                          <ion-icon :icon="documentOutline"></ion-icon>
-                          <ion-label>{{ formatFileSize(resource.file_size) }}</ion-label>
-                        </ion-chip>
-                        <ion-chip color="medium">
-                          <ion-icon :icon="timeOutline"></ion-icon>
-                          <ion-label>{{ formatDate(resource.upload_date) }}</ion-label>
-                        </ion-chip>
-                      </ion-col>
-                      <ion-col size="auto">
-                        <ion-button
-                          fill="outline"
-                          color="danger"
-                          @click="confirmDeleteResource(resource)"
-                          class="action-button">
-                          <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                          Delete
-                        </ion-button>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
+                  <div class="resource-content">
+                    <div class="resource-header">
+                      <ion-thumbnail>
+                        <img
+                          v-if="isImage(resource.file_type)"
+                          :src="getResourceUrl(resource.filename)"
+                          alt="Resource thumbnail"
+                        />
+                        <ion-icon
+                          v-else
+                          :icon="documentOutline"
+                          size="large"
+                          class="thumbnail-icon">
+                        </ion-icon>
+                      </ion-thumbnail>
+                      <div class="resource-details">
+                        <h3 class="resource-title">{{ resource.original_filename }}</h3>
+                        <p class="resource-description">{{ resource.description }}</p>
+                        <div class="resource-meta">
+                          <ion-chip class="status-chip">
+                            <ion-icon :icon="documentOutline"></ion-icon>
+                            <ion-label>{{ formatFileSize(resource.file_size) }}</ion-label>
+                          </ion-chip>
+                          <ion-chip class="time-chip">
+                            <ion-icon :icon="timeOutline"></ion-icon>
+                            <ion-label>{{ formatDate(resource.upload_date) }}</ion-label>
+                          </ion-chip>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="action-wrapper">
+                      <ion-button
+                        fill="outline"
+                        color="danger"
+                        @click="confirmDeleteResource(resource)"
+                        class="delete-button">
+                        <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                        Delete
+                      </ion-button>
+                    </div>
+                  </div>
                 </ion-card-content>
               </ion-card>
             </ion-item>
@@ -782,6 +764,9 @@ onMounted(() => {
 /* List and Cards */
 .custom-list {
   background: transparent;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .custom-item {
@@ -792,97 +777,206 @@ onMounted(() => {
 }
 
 .custom-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   width: 100%;
+  margin: 0;
+  border-radius: 16px;
+  background: var(--ion-card-background);
+  border: 1px solid var(--ion-border-color);
+  overflow: hidden;
 }
 
-.custom-card:hover {
-  transform: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* User Info */
+/* User Card Styles */
 .user-info {
-  padding: 8px 0;
+  width: 100%;
 }
 
 .user-header {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-bottom: 12px;
 }
 
 .user-avatar {
   width: 48px;
   height: 48px;
-  --border-radius: 14px;
+  --border-radius: 12px;
+  flex-shrink: 0;
 }
 
 .avatar-content {
   width: 100%;
   height: 100%;
-  background: var(--ion-color-primary);
-  color: var(--ion-color-primary-contrast);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 1.2rem;
   font-weight: 600;
 }
 
 .user-details {
   flex: 1;
+  min-width: 0;
 }
 
 .user-name {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: var(--ion-color-dark);
   margin: 0;
-  line-height: 1.4;
+  color: var(--ion-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-email {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--ion-color-medium);
   margin: 4px 0 0 0;
-  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
 }
 
-/* Status Chips */
+/* Task Card Styles */
+.task-content {
+  width: 100%;
+}
+
+.task-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.task-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-description {
+  color: var(--ion-color-medium);
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Resource Card Styles */
+.resource-content {
+  width: 100%;
+}
+
+.resource-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.resource-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.resource-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resource-description {
+  color: var(--ion-color-medium);
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.resource-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+ion-thumbnail {
+  --size: 48px;
+  --border-radius: 8px;
+  background: var(--ion-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ion-border-color);
+}
+
+.thumbnail-icon {
+  font-size: 24px;
+  color: var(--ion-color-medium);
+}
+
+/* Chips and Status Indicators */
 .status-chip {
   --background: transparent;
   font-weight: 500;
   padding: 4px 12px;
-}
-
-.admin-chip {
-  --background: rgba(var(--ion-color-primary-rgb), 0.1);
-  --color: var(--ion-color-primary);
-  border: 1px solid var(--ion-color-primary);
-}
-
-.user-chip {
-  --background: rgba(var(--ion-color-success-rgb), 0.1);
-  --color: var(--ion-color-success);
-  border: 1px solid var(--ion-color-success);
+  margin: 0;
+  height: 24px;
+  
+  &.admin-chip {
+    --color: var(--ion-color-primary);
+    border: 1px solid var(--ion-color-primary);
+  }
+  
+  &.user-chip {
+    --color: var(--ion-color-success);
+    border: 1px solid var(--ion-color-success);
+  }
+  
+  &.completed-chip {
+    --color: var(--ion-color-success);
+    border: 1px solid var(--ion-color-success);
+  }
+  
+  &.pending-chip {
+    --color: var(--ion-color-warning);
+    border: 1px solid var(--ion-color-warning);
+  }
 }
 
 .time-chip {
   --background: rgba(var(--ion-color-medium-rgb), 0.1);
   --color: var(--ion-color-medium);
   border: 1px solid var(--ion-color-medium);
+  height: 24px;
+  padding: 4px 12px;
+  margin: 0;
 }
 
-/* Actions */
+/* Action Buttons */
 .action-column {
   display: flex;
   align-items: center;
@@ -891,61 +985,37 @@ onMounted(() => {
 
 .action-wrapper {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
 
 .role-select-wrapper {
-  position: relative;
-  background: var(--ion-color-light);
-  border-radius: 12px;
-  padding: 8px 16px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--ion-color-light-shade);
-}
-
-.role-select {
-  --background: transparent;
-  --border-width: 0;
-  --padding-start: 8px;
-  --padding-end: 32px;
-  min-width: 160px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  --placeholder-color: var(--ion-color-medium);
-  --placeholder-opacity: 1;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .select-label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--ion-color-medium);
+  font-size: 0.85rem;
 }
 
-.role-status {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.role-select {
+  width: 100%;
+  max-width: 200px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  border: 1px solid var(--ion-border-color);
+  border-radius: 8px;
 }
 
 .delete-button {
-  --border-radius: 12px;
-  --border-width: 2px;
-  --box-shadow: none;
-  height: 42px;
-  font-weight: 500;
-}
-
-.delete-button ion-icon {
-  font-size: 18px;
-  margin-right: 6px;
+  width: 100%;
+  max-width: 200px;
+  height: 36px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: 0.9rem;
 }
 
 /* Animations */
@@ -974,10 +1044,6 @@ onMounted(() => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
-  .custom-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-
   .avatar-content {
     background: var(--ion-color-primary-shade);
   }
@@ -1001,33 +1067,12 @@ onMounted(() => {
     font-size: 1.75rem;
   }
 
-  .action-column {
-    margin-top: 16px;
+  .custom-list {
+    padding: 0 12px;
   }
 
-  .action-wrapper {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .role-select-wrapper {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .role-select {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .delete-button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-title {
-    font-size: 1.5rem;
+  .custom-card {
+    border-radius: 12px;
   }
 
   .user-header {
@@ -1040,115 +1085,77 @@ onMounted(() => {
   }
 
   .user-name {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .user-email {
-    font-size: 0.9rem;
-  }
-
-  .status-chip {
     font-size: 0.85rem;
   }
-}
-
-/* Task Styles */
-.task-content {
-  padding: 8px 0;
-}
-
-.task-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.task-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0;
-  line-height: 1.4;
-  flex: 1;
-}
-
-.task-description {
-  color: var(--ion-color-medium);
-  margin: 8px 0;
-  line-height: 1.5;
-  font-size: 0.95rem;
-}
-
-.task-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.status-chip {
-  margin: 0;
-  min-width: 100px;
-  justify-content: center;
-}
-
-.completed-chip {
-  --background: rgba(var(--ion-color-success-rgb), 0.1);
-  --color: var(--ion-color-success);
-  border: 1px solid var(--ion-color-success);
-}
-
-.pending-chip {
-  --background: rgba(var(--ion-color-warning-rgb), 0.1);
-  --color: var(--ion-color-warning);
-  border: 1px solid var(--ion-color-warning);
-}
-
-.time-chip {
-  --background: rgba(var(--ion-color-medium-rgb), 0.1);
-  --color: var(--ion-color-medium);
-  border: 1px solid var(--ion-color-medium);
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .task-title {
-    color: var(--ion-color-light);
-  }
-
-  .completed-chip {
-    --background: rgba(var(--ion-color-success-rgb), 0.15);
-  }
-
-  .pending-chip {
-    --background: rgba(var(--ion-color-warning-rgb), 0.15);
-  }
-
-  .time-chip {
-    --background: rgba(var(--ion-color-medium-rgb), 0.15);
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .task-status-icon {
-    width: 40px;
-    height: 40px;
-    margin-right: 12px;
-  }
-
-  .task-status-icon ion-icon {
-    font-size: 20px;
-  }
 
   .task-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .task-description {
     font-size: 0.9rem;
+  }
+
+  .action-wrapper {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .role-select,
+  .delete-button {
+    max-width: 48%;
+  }
+
+  .resource-header {
+    gap: 12px;
+  }
+
+  .resource-title {
+    font-size: 1rem;
+  }
+
+  .resource-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+
+  .custom-list {
+    padding: 0 8px;
+  }
+
+  .action-wrapper {
+    flex-direction: column;
+  }
+
+  .role-select,
+  .delete-button {
+    max-width: 100%;
+  }
+
+  .user-meta,
+  .task-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-chip,
+  .time-chip {
+    width: 100%;
+  }
+
+  .resource-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style> 

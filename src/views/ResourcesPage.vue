@@ -1,13 +1,22 @@
 <template>
-  <page-layout title="Resources">
+  <page-layout title="Resources" :show-back-button="false">
     <template #additional-toolbar>
       <ion-toolbar>
-        <ion-searchbar
-          v-model="searchQuery"
-          placeholder="Search resources..."
-          @ionInput="handleSearch">
-        </ion-searchbar>
+        <div class="search-container">
+          <ion-searchbar
+            v-model="searchQuery"
+            placeholder="Search resources..."
+            @ionInput="handleSearch"
+            class="custom-searchbar"
+            inputmode="search"
+            clear-icon="close-circle">
+          </ion-searchbar>
+        </div>
       </ion-toolbar>
+    </template>
+
+    <template #toolbar-buttons>
+      <!-- ... existing code ... -->
     </template>
 
     <ion-content :fullscreen="true" class="ion-padding">
@@ -417,6 +426,61 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Base styles */
+ion-content {
+  --padding-bottom: 80px;
+}
+
+/* Custom searchbar */
+.custom-searchbar {
+  --background: var(--ion-background-color);
+  --border-radius: 10px;
+  --box-shadow: none;
+  --placeholder-color: var(--ion-color-medium);
+  --icon-color: var(--ion-color-primary);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 44px;
+  margin: 8px 12px;
+  max-width: 100%;
+  width: auto;
+}
+
+ion-toolbar {
+  --min-height: 56px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  contain: none;
+  overflow: visible;
+}
+
+.search-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 360px) {
+  .custom-searchbar {
+    --min-height: 40px;
+    margin: 4px 8px;
+  }
+  
+  ion-toolbar {
+    --min-height: 48px;
+  }
+}
+
+@media (min-width: 768px) {
+  .custom-searchbar {
+    max-width: 800px;
+    margin: 8px auto;
+  }
+}
+
 .upload-card {
   margin-bottom: 20px;
   border-radius: 16px;

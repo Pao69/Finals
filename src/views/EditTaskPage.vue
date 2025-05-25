@@ -1,27 +1,20 @@
 <template>
   <page-layout title="Edit Task" :showBackButton="true" backHref="/tabs/tasks">
-    <template #additional-toolbar>
-      <ion-toolbar>
-        <ion-buttons slot="end">
-          <ion-button @click="handleSubmit" :disabled="!isFormValid" class="save-button">
-            <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-            Save
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </template>
-
     <ion-content class="ion-padding">
       <div class="edit-task-container">
         <form @submit.prevent="handleSubmit" class="task-form" v-if="taskForm">
           <div class="status-section">
-            <ion-badge :color="isCompleted ? 'success' : 'warning'" class="status-badge">
-              <ion-icon :icon="isCompleted ? checkmarkCircleOutline : timeOutline" slot="start"></ion-icon>
-              {{ isCompleted ? 'Completed' : 'Pending' }}
-            </ion-badge>
+            <ion-chip :color="isCompleted ? 'success' : 'warning'" class="status-chip">
+              <ion-icon :icon="isCompleted ? checkmarkCircleOutline : timeOutline"></ion-icon>
+              <ion-label>{{ isCompleted ? 'Completed' : 'Pending' }}</ion-label>
+            </ion-chip>
           </div>
 
           <div class="form-section">
+            <div class="section-header">
+              <h2>Task Details</h2>
+            </div>
+            
             <ion-item class="form-item" :class="{ 'ion-valid': taskForm.title.trim() !== '' }">
               <ion-label position="stacked">Title <ion-text color="danger">*</ion-text></ion-label>
               <ion-input
@@ -42,21 +35,30 @@
                 class="custom-textarea"
               ></ion-textarea>
             </ion-item>
+          </div>
 
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Schedule</h2>
+            </div>
+            
             <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
               <ion-label position="stacked">Due Date <ion-text color="danger">*</ion-text></ion-label>
-              <ion-datetime
+              <input
+                type="datetime-local"
                 v-model="taskForm.due_date"
-                presentation="date-time"
                 :min="minDateTime"
                 required
-                :buttons="true"
-                button-text="Done"
-                cancel-text="Cancel"
                 class="custom-datetime"
-              ></ion-datetime>
+              >
             </ion-item>
+          </div>
 
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Status</h2>
+            </div>
+            
             <ion-item class="form-item toggle-item">
               <ion-label>Mark as Completed</ion-label>
               <ion-toggle
@@ -327,68 +329,63 @@ onBeforeUnmount(async () => {
 <style scoped>
 .edit-task-container {
   max-width: 600px;
-  margin: 1rem auto;
-  padding: 1.5rem;
-  background: var(--ion-color-light);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin: 0.5rem auto;
+  padding: 1rem;
 }
 
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .status-section {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-.status-badge {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
+.status-chip {
+  --background: transparent;
+  --color: inherit;
+  height: 32px;
+  padding: 0 16px;
   font-weight: 500;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.status-badge ion-icon {
-  font-size: 1.1rem;
+.status-chip ion-icon {
+  font-size: 18px;
 }
 
 .form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  background: var(--ion-color-light);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.section-header {
+  margin-bottom: 1.25rem;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
 }
 
 .form-item {
-  --background: var(--ion-color-light);
+  --background: var(--ion-background-color);
   --border-radius: 12px;
   --padding-start: 16px;
   --padding-end: 16px;
-  margin: 0;
+  margin: 0 0 1rem;
   border: 1px solid var(--ion-color-medium-shade);
 }
 
-.form-item:hover {
-  border-color: var(--ion-color-medium-shade);
-  box-shadow: none;
-}
-
-.form-item.ion-valid {
-  --border-color: var(--ion-color-medium-shade);
-  --highlight-color: transparent;
-  --highlight-color-focused: transparent;
-}
-
-.form-item.ion-valid:hover {
-  border-color: var(--ion-color-medium-shade);
+.form-item:last-child {
+  margin-bottom: 0;
 }
 
 .form-item ion-label {
@@ -402,7 +399,7 @@ onBeforeUnmount(async () => {
 .custom-textarea {
   --padding-start: 12px;
   --padding-end: 12px;
-  --background: var(--ion-color-light);
+  --background: var(--ion-background-color);
   border-radius: 8px;
   font-size: 1rem;
   --color: var(--ion-color-dark);
@@ -413,12 +410,28 @@ onBeforeUnmount(async () => {
   line-height: 1.5;
 }
 
+.custom-datetime {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--ion-color-medium-shade);
+  border-radius: 8px;
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.custom-datetime:focus {
+  outline: none;
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
 .toggle-item {
   --padding-start: 16px;
   --padding-end: 16px;
-  margin-top: 0.5rem;
   border: none;
-  background: transparent;
+  background: var(--ion-background-color);
 }
 
 .toggle-item ion-label {
@@ -438,11 +451,9 @@ onBeforeUnmount(async () => {
 }
 
 .form-actions {
-  margin-top: 2rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0 0.5rem;
 }
 
 .submit-button {
@@ -469,17 +480,7 @@ onBeforeUnmount(async () => {
   --background: var(--ion-color-light-shade);
 }
 
-.save-button {
-  --padding-start: 12px;
-  --padding-end: 12px;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.save-button ion-icon {
-  margin-right: 4px;
-}
-
+/* Loading state */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -505,48 +506,12 @@ onBeforeUnmount(async () => {
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .edit-task-container {
-    margin: 2rem auto;
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+  }
+
+  .form-section {
     padding: 2rem;
   }
-
-  .form-item {
-    --padding-start: 20px;
-    --padding-end: 20px;
-  }
-}
-
-/* Custom datetime styling */
-.custom-datetime {
-  width: 100%;
-}
-
-:deep(.custom-datetime) {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
-}
-
-:deep(.custom-datetime .datetime-buttons) {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  border-top: 1px solid var(--ion-color-light-shade);
-}
-
-:deep(.custom-datetime .datetime-buttons button) {
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-}
-
-:deep(.custom-datetime .datetime-buttons button:first-child) {
-  color: var(--ion-color-medium);
-}
-
-:deep(.custom-datetime .datetime-buttons button:last-child) {
-  color: var(--ion-color-primary);
 }
 </style>

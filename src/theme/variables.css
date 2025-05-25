@@ -1,2 +1,66 @@
 /* For information on how to create your own theme, please see:
 http://ionicframework.com/docs/theming/ */
+
+:root {
+  /* Dark theme colors */
+  --ion-color-primary: #4a90e2;
+  --ion-color-primary-rgb: 74, 144, 226;
+  --ion-color-primary-contrast: #ffffff;
+  
+  --ion-background-color: #1a1a1a;
+  --ion-background-color-rgb: 26, 26, 26;
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+  
+  --ion-card-background: #2a2a2a;
+  --ion-item-background: #2a2a2a;
+  
+  --ion-color-step-50: #232323;
+  --ion-color-step-100: #2e2e2e;
+  --ion-color-step-150: #3a3a3a;
+  --ion-color-step-200: #454545;
+  --ion-color-step-250: #515151;
+  --ion-color-step-300: #5d5d5d;
+  --ion-color-step-350: #696969;
+  --ion-color-step-400: #757575;
+  --ion-color-step-450: #818181;
+  --ion-color-step-500: #8d8d8d;
+  --ion-color-step-550: #999999;
+  --ion-color-step-600: #a5a5a5;
+  --ion-color-step-650: #b1b1b1;
+  --ion-color-step-700: #bdbdbd;
+  --ion-color-step-750: #c9c9c9;
+  --ion-color-step-800: #d5d5d5;
+  --ion-color-step-850: #e1e1e1;
+  --ion-color-step-900: #ededed;
+  --ion-color-step-950: #f9f9f9;
+  
+  /* Status colors */
+  --ion-color-success: #2dd36f;
+  --ion-color-warning: #ffc409;
+  --ion-color-danger: #eb445a;
+  --ion-color-medium: #92949c;
+  
+  /* Border colors */
+  --ion-border-color: #333333;
+}
+
+/* Global styles */
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+ion-card {
+  --background: var(--ion-card-background);
+  box-shadow: none;
+  border: 1px solid var(--ion-border-color);
+}
+
+ion-item {
+  --background: var(--ion-item-background);
+  --border-color: var(--ion-border-color);
+}
+
+ion-button {
+  --box-shadow: none;
+}

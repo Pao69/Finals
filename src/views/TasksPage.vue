@@ -1,41 +1,44 @@
 <template>
-  <page-layout title="My Tasks">
+  <page-layout title="My Tasks" :show-back-button="false">
     <template #additional-toolbar>
       <ion-toolbar>
-        <ion-searchbar
-          v-model="searchQuery"
-          placeholder="Search tasks..."
-          @ionInput="handleSearch">
-        </ion-searchbar>
+        <div class="search-container">
+          <ion-searchbar
+            v-model="searchQuery"
+            placeholder="Search tasks..."
+            @ionInput="handleSearch"
+            class="custom-searchbar"
+            inputmode="search"
+            clear-icon="close-circle">
+          </ion-searchbar>
+        </div>
       </ion-toolbar>
-      <ion-toolbar>
-        <ion-segment v-model="selectedFilter" @ionChange="handleFilterChange" scrollable>
-          <ion-segment-button value="all">
-            <ion-label class="segment-label">
-              <div class="label-text">All</div>
-              <ion-badge color="primary">{{ taskCounts.all }}</ion-badge>
-            </ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="today">
-            <ion-label class="segment-label">
-              <div class="label-text">Today</div>
-              <ion-badge color="warning">{{ taskCounts.today }}</ion-badge>
-            </ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="upcoming">
-            <ion-label class="segment-label">
-              <div class="label-text">Upcoming</div>
-              <ion-badge color="success">{{ taskCounts.upcoming }}</ion-badge>
-            </ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="complete">
-            <ion-label class="segment-label">
-              <div class="label-text">Complete</div>
-              <ion-badge color="medium">{{ taskCounts.complete }}</ion-badge>
-            </ion-label>
-          </ion-segment-button>
-        </ion-segment>
-      </ion-toolbar>
+      <ion-segment v-model="selectedFilter" @ionChange="handleFilterChange">
+        <ion-segment-button value="all">
+          <ion-label class="segment-label">
+            <div class="label-text">All</div>
+            <ion-badge color="primary">{{ taskCounts.all }}</ion-badge>
+          </ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="today">
+          <ion-label class="segment-label">
+            <div class="label-text">Today</div>
+            <ion-badge color="warning">{{ taskCounts.today }}</ion-badge>
+          </ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="upcoming">
+          <ion-label class="segment-label">
+            <div class="label-text">Upcoming</div>
+            <ion-badge color="success">{{ taskCounts.upcoming }}</ion-badge>
+          </ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="complete">
+          <ion-label class="segment-label">
+            <div class="label-text">Complete</div>
+            <ion-badge color="medium">{{ taskCounts.complete }}</ion-badge>
+          </ion-label>
+        </ion-segment-button>
+      </ion-segment>
     </template>
 
     <ion-content :fullscreen="true" class="ion-padding-bottom">
@@ -79,23 +82,23 @@
                 :modelValue="task.completed === 1"
                 @update:modelValue="toggleTaskCompletion(task, $event)"
                 @click.stop>
-                </ion-checkbox>
-                <ion-label>
-                  <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
-                  <p class="task-description">{{ task.description }}</p>
-                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
-                </ion-label>
-              </ion-item>
-            </template>
-          </ion-item-group>
-        </ion-list>
+              </ion-checkbox>
+              <ion-label>
+                <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
+                <p class="task-description">{{ task.description }}</p>
+                <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+              </ion-label>
+            </ion-item>
+          </template>
+        </ion-item-group>
+      </ion-list>
 
-        <!-- Empty State -->
-        <div v-else class="empty-state ion-text-center">
-          <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
-          <h2>No Tasks Found</h2>
-          <p>Start by creating a new task</p>
-        </div>
+      <!-- Empty State -->
+      <div v-else class="empty-state ion-text-center">
+        <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
+        <h2>No Tasks Found</h2>
+        <p>Start by creating a new task</p>
+      </div>
 
     </ion-content>
     <!-- Floating Action Button -->
@@ -572,272 +575,245 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.completed {
-  text-decoration: line-through;
-  color: var(--ion-color-medium);
+/* Base styles */
+ion-content {
+  --padding-bottom: 80px;
 }
 
-ion-searchbar {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
+.hide-sm {
+  @media (max-width: 360px) {
+    display: none;
+  }
+}
+
+/* Custom searchbar */
+.custom-searchbar {
+  --background: var(--ion-background-color);
+  --border-radius: 10px;
   --box-shadow: none;
-  --border-style: solid;
-  --border-width: 1px;
-  --border-color: var(--ion-color-light-shade);
-  margin: 8px 16px;
+  --placeholder-color: var(--ion-color-medium);
+  --icon-color: var(--ion-color-primary);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 44px;
+  margin: 8px 12px;
+  max-width: 100%;
+  width: auto;
 }
 
+ion-toolbar {
+  --min-height: 56px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  contain: none;
+  overflow: visible;
+}
+
+@media (max-width: 360px) {
+  .custom-searchbar {
+    --min-height: 40px;
+    margin: 4px 8px;
+  }
+  
+  ion-toolbar {
+    --min-height: 48px;
+  }
+}
+
+@media (min-width: 768px) {
+  .custom-searchbar {
+    max-width: 800px;
+    margin: 8px auto;
+  }
+}
+
+/* Segment styles */
 ion-segment {
-  --background: var(--ion-color-light);
+  --background: var(--ion-card-background);
   border-radius: 12px;
-  padding: 4px;
-  max-width: 100%;
-  margin: 0 auto;
+  margin: 8px 12px;
+  display: flex;
+  overflow: visible;
+  width: auto;
 }
 
 ion-segment-button {
   --background-checked: var(--ion-color-primary);
   --color-checked: var(--ion-color-primary-contrast);
   --indicator-color: transparent;
-  border-radius: 8px;
+  min-width: auto;
+  flex: 1;
+  font-size: 0.85rem;
   text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
-  min-height: 50px;
-  font-size: 1rem;
-  --padding-top: 8px;
-  --padding-bottom: 8px;
-  --padding-start: 16px;
-  --padding-end: 16px;
+  padding: 4px;
+  
+  .label-text {
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  ion-badge {
+    --padding-start: 6px;
+    --padding-end: 6px;
+    --padding-top: 2px;
+    --padding-bottom: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 10px;
+  }
 }
 
-.segment-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.label-text {
-  font-size: 1rem;
-  margin-bottom: 4px;
-}
-
-ion-badge {
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --padding-top: 4px;
-  --padding-bottom: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 6px;
-}
-
-.sort-option {
-  --background: transparent;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin: 8px 16px;
-}
-
-.sort-option ion-button {
-  --color: var(--ion-color-medium);
-  font-size: 0.9rem;
-}
-
+/* Task items */
 .task-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin: 8px 16px;
-  --background: var(--ion-color-light);
+  --background: var(--ion-card-background);
+  margin: 8px 12px;
   border-radius: 12px;
-  border: 1px solid var(--ion-color-light-shade);
-}
-
-ion-item-divider {
-  --background: transparent;
-  --color: var(--ion-color-medium);
-  font-size: 0.9rem;
-  padding: 8px 16px;
-  margin-top: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-ion-checkbox {
-  --size: 20px;
-  --checkbox-background-checked: var(--ion-color-primary);
-  --border-color: var(--ion-color-medium);
-  --border-color-checked: var(--ion-color-primary);
-  margin-right: 12px;
-  border-radius: 4px;
+  border: 1px solid var(--ion-border-color);
+  --padding-start: 12px;
+  --padding-end: 12px;
 }
 
 .task-description {
-  font-size: 0.9rem;
   color: var(--ion-color-medium);
   margin: 4px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .task-due {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: var(--ion-color-medium);
   margin: 4px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  &.completed-task { color: var(--ion-color-medium); }
+  &.due-today { color: var(--ion-color-warning); }
+  &.overdue { color: var(--ion-color-danger); }
+  &.upcoming { color: var(--ion-color-success); }
 }
 
-.task-due.completed-task {
-  color: var(--ion-color-medium);
-}
-
-.task-due.due-today {
-  color: var(--ion-color-warning);
-}
-
-.task-due.overdue {
-  color: var(--ion-color-danger);
-}
-
-.task-due.upcoming {
-  color: var(--ion-color-success);
-}
-
+/* Empty state */
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
   text-align: center;
-  margin-top: 32px;
-}
-
-.empty-icon {
-  font-size: 64px;
+  padding: 24px 16px;
   color: var(--ion-color-medium);
-  margin-bottom: 16px;
+  
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  
+  h2 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  
+  p {
+    font-size: 0.9rem;
+    margin: 0;
+    padding: 0 16px;
+  }
 }
 
-.empty-state h2 {
-  font-size: 1.2rem;
-  color: var(--ion-color-dark);
-  margin: 0 0 8px 0;
-}
-
-.empty-state p {
-  font-size: 0.9rem;
-  color: var(--ion-color-medium);
-  margin: 0;
-}
-
+/* FAB button */
 .custom-fab {
-  --background: var(--ion-color-primary);
-  --border-radius: 50%;
-  margin: 16px;
+  margin: 0 16px 16px 0;
 }
 
-/* Sort popover styles */
-:deep(.sort-popover) {
-  --width: 250px;
-  --background: var(--ion-background-color);
-  --border-radius: 12px;
-  border: 1px solid var(--ion-color-light-shade);
-}
-
-:deep(.sort-popover ion-item) {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --min-height: 48px;
-  font-size: 0.9rem;
-  --background: transparent;
-  --background-hover: var(--ion-color-light);
-}
-
-:deep(.sort-popover ion-icon) {
-  font-size: 18px;
-  color: var(--ion-color-primary);
-}
-
-/* Toast styling */
-:deep(.custom-toast) {
-  --background: var(--ion-color-success);
-  --color: white;
-  --border-radius: 12px;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --min-height: 48px;
-  --min-width: 200px;
-  --max-width: 300px;
-  text-align: center;
-  font-weight: 500;
-}
-
-@media (max-width: 768px) {
-  ion-content {
-    --padding-bottom: 80px;
-  }
-
-  .task-item {
-    margin: 6px 12px;
-  }
-
-  ion-searchbar,
-  ion-segment {
-    margin: 8px 12px;
-  }
-}
-
+/* Responsive styles */
 @media (min-width: 768px) {
   ion-content {
     --padding-bottom: 100px;
   }
 
-  ion-list {
+  ion-segment {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 16px auto;
   }
 
-  ion-searchbar,
-  ion-segment,
-  .sort-option {
-    max-width: 800px;
-    margin: 8px auto;
+  ion-segment-button {
+    font-size: 1rem;
+    min-height: 48px;
+    
+    .label-text {
+      font-size: 1rem;
+    }
+    
+    ion-badge {
+      font-size: 0.85rem;
+      --padding-start: 8px;
+      --padding-end: 8px;
+    }
   }
 
   .task-item {
-    margin: 8px auto;
     max-width: 800px;
+    margin: 8px auto;
+    --padding-start: 16px;
+    --padding-end: 16px;
   }
 
-  .task-item:hover {
-    transform: none;
-    box-shadow: none;
+  .task-description {
+    font-size: 1rem;
+  }
+
+  .task-due {
+    font-size: 0.9rem;
   }
 
   .empty-state {
     max-width: 800px;
     margin: 32px auto;
+    padding: 32px 16px;
+    
+    .empty-icon {
+      font-size: 64px;
+    }
+    
+    h2 {
+      font-size: 1.2rem;
+    }
   }
+}
 
-  ion-segment {
-    max-width: 800px;
-  }
-
+/* Small screen adjustments */
+@media (max-width: 360px) {
   ion-segment-button {
-    min-width: 180px;
-    font-size: 1.1rem;
-    min-height: 60px;
+    font-size: 0.8rem;
+    padding: 2px;
+    
+    .label-text {
+      margin-bottom: 2px;
+    }
+    
+    ion-badge {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      font-size: 0.7rem;
+    }
   }
 
-  .label-text {
-    font-size: 1.1rem;
+  .task-item {
+    margin: 6px 8px;
+    --padding-start: 8px;
+    --padding-end: 8px;
   }
+}
 
-  ion-badge {
-    font-size: 1rem;
-  }
+.search-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

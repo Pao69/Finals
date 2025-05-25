@@ -3,9 +3,11 @@
     <ion-content class="ion-padding">
       <form @submit.prevent="handleSubmit" class="task-form">
         <div class="form-section">
-          <h2>Task Details</h2>
+          <div class="section-header">
+            <h2>Task Details</h2>
+          </div>
           
-          <ion-item>
+          <ion-item class="form-item">
             <ion-label position="stacked">Title <ion-text color="danger">*</ion-text></ion-label>
             <ion-input
               v-model="taskForm.title"
@@ -17,45 +19,45 @@
             <ion-note v-if="errors.title" color="danger">{{ errors.title }}</ion-note>
           </ion-item>
 
-          <ion-item>
+          <ion-item class="form-item">
             <ion-label position="stacked">Description</ion-label>
             <ion-textarea
               v-model="taskForm.description"
               placeholder="Enter task description"
               :rows="4"
-              class="custom-input">
+              class="custom-textarea">
             </ion-textarea>
           </ion-item>
         </div>
 
         <div class="form-section">
-          <h2>Schedule</h2>
+          <div class="section-header">
+            <h2>Schedule</h2>
+          </div>
           
           <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
             <ion-label position="stacked">Due Date <ion-text color="danger">*</ion-text></ion-label>
-            <ion-datetime
+            <input
+              type="datetime-local"
               v-model="taskForm.due_date"
-              presentation="date-time"
               :min="minDateTime"
               required
-              :buttons="true"
-              button-text="Done"
-              cancel-text="Cancel"
               class="custom-datetime">
-            </ion-datetime>
           </ion-item>
         </div>
 
         <div class="form-section">
-          <h2>Status</h2>
+          <div class="section-header">
+            <h2>Status</h2>
+          </div>
           
-          <ion-item>
+          <ion-item class="form-item toggle-item">
             <ion-label>Mark as completed</ion-label>
-            <ion-toggle v-model="taskForm.completed" slot="end"></ion-toggle>
+            <ion-toggle v-model="taskForm.completed" slot="end" class="custom-toggle"></ion-toggle>
           </ion-item>
         </div>
 
-        <div class="submit-section">
+        <div class="form-actions">
           <ion-button expand="block" type="submit" :disabled="!isFormValid" class="submit-button">
             <ion-icon :icon="addOutline" slot="start"></ion-icon>
             Add Task
@@ -201,124 +203,137 @@ const confirmDate = async () => {
 <style scoped>
 .task-form {
   max-width: 600px;
-  margin: 0 auto;
-  padding-bottom: 2rem;
+  margin: 0.5rem auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .form-section {
-  margin-bottom: 2rem;
+  background: var(--ion-color-light);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.form-section h2 {
+.section-header {
+  margin-bottom: 1.25rem;
+}
+
+.section-header h2 {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--ion-color-dark);
-  margin-bottom: 1rem;
-  padding-left: 0.5rem;
+  margin: 0;
 }
 
-ion-item {
-  --padding-start: 0;
-  margin-bottom: 1rem;
+.form-item {
+  --background: var(--ion-background-color);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 0 0 1rem;
+  border: 1px solid var(--ion-color-medium-shade);
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-item ion-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ion-color-medium);
+  margin-bottom: 0.5rem;
+}
+
+.custom-input,
+.custom-textarea {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --background: var(--ion-background-color);
   border-radius: 8px;
-  --background: var(--ion-color-light);
+  font-size: 1rem;
+  --color: var(--ion-color-dark);
 }
 
-.custom-input {
-  --padding-start: 1rem;
-  --padding-end: 1rem;
-  --padding-top: 0.5rem;
-  --padding-bottom: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-ion-datetime {
-  width: 100%;
+.custom-textarea {
+  min-height: 120px;
+  line-height: 1.5;
 }
 
 .custom-datetime {
   width: 100%;
+  padding: 12px;
+  border: 1px solid var(--ion-color-medium-shade);
+  border-radius: 8px;
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+  font-size: 16px;
+  margin-top: 8px;
 }
 
-.submit-section {
-  margin-top: 2rem;
-  padding: 0 1rem;
+.custom-datetime:focus {
+  outline: none;
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+.toggle-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: none;
+  background: var(--ion-background-color);
+}
+
+.toggle-item ion-label {
+  font-size: 0.95rem;
+  color: var(--ion-color-dark);
+}
+
+.custom-toggle {
+  --background: var(--ion-color-medium);
+  --background-checked: var(--ion-color-success);
+  --handle-background: var(--ion-color-light);
+  --handle-background-checked: var(--ion-color-light);
+  --handle-width: 20px;
+  --handle-height: 20px;
+  --handle-spacing: 2px;
+  --handle-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .submit-button {
-  --border-radius: 8px;
-  font-weight: 600;
+  --border-radius: 12px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  --background: var(--ion-color-primary);
   height: 48px;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
 }
 
 ion-note {
   font-size: 0.8rem;
   padding: 0.5rem 0;
+  color: var(--ion-color-danger);
 }
 
-.date-item {
-  --background: var(--ion-color-light);
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .task-form {
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+  }
 
-.date-button-wrapper {
-  width: 100%;
-  margin-top: 8px;
-}
-
-.date-button-wrapper ion-datetime-button::part(native) {
-  background: var(--ion-color-light);
-  border-radius: 8px;
-  padding: 12px;
-  color: var(--ion-color-dark);
-}
-
-.custom-datetime {
-  width: 100%;
-}
-
-:deep(.custom-datetime) {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
-}
-
-:deep(.custom-datetime .datetime-buttons) {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  border-top: 1px solid var(--ion-color-light-shade);
-}
-
-:deep(.custom-datetime .datetime-buttons button) {
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-}
-
-:deep(.custom-datetime .datetime-buttons button:first-child) {
-  color: var(--ion-color-medium);
-}
-
-:deep(.custom-datetime .datetime-buttons button:last-child) {
-  color: var(--ion-color-primary);
-}
-
-/* Make the date picker more prominent */
-ion-datetime::part(calendar-day) {
-  color: var(--ion-color-dark);
-}
-
-ion-datetime::part(calendar-day selected) {
-  background: var(--ion-color-primary);
-  color: white;
-}
-
-ion-datetime::part(calendar-day today) {
-  border-color: var(--ion-color-primary);
+  .form-section {
+    padding: 2rem;
+  }
 }
 </style>
