@@ -69,11 +69,11 @@
       </div>
 
       <div class="action-buttons">
-        <ion-button expand="block" @click="editTask" class="edit-button">
+        <ion-button expand="block" @click="editTask" class="edit-button" v-if="canModifyTask">
           <ion-icon :icon="createOutline" slot="start"></ion-icon>
           Edit Task
         </ion-button>
-        <ion-button expand="block" @click="confirmDelete" color="danger" class="delete-button">
+        <ion-button expand="block" @click="confirmDelete" color="danger" class="delete-button" v-if="canModifyTask">
           <ion-icon :icon="trashOutline" slot="start"></ion-icon>
           Delete Task
         </ion-button>
@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import {
@@ -131,6 +131,7 @@ interface Task {
   completed: number;
   created_at: string;
   updated_at: string;
+  owner_username: string;
 }
 
 interface Resource {
@@ -150,6 +151,15 @@ const router = useRouter();
 const task = ref<Task | null>(null);
 const resources = ref<Resource[]>([]);
 const showDeleteAlert = ref(false);
+
+// Add computed property to check if user can edit/delete
+const currentUser = ref(JSON.parse(localStorage.getItem('user') || '{}'));
+const canModifyTask = computed(() => {
+  return task.value && (
+    task.value.user_id === currentUser.value.id || 
+    currentUser.value.role === 'admin'
+  );
+});
 
 // Fetch task details
 const fetchTaskDetails = async () => {
@@ -173,7 +183,7 @@ const fetchTaskDetails = async () => {
   } catch (error: any) {
     console.error('Error fetching task:', error);
     const toast = await toastController.create({
-      message: 'Failed to fetch task details',
+      message: error.response?.data?.message || 'Failed to fetch task details',
       duration: 2000,
       color: 'danger'
     });

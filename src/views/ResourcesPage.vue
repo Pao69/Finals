@@ -81,7 +81,7 @@
               <ion-button @click="downloadResource(resource)">
                 <ion-icon :icon="downloadOutline" slot="icon-only"></ion-icon>
               </ion-button>
-              <ion-button color="danger" @click="confirmDelete(resource)">
+              <ion-button color="danger" @click="confirmDelete(resource)" v-if="canModifyResource(resource)">
                 <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
               </ion-button>
             </ion-buttons>
@@ -149,7 +149,8 @@ interface Resource {
   file_size: number;
   description: string;
   upload_date: string;
-  task_title?: string;
+  task_title: string | null;
+  owner_username: string;
 }
 
 interface Task {
@@ -170,6 +171,11 @@ const uploadForm = ref({
   description: '',
   task_id: null as number | null
 });
+
+const currentUser = ref(JSON.parse(localStorage.getItem('user') || '{}'));
+const canModifyResource = (resource: Resource) => {
+  return resource.user_id === currentUser.value.id || currentUser.value.role === 'admin';
+};
 
 // Fetch resources
 const fetchResources = async () => {
@@ -222,6 +228,7 @@ const filteredResources = computed(() => {
   return resources.value.filter(resource => 
     resource.original_filename.toLowerCase().includes(query) ||
     resource.description.toLowerCase().includes(query) ||
+    resource.owner_username.toLowerCase().includes(query) ||
     (resource.task_title && resource.task_title.toLowerCase().includes(query))
   );
 });

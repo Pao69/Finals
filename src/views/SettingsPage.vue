@@ -315,13 +315,15 @@ const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg')
 const originalProfile = ref({
   username: '',
   email: '',
-  phone: ''
+  phone: '',
+  role: 'user'
 });
 
 const profile = ref({
   username: '',
   email: '',
-  phone: ''
+  phone: '',
+  role: 'user'
 });
 
 // Password change form
@@ -338,18 +340,27 @@ const passwordStrength = ref({
 
 // Load user profile with image
 onMounted(async () => {
-  const userData = localStorage.getItem('user');
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
   if (userData) {
     const user = JSON.parse(userData);
     originalProfile.value = {
-      username: user.username,
-      email: user.email,
-      phone: user.phone
+      username: user.username || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: user.role || 'user'
     };
     profile.value = { ...originalProfile.value };
     
-    // Fetch current profile picture
+    // Set profile image if it exists in user data
+    if (user.pfp) {
+      profileImage.value = user.pfp;
+    }
+    
+    // Fetch current profile picture in case it was updated
     await fetchProfilePicture();
+  } else {
+    // If no user data is found, redirect to login
+    router.push('/login');
   }
 });
 
@@ -579,6 +590,7 @@ const deleteProfilePicture = async () => {
   await alert.present();
 };
 
+//Logout
 const handleLogout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
@@ -601,9 +613,20 @@ const updateProfile = async () => {
     const response = await api.post('/update_profile.php', profile.value);
 
     if (response.data.success) {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const updatedUser = { ...userData, ...profile.value };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Get the storage where user data is stored
+      const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+      const userData = JSON.parse(storage.getItem('user') || '{}');
+      
+      // Update user data while preserving other fields
+      const updatedUser = { 
+        ...userData,
+        username: profile.value.username,
+        email: profile.value.email,
+        phone: profile.value.phone
+      };
+      
+      // Store updated user data
+      storage.setItem('user', JSON.stringify(updatedUser));
       originalProfile.value = { ...profile.value };
 
       const toast = await toastController.create({
@@ -614,10 +637,13 @@ const updateProfile = async () => {
         icon: checkmarkCircle
       });
       await toast.present();
+    } else {
+      throw new Error(response.data.message || 'Failed to update profile');
     }
   } catch (error: any) {
+    console.error('Profile update error:', error);
     const toast = await toastController.create({
-      message: error.message || 'Failed to update profile',
+      message: error.response?.data?.message || error.message || 'Failed to update profile',
       duration: 3000,
       color: 'danger',
       position: 'top',
@@ -777,21 +803,34 @@ const updatePasswordStrength = () => {
 
 const fetchProfilePicture = async () => {
   try {
-    const token = localStorage.getItem('token');
+    // First check local storage or session storage for cached profile picture
+    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.pfp) {
+        profileImage.value = user.pfp;
+      }
+    }
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
     const response = await api.get('/profile_picture.php');
-
     if (response.data.success && response.data.image_link) {
       profileImage.value = response.data.image_link;
       
-      // Update local storage
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      // Update user data in the storage that contains it
+      const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+      const userData = JSON.parse(storage.getItem('user') || '{}');
       userData.pfp = response.data.image_link;
-      localStorage.setItem('user', JSON.stringify(userData));
+      storage.setItem('user', JSON.stringify(userData));
     }
   } catch (error) {
     console.error('Failed to fetch profile picture:', error);
+    // If there's an error, ensure we at least show the default avatar
+    if (!profileImage.value) {
+      profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    }
   }
 };
 
