@@ -20,7 +20,16 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     } else {
       // If no token is found, check if we're on a public route
-      const publicRoutes = ['/login.php', '/signup.php', '/request_reset.php', '/reset_password.php'];
+      const publicRoutes = [
+        '/login.php', 
+        '/signup.php', 
+        '/request_reset.php', 
+        '/reset_password.php',
+        '/profile_picture.php',
+        '/profile.php',
+        '/projects.php',
+        '/tasks.php'
+      ];
       const isPublicRoute = publicRoutes.some(route => config.url?.endsWith(route));
       
       if (!isPublicRoute) {

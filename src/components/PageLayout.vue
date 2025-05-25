@@ -1,49 +1,56 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar :class="{ 'dark-toolbar': isDark }">
+      <ion-toolbar>
         <ion-buttons slot="start" v-if="showBackButton">
           <ion-back-button :default-href="backHref"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ title }}</ion-title>
-        <ion-buttons slot="end" v-if="title !== 'Settings'">
-          <profile-avatar></profile-avatar>
-        </ion-buttons>
       </ion-toolbar>
+      <!-- Additional toolbar slot -->
       <slot name="additional-toolbar"></slot>
     </ion-header>
-
-    <ion-content :class="{ 'custom-content': isDark, 'dark-theme': isDark }">
-      <slot></slot>
-    </ion-content>
+    <slot></slot>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton } from '@ionic/vue';
-import ProfileAvatar from './ProfileAvatar.vue';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton
+} from '@ionic/vue';
 
-interface Props {
+defineProps<{
   title: string;
   showBackButton?: boolean;
   backHref?: string;
-  isDark?: boolean;
-}
-
-defineProps<Props>();
+}>();
 </script>
 
 <style scoped>
-.dark-toolbar {
-  --background: #1a1a1a;
-  --color: #ffffff;
+ion-toolbar {
+  --background: var(--ion-color-light);
+  --border-color: var(--ion-color-light-shade);
 }
 
-.custom-content {
-  --background: #121212;
+ion-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
 }
 
-.dark-theme {
-  color: #ffffff;
+@media (prefers-color-scheme: dark) {
+  ion-toolbar {
+    --background: var(--ion-color-dark);
+    --border-color: var(--ion-color-dark-shade);
+  }
+
+  ion-title {
+    color: var(--ion-color-light);
+  }
 }
 </style> 

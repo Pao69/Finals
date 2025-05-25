@@ -79,23 +79,23 @@
                 :modelValue="task.completed === 1"
                 @update:modelValue="toggleTaskCompletion(task, $event)"
                 @click.stop>
-                </ion-checkbox>
-                <ion-label>
-                  <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
-                  <p class="task-description">{{ task.description }}</p>
-                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
-                </ion-label>
-              </ion-item>
-            </template>
-          </ion-item-group>
-        </ion-list>
+              </ion-checkbox>
+              <ion-label>
+                <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
+                <p class="task-description">{{ task.description }}</p>
+                <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+              </ion-label>
+            </ion-item>
+          </template>
+        </ion-item-group>
+      </ion-list>
 
-        <!-- Empty State -->
-        <div v-else class="empty-state ion-text-center">
-          <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
-          <h2>No Tasks Found</h2>
-          <p>Start by creating a new task</p>
-        </div>
+      <!-- Empty State -->
+      <div v-else class="empty-state ion-text-center">
+        <ion-icon :icon="clipboardOutline" class="empty-icon"></ion-icon>
+        <h2>No Tasks Found</h2>
+        <p>Start by creating a new task</p>
+      </div>
 
     </ion-content>
     <!-- Floating Action Button -->
