@@ -41,6 +41,7 @@
                 type="tel"
                 id="phone"
                 v-model="phone"
+                maxlength="11"
                 required
                 placeholder="Enter phone"
                 @input="validatePhone"/>

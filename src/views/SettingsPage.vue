@@ -105,15 +105,87 @@
               </ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <div class="security-options">
-                <ion-button 
-                  expand="block" 
-                  fill="outline" 
-                  @click="openChangePasswordModal"
-                  class="security-button">
-                  <ion-icon :icon="keyOutline" slot="start"></ion-icon>
-                  Change Password
-                </ion-button>
+              <div class="settings-form">
+                <ion-item>
+                  <ion-label position="stacked">Current Password</ion-label>
+                  <div class="inputForm">
+                    <ion-input 
+                      :type="showPasswordFields.current ? 'text' : 'password'"
+                      v-model="passwordForm.currentPassword"
+                      placeholder="Enter current password"
+                      class="custom-input">
+                    </ion-input>
+                    <span class="toggle-password" @click="showPasswordFields.current = !showPasswordFields.current">
+                      {{ showPasswordFields.current ? '👁️' : '👁️‍🗨️' }}
+                    </span>
+                  </div>
+                </ion-item>
+                <div v-if="passwordErrors.currentPassword" class="error-message">
+                  {{ passwordErrors.currentPassword }}
+                </div>
+
+                <ion-item>
+                  <ion-label position="stacked">New Password</ion-label>
+                  <div class="inputForm">
+                    <ion-input 
+                      :type="showPasswordFields.new ? 'text' : 'password'"
+                      v-model="passwordForm.newPassword"
+                      placeholder="Enter new password"
+                      class="custom-input">
+                    </ion-input>
+                    <span class="toggle-password" @click="showPasswordFields.new = !showPasswordFields.new">
+                      {{ showPasswordFields.new ? '👁️' : '👁️‍🗨️' }}
+                    </span>
+                  </div>
+                </ion-item>
+                <div class="password-requirements" v-if="passwordForm.newPassword">
+                  <p :class="{ valid: hasLength }">✓ At least 11 characters</p>
+                  <p :class="{ valid: hasLetter }">✓ At least one letter</p>
+                  <p :class="{ valid: hasNumber }">✓ At least one number</p>
+                  <p :class="{ valid: hasSpecial }">✓ At least one special character</p>
+                </div>
+                <div v-if="passwordErrors.newPassword" class="error-message">
+                  {{ passwordErrors.newPassword }}
+                </div>
+
+                <ion-item>
+                  <ion-label position="stacked">Confirm New Password</ion-label>
+                  <div class="inputForm">
+                    <ion-input 
+                      :type="showPasswordFields.confirm ? 'text' : 'password'"
+                      v-model="passwordForm.confirmPassword"
+                      placeholder="Confirm new password"
+                      class="custom-input">
+                    </ion-input>
+                    <span class="toggle-password" @click="showPasswordFields.confirm = !showPasswordFields.confirm">
+                      {{ showPasswordFields.confirm ? '👁️' : '👁️‍🗨️' }}
+                    </span>
+                  </div>
+                </ion-item>
+                <div v-if="passwordErrors.confirmPassword" class="error-message">
+                  {{ passwordErrors.confirmPassword }}
+                </div>
+
+                <div class="password-actions">
+                  <ion-button 
+                    expand="block" 
+                    @click="changePassword"
+                    color="primary"
+                    class="action-button"
+                    :disabled="isChangingPassword">
+                    <ion-icon :icon="keyOutline" slot="start"></ion-icon>
+                    {{ isChangingPassword ? 'Changing Password...' : 'Change Password' }}
+                  </ion-button>
+                  <ion-button 
+                    expand="block"
+                    @click="handleForgotPassword"
+                    color="medium"
+                    class="action-button"
+                    :disabled="isChangingPassword">
+                    <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
+                    Forgot Password
+                  </ion-button>
+                </div>
               </div>
             </ion-card-content>
           </ion-card>
@@ -151,85 +223,6 @@
         </div>
       </div>
     </ion-content>
-
-    <!-- Change Password Modal -->
-    <ion-modal 
-      :is-open="isChangePasswordModalOpen" 
-      @didDismiss="isChangePasswordModalOpen = false"
-      class="password-modal">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Change Password</ion-title>
-          <ion-buttons slot="end">
-            <ion-button @click="isChangePasswordModalOpen = false">
-              <ion-icon :icon="closeOutline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-
-      <ion-content class="ion-padding">
-        <form @submit.prevent="changePassword" class="password-form">
-          <div class="form-group">
-            <ion-item lines="full" class="custom-input-item">
-              <ion-icon :icon="lockClosedOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="floating">Current Password</ion-label>
-              <ion-input
-                type="password"
-                v-model="passwordForm.currentPassword"
-                required
-                placeholder="Enter current password"
-                class="custom-input"
-              ></ion-input>
-            </ion-item>
-            <div v-if="passwordErrors.currentPassword" class="error-message">
-              {{ passwordErrors.currentPassword }}
-            </div>
-          </div>
-
-          <div class="form-group">
-            <ion-item lines="full" class="custom-input-item">
-              <ion-icon :icon="keyOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="floating">New Password</ion-label>
-              <ion-input
-                type="password"
-                v-model="passwordForm.newPassword"
-                required
-                placeholder="Enter new password"
-                class="custom-input">
-              </ion-input>
-            </ion-item>
-            <div v-if="passwordErrors.newPassword" class="error-message">
-              {{ passwordErrors.newPassword }}
-            </div>
-          </div>
-
-          <div class="form-group">
-            <ion-item lines="full" class="custom-input-item">
-              <ion-icon :icon="keyOutline" slot="start" color="primary"></ion-icon>
-              <ion-label position="floating">Confirm New Password</ion-label>
-              <ion-input
-                type="password"
-                v-model="passwordForm.confirmPassword"
-                required
-                placeholder="Confirm new password"
-                class="custom-input">
-              </ion-input>
-            </ion-item>
-            <div v-if="passwordErrors.confirmPassword" class="error-message">
-              {{ passwordErrors.confirmPassword }}
-            </div>
-          </div>
-
-          <ion-button 
-            expand="block" 
-            type="submit"
-            class="submit-button">
-            Change Password
-          </ion-button>
-        </form>
-      </ion-content>
-    </ion-modal>
   </page-layout>
 </template>
 
@@ -255,7 +248,8 @@ import {
   keyOutline,
   checkmarkCircleOutline, 
   trashOutline, 
-  warningOutline
+  warningOutline,
+  refreshOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
@@ -268,7 +262,6 @@ const components = {
 };
 
 const router = useRouter();
-const isChangePasswordModalOpen = ref(false);
 
 //for default profile
 const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
@@ -294,6 +287,22 @@ const passwordForm = ref({
   newPassword: '',
   confirmPassword: ''
 });
+
+// Add showPasswordFields ref
+const showPasswordFields = ref({
+  current: false,
+  new: false,
+  confirm: false
+});
+
+// Add loading state
+const isChangingPassword = ref(false);
+
+// Add computed properties for password requirements
+const hasLength = computed(() => passwordForm.value.newPassword.length >= 11);
+const hasLetter = computed(() => /[A-Za-z]/.test(passwordForm.value.newPassword));
+const hasNumber = computed(() => /[0-9]/.test(passwordForm.value.newPassword));
+const hasSpecial = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.value.newPassword));
 
 const passwordErrors = ref({
   currentPassword: '',
@@ -346,8 +355,17 @@ const validatePassword = () => {
 
   if (!passwordForm.value.newPassword) {
     passwordErrors.value.newPassword = 'New password is required';
-  } else if (passwordForm.value.newPassword.length < 8) {
-    passwordErrors.value.newPassword = 'Password must be at least 8 characters long';
+  } else {
+    // Check password requirements
+    if (passwordForm.value.newPassword.length < 11) {
+      passwordErrors.value.newPassword = 'Password must be at least 11 characters long';
+    } else if (!/[A-Za-z]/.test(passwordForm.value.newPassword)) {
+      passwordErrors.value.newPassword = 'Password must contain at least one letter';
+    } else if (!/[0-9]/.test(passwordForm.value.newPassword)) {
+      passwordErrors.value.newPassword = 'Password must contain at least one number';
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.value.newPassword)) {
+      passwordErrors.value.newPassword = 'Password must contain at least one special character';
+    }
   }
 
   if (!passwordForm.value.confirmPassword) {
@@ -682,22 +700,14 @@ const deleteProfile = async () => {
   await alert.present();
 };
 
-const openChangePasswordModal = () => {
-  passwordForm.value = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
-  isChangePasswordModalOpen.value = true;
-};
-
 const changePassword = async () => {
   if (!validatePassword()) {
     return;
   }
 
+  isChangingPassword.value = true;
   try {
-    const response = await api.post('/change_password.php', {
+    const response = await api.post('/dbConnect/change_password.php', {
       currentPassword: passwordForm.value.currentPassword,
       newPassword: passwordForm.value.newPassword
     });
@@ -706,25 +716,36 @@ const changePassword = async () => {
       const toast = await toastController.create({
         message: 'Password changed successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
 
-      // Clear form and close modal
+      // Clear form
       passwordForm.value = {
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       };
-      isChangePasswordModalOpen.value = false;
+      // Reset show password fields
+      showPasswordFields.value = {
+        current: false,
+        new: false,
+        confirm: false
+      };
     }
   } catch (error: any) {
     const toast = await toastController.create({
       message: error.response?.data?.message || 'Failed to change password',
       duration: 3000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
+  } finally {
+    isChangingPassword.value = false;
   }
 };
 
@@ -766,6 +787,16 @@ const triggerFileInput = () => {
   if (fileInput) {
     fileInput.click();
   }
+};
+
+const handleForgotPassword = () => {
+  // Save current user data to session storage before navigating
+  const userData = localStorage.getItem('user');
+  if (userData) {
+    sessionStorage.setItem('user', userData);
+  }
+  // Navigate to forgot password page using the correct path
+  router.push('/ForgotPasswordPage');
 };
 </script>
 
@@ -941,30 +972,20 @@ ion-button {
   --color: var(--ion-color-dark);
 }
 
-/* Password Modal Styles */
-.password-modal {
-  --background: var(--ion-background-color);
-  --height: auto;
-  --width: 90%;
-  max-width: 400px;
-  --border-radius: 16px;
-  border: 1px solid var(--ion-color-light-shade);
+.password-requirements {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  padding-left: 16px;
 }
 
-.password-form {
-  padding: 16px;
+.password-requirements p {
+  color: var(--ion-color-danger);
+  margin: 4px 0;
+  transition: color 0.3s ease;
 }
 
-.form-group {
-  margin-bottom: 16px;
-}
-
-.custom-input-item {
-  --background: var(--ion-color-light);
-  --border-radius: 8px;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  margin-bottom: 8px;
+.password-requirements p.valid {
+  color: var(--ion-color-success);
 }
 
 .error-message {
@@ -972,10 +993,11 @@ ion-button {
   font-size: 0.8rem;
   margin-top: 4px;
   padding-left: 16px;
+  margin-bottom: 8px;
 }
 
-.submit-button {
-  margin-top: 24px;
+.save-button {
+  margin-top: 16px;
 }
 
 /* Responsive Design */
@@ -1015,5 +1037,39 @@ ion-button {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   }
+}
+
+.password-actions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.action-button {
+  margin: 0;
+  height: 42px;
+  --box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .password-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inputForm {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+  z-index: 1;
 }
 </style>

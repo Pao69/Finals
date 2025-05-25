@@ -1,126 +1,246 @@
 <template>
   <page-layout title="Admin Dashboard">
     <ion-content class="ion-padding">
-      <!-- Segment for switching between users, tasks, and resources -->
-      <ion-segment v-model="selectedTab" @ionChange="handleTabChange">
-        <ion-segment-button value="users">
-          <ion-label>Users</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="tasks">
-          <ion-label>Tasks</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="resources">
-          <ion-label>Resources</ion-label>
-        </ion-segment-button>
-      </ion-segment>
+      <!-- Segment Tabs -->
+       <div>
+        <ion-segment 
+          v-model="selectedTab" 
+          @ionChange="handleTabChange" 
+          class="custom-segment ion-margin-vertical">
+          <ion-segment-button value="users" class="segment-button">
+            <ion-icon :icon="peopleOutline" size="small"></ion-icon>
+            <ion-label>Users</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="tasks" class="segment-button">
+            <ion-icon :icon="checkboxOutline" size="small"></ion-icon>
+            <ion-label>Tasks</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="resources" class="segment-button">
+            <ion-icon :icon="folderOutline" size="small"></ion-icon>
+            <ion-label>Resources</ion-label>
+          </ion-segment-button>
+        </ion-segment>
 
-      <!-- Search Bar -->
-      <ion-searchbar
-        v-model="searchQuery"
-        placeholder="Search..."
-        @ionInput="handleSearch">
-      </ion-searchbar>
+        <ion-searchbar
+          v-model="searchQuery"
+          placeholder="Search..."
+          @ionInput="handleSearch"
+          class="custom-searchbar">
+        </ion-searchbar>
+      </div>
 
       <!-- Users Tab -->
-      <div v-if="selectedTab === 'users'" class="tab-content">
-        <ion-list>
-          <ion-item v-for="user in filteredUsers" :key="user.id" class="list-item">
-            <ion-label>
-              <h2>{{ user.username }}</h2>
-              <p>{{ user.email }}</p>
-              <p class="metadata">
-                <span>Role: <span :class="['user-role', user.role === 'admin' ? 'role-admin' : 'role-user']">{{ user.role || 'user' }}</span></span> | 
-                <span>Last Login: {{ formatDate(user.last_login) }}</span>
-              </p>
-            </ion-label>
-            <ion-select 
-              v-model="user.role" 
-              interface="popover"
-              @ionChange="updateUserRole(user.id, $event.detail.value)"
-              :disabled="user.id === currentUser.id">
-              <ion-select-option value="user">User</ion-select-option>
-              <ion-select-option value="admin">Admin</ion-select-option>
-            </ion-select>
-            <ion-button 
-              fill="clear" 
-              color="danger"
-              @click="confirmDeleteUser(user)"
-              :disabled="user.id === currentUser.id">
-              <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
-            </ion-button>
-          </ion-item>
+      <div v-if="selectedTab === 'users'" class="ion-padding-bottom fade-in">
+        <ion-list class="custom-list">
+          <ion-item-group>
+            <ion-item v-for="user in filteredUsers" :key="user.id" class="custom-item ion-margin-bottom">
+              <ion-card class="custom-card ion-no-margin">
+                <ion-card-content>
+                  <ion-grid class="ion-no-padding">
+                    <ion-row class="ion-align-items-center">
+                      <ion-col size="12" size-md="7">
+                        <div class="user-info">
+                          <div class="user-header">
+                            <ion-avatar class="user-avatar">
+                              <div class="avatar-content">
+                                {{ user.username.charAt(0).toUpperCase() }}
+                              </div>
+                            </ion-avatar>
+                            <div class="user-details">
+                              <h2 class="user-name">{{ user.username }}</h2>
+                              <p class="user-email">{{ user.email }}</p>
+                            </div>
+                          </div>
+                          <div class="user-meta">
+                            <ion-chip :class="['status-chip', user.role === 'admin' ? 'admin-chip' : 'user-chip']">
+                              <ion-icon :icon="user.role === 'admin' ? 'shield' : 'person'"></ion-icon>
+                              <ion-label>{{ user.role === 'admin' ? 'Administrator' : 'Regular User' }}</ion-label>
+                            </ion-chip>
+                            <ion-chip class="time-chip">
+                              <ion-icon :icon="timeOutline"></ion-icon>
+                              <ion-label>{{ formatDate(user.last_login) }}</ion-label>
+                            </ion-chip>
+                          </div>
+                        </div>
+                      </ion-col>
+                      <ion-col size="12" size-md="5" class="action-column">
+                        <div class="action-wrapper">
+                          <div class="role-select-wrapper" :class="{ 'is-loading': getRoleChangeStatus(user.id) === 'loading' }">
+                            <ion-text color="medium" class="select-label">
+                              Change Role
+                            </ion-text>
+                            <ion-select
+                              v-model="user.role"
+                              interface="action-sheet"
+                              @ionChange="handleRoleChange($event, user)"
+                              :disabled="user.id === currentUser.id || getRoleChangeStatus(user.id) === 'loading'"
+                              class="role-select"
+                              :class="{
+                                'select-error': lastRoleChangeError && roleChangeState?.userId === user.id,
+                                'select-success': !lastRoleChangeError && roleChangeState?.userId === user.id
+                              }">
+                              <ion-select-option value="user">Regular User</ion-select-option>
+                              <ion-select-option value="admin">Administrator</ion-select-option>
+                            </ion-select>
+                            <div class="role-status" v-if="getRoleChangeStatus(user.id) === 'loading'">
+                              <ion-spinner name="crescent" color="primary"></ion-spinner>
+                            </div>
+                          </div>
+                          <ion-button
+                            fill="outline"
+                            color="danger"
+                            @click="confirmDeleteUser(user)"
+                            :disabled="user.id === currentUser.id"
+                            class="delete-button">
+                            <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                            Delete
+                          </ion-button>
+                        </div>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+            </ion-item>
+          </ion-item-group>
         </ion-list>
       </div>
 
       <!-- Tasks Tab -->
-      <div v-if="selectedTab === 'tasks'" class="tab-content">
-        <ion-list v-for="(userTasks, index) in groupedTasks" :key="index">
-          <ion-list-header>
-            <ion-label>
-              <h2>{{ userTasks.username }}</h2>
-              <p>{{ userTasks.tasks.length }} tasks</p>
-            </ion-label>
-          </ion-list-header>
-          
-          <ion-item v-for="task in userTasks.tasks" :key="task.id" class="list-item">
-            <ion-label>
-              <h2>{{ task.title }}</h2>
-              <p>{{ task.description }}</p>
-              <p class="metadata">
-                <span class="due-date">Due: {{ formatDate(task.due_date) }}</span> |
-                <span>Status: <span :class="['task-status', task.completed ? 'status-completed' : 'status-pending']">
-                  {{ task.completed ? 'Completed' : 'Pending' }}
-                </span></span>
-              </p>
-            </ion-label>
-            <ion-button 
-              fill="clear" 
-              color="danger"
-              @click="confirmDeleteTask(task)">
-              <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
-            </ion-button>
-          </ion-item>
+      <div v-if="selectedTab === 'tasks'" class="ion-padding-bottom fade-in">
+        <ion-list class="custom-list">
+          <ion-item-group v-for="(userTasks, index) in groupedTasks" :key="index">
+            <ion-item-divider sticky>
+              <ion-label>
+                <ion-text color="dark">
+                  <h2 class="ion-no-margin">{{ userTasks.username }}</h2>
+                </ion-text>
+                <ion-badge color="medium" class="ion-margin-top">
+                  {{ userTasks.tasks.length }} tasks
+                </ion-badge>
+              </ion-label>
+            </ion-item-divider>
+
+            <ion-item v-for="task in userTasks.tasks" :key="task.id" class="custom-item ion-margin-bottom">
+              <ion-card class="custom-card ion-no-margin">
+                <ion-card-content>
+                  <ion-grid class="ion-no-padding">
+                    <ion-row class="ion-align-items-center">
+                      <ion-col size="auto">
+                        <div class="task-status-icon" :class="{ 'completed': task.completed }">
+                          <ion-icon 
+                            :icon="task.completed ? checkmarkCircleOutline : timeOutline"
+                            :color="task.completed ? 'success' : 'warning'"
+                            size="large">
+                          </ion-icon>
+                        </div>
+                      </ion-col>
+                      <ion-col size="12" size-md="8">
+                        <div class="task-content">
+                          <div class="task-header">
+                            <h3 class="task-title">{{ task.title }}</h3>
+                            <ion-chip 
+                              :class="['status-chip', task.completed ? 'completed-chip' : 'pending-chip']"
+                              class="task-status">
+                              <ion-icon :icon="task.completed ? checkmarkCircleOutline : timeOutline"></ion-icon>
+                              <ion-label>{{ task.completed ? 'Completed' : 'Pending' }}</ion-label>
+                            </ion-chip>
+                          </div>
+                          <p class="task-description">{{ task.description }}</p>
+                          <div class="task-meta">
+                            <ion-chip class="time-chip">
+                              <ion-icon :icon="calendarOutline"></ion-icon>
+                              <ion-label>Due: {{ formatDate(task.due_date) }}</ion-label>
+                            </ion-chip>
+                          </div>
+                        </div>
+                      </ion-col>
+                      <ion-col size="12" size-md="3" class="ion-text-md-end">
+                        <ion-button
+                          fill="outline"
+                          color="danger"
+                          @click="confirmDeleteTask(task)"
+                          class="delete-button">
+                          <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                          Delete
+                        </ion-button>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+            </ion-item>
+          </ion-item-group>
         </ion-list>
       </div>
 
       <!-- Resources Tab -->
-      <div v-if="selectedTab === 'resources'" class="tab-content">
-        <ion-list v-for="(userResources, index) in groupedResources" :key="index">
-          <ion-list-header>
-            <ion-label>
-              <h2>{{ userResources.username }}</h2>
-              <p>{{ userResources.resources.length }} resources</p>
-            </ion-label>
-          </ion-list-header>
+      <div v-if="selectedTab === 'resources'">
+        <ion-list>
+          <ion-item-group v-for="(userResources, index) in groupedResources" :key="index">
+            <ion-item-divider sticky>
+              <ion-label>
+                <ion-text color="dark">
+                  <h2 class="ion-no-margin">{{ userResources.username }}</h2>
+                </ion-text>
+                <ion-badge color="medium" class="ion-margin-top">
+                  {{ userResources.resources.length }} resources
+                </ion-badge>
+              </ion-label>
+            </ion-item-divider>
 
-          <ion-item v-for="resource in userResources.resources" :key="resource.id" class="list-item">
-            <ion-thumbnail slot="start">
-              <img 
-                v-if="isImage(resource.file_type)" 
-                :src="getResourceUrl(resource.filename)" 
-                alt="Resource thumbnail"
-              />
-              <ion-icon 
-                v-else 
-                :icon="documentOutline" 
-                size="large">
-              </ion-icon>
-            </ion-thumbnail>
-            <ion-label>
-              <h2>{{ resource.original_filename }}</h2>
-              <p>{{ resource.description }}</p>
-              <p class="metadata">
-                <span class="file-size">{{ formatFileSize(resource.file_size) }}</span> |
-                <span class="upload-date">{{ formatDate(resource.upload_date) }}</span>
-              </p>
-            </ion-label>
-            <ion-button 
-              fill="clear" 
-              color="danger"
-              @click="confirmDeleteResource(resource)">
-              <ion-icon :icon="trashOutline" slot="icon-only"></ion-icon>
-            </ion-button>
-          </ion-item>
+            <ion-item v-for="resource in userResources.resources" :key="resource.id" class="ion-margin-bottom">
+              <ion-card class="ion-no-margin ion-margin-vertical full-width">
+                <ion-card-content>
+                  <ion-grid>
+                    <ion-row class="ion-align-items-center">
+                      <ion-col size="auto">
+                        <ion-thumbnail>
+                          <img
+                            v-if="isImage(resource.file_type)"
+                            :src="getResourceUrl(resource.filename)"
+                            alt="Resource thumbnail"
+                          />
+                          <ion-icon
+                            v-else
+                            :icon="documentOutline"
+                            size="large"
+                            class="thumbnail-icon">
+                          </ion-icon>
+                        </ion-thumbnail>
+                      </ion-col>
+                      <ion-col>
+                        <ion-text color="dark">
+                          <h3 class="ion-no-margin">{{ resource.original_filename }}</h3>
+                        </ion-text>
+                        <ion-text color="medium">
+                          <p class="ion-no-margin ion-margin-vertical">{{ resource.description }}</p>
+                        </ion-text>
+                        <ion-chip color="tertiary" outline>
+                          <ion-icon :icon="documentOutline"></ion-icon>
+                          <ion-label>{{ formatFileSize(resource.file_size) }}</ion-label>
+                        </ion-chip>
+                        <ion-chip color="medium">
+                          <ion-icon :icon="timeOutline"></ion-icon>
+                          <ion-label>{{ formatDate(resource.upload_date) }}</ion-label>
+                        </ion-chip>
+                      </ion-col>
+                      <ion-col size="auto">
+                        <ion-button
+                          fill="outline"
+                          color="danger"
+                          @click="confirmDeleteResource(resource)"
+                          class="action-button">
+                          <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                          Delete
+                        </ion-button>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+            </ion-item>
+          </ion-item-group>
         </ion-list>
       </div>
     </ion-content>
@@ -130,14 +250,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { 
-  IonContent, IonSegment, IonSegmentButton, IonLabel,
-  IonSearchbar, IonList, IonItem, IonButton, IonIcon,
-  IonSelect, IonSelectOption, IonThumbnail,
-  alertController, toastController, IonListHeader
+  IonContent, IonSegment, IonSegmentButton, IonLabel, IonIcon,
+  IonSearchbar, IonList, IonItem, IonButton, IonCard, IonCardContent,
+  IonGrid, IonRow, IonCol, IonText, IonChip, IonBadge,
+  IonItemDivider, IonItemGroup, IonThumbnail, IonSelect, IonSelectOption,
+  alertController, toastController, loadingController
 } from '@ionic/vue';
 import { 
-  trashOutline, 
-  documentOutline 
+  trashOutline, documentOutline, timeOutline, calendarOutline,
+  peopleOutline, checkboxOutline, folderOutline, personCircleOutline,
+  personOutline, shieldOutline, checkmarkCircleOutline, closeCircleOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 import api from '@/utils/api';
@@ -182,6 +304,13 @@ interface GroupedResources {
   resources: Resource[];
 }
 
+// Add new interface for role change tracking
+interface RoleChangeState {
+  userId: number;
+  isLoading: boolean;
+  originalRole: string;
+}
+
 // State
 const selectedTab = ref('users');
 const searchQuery = ref('');
@@ -189,6 +318,10 @@ const users = ref<User[]>([]);
 const tasks = ref<Task[]>([]);
 const resources = ref<Resource[]>([]);
 const currentUser = ref<User>(JSON.parse(localStorage.getItem('user') || '{}'));
+
+// Add new refs for role change state
+const roleChangeState = ref<RoleChangeState | null>(null);
+const lastRoleChangeError = ref<string | null>(null);
 
 // Computed properties for filtered data
 const filteredUsers = computed(() => {
@@ -313,31 +446,101 @@ const fetchData = async () => {
   }
 };
 
-// User management
-const updateUserRole = async (userId: number, newRole: string) => {
+// Enhanced role change handler
+const handleRoleChange = async (event: CustomEvent, user: any) => {
+  const newRole = event.detail.value;
+  const originalRole = user.role;
+  
+  // Set loading state
+  roleChangeState.value = {
+    userId: user.id,
+    isLoading: true,
+    originalRole
+  };
+
+  // Show loading indicator
+  const loading = await loadingController.create({
+    message: 'Updating role...',
+    duration: 10000 // Max duration of 10 seconds
+  });
+  await loading.present();
+
   try {
     const response = await api.post('/admin.php', {
       action: 'update_user_role',
-      user_id: userId,
+      user_id: user.id,
       role: newRole
     });
 
     if (response.data.success) {
+      // Dismiss loading indicator
+      await loading.dismiss();
+      
+      // Show success toast
       const toast = await toastController.create({
-        message: 'User role updated successfully',
+        message: `Role successfully updated to ${newRole === 'admin' ? 'Administrator' : 'Regular User'}`,
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'bottom',
+        buttons: [
+          {
+            icon: checkmarkCircleOutline,
+            role: 'cancel'
+          }
+        ]
       });
       await toast.present();
+      
+      // Update the local user data
+      user.role = newRole;
+      lastRoleChangeError.value = null;
+    } else {
+      throw new Error(response.data.message || 'Failed to update role');
     }
   } catch (error: any) {
+    // Dismiss loading indicator
+    await loading.dismiss();
+    
+    // Show error toast
     const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to update user role',
+      message: error.message || 'Failed to update user role',
       duration: 3000,
-      color: 'danger'
+      color: 'danger',
+      position: 'bottom',
+      buttons: [
+        {
+          icon: closeCircleOutline,
+          role: 'cancel'
+        }
+      ]
     });
     await toast.present();
+    
+    // Store the error message
+    lastRoleChangeError.value = error.message || 'Failed to update user role';
+    
+    // Revert the select value
+    user.role = originalRole;
+    
+    // Show revert alert
+    const alert = await alertController.create({
+      header: 'Role Update Failed',
+      message: 'The role change could not be completed. The previous role has been restored.',
+      buttons: ['OK']
+    });
+    await alert.present();
+  } finally {
+    // Clear loading state
+    roleChangeState.value = null;
   }
+};
+
+// Add computed property for role change status
+const getRoleChangeStatus = (userId: number) => {
+  if (roleChangeState.value?.userId === userId) {
+    return roleChangeState.value.isLoading ? 'loading' : 'success';
+  }
+  return 'idle';
 };
 
 const confirmDeleteUser = async (user: any) => {
@@ -507,169 +710,454 @@ onMounted(() => {
 </script>
 
 <style scoped>
-ion-segment {
-  margin-bottom: 16px;
+/* Dashboard Header */
+.dashboard-header {
+  padding: 16px 0;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+/* Custom Segment */
+.custom-segment {
   --background: var(--ion-color-light);
   border-radius: 12px;
   padding: 4px;
 }
 
-ion-segment-button {
+.segment-button {
   --background-checked: var(--ion-color-primary);
   --color-checked: var(--ion-color-primary-contrast);
   --indicator-color: transparent;
   border-radius: 8px;
-}
-
-ion-searchbar {
-  --background: var(--ion-color-light);
-  --border-radius: 12px;
-  --box-shadow: none;
-  margin-bottom: 16px;
-}
-
-.tab-content {
-  margin-top: 16px;
-}
-
-.list-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --inner-padding-end: 0;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  --background: var(--ion-color-light);
-}
-
-/* Header styling for user groups */
-ion-list-header {
-  --background: var(--ion-color-primary-shade);
-  border-radius: 8px 8px 0 0;
-  margin-top: 16px;
-  padding: 12px 16px;
-}
-
-ion-list-header ion-label h2 {
-  color: var(--ion-color-light);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-ion-list-header ion-label p {
-  color: var(--ion-color-light-shade);
+  text-transform: none;
+  letter-spacing: 0;
   font-weight: 500;
-  margin: 4px 0 0 0;
-  opacity: 0.9;
+  transition: all 0.2s ease;
 }
 
-/* Add a subtle shadow to the header for better depth */
-ion-list {
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
-.list-item {
-  --background: var(--ion-color-light);
-  --border-color: transparent;
-}
-
-.list-item:last-child {
-  border-radius: 0 0 8px 8px;
-}
-
-/* Item content styling */
-ion-label h2 {
-  font-weight: 600;
-  font-size: 1.1rem;
+.segment-button ion-icon {
   margin-bottom: 4px;
+}
+
+/* Custom Searchbar */
+.custom-searchbar {
+  --background: var(--ion-color-light);
+  --box-shadow: none;
+  --border-radius: 12px;
+  --placeholder-color: var(--ion-color-medium);
+  --icon-color: var(--ion-color-medium);
+  padding: 0;
+  margin-top: 16px;
+}
+
+/* List and Cards */
+.custom-list {
+  background: transparent;
+}
+
+.custom-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  --background: transparent;
+}
+
+.custom-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* User Info */
+.user-info {
+  padding: 8px 0;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  --border-radius: 14px;
+}
+
+.avatar-content {
+  width: 100%;
+  height: 100%;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 1.2rem;
+  font-weight: 600;
   color: var(--ion-color-dark);
+  margin: 0;
+  line-height: 1.4;
 }
 
-ion-label p {
-  color: var(--ion-color-dark-shade);
-  margin: 4px 0;
+.user-email {
+  font-size: 0.95rem;
+  color: var(--ion-color-medium);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
 }
 
-/* User role styling */
-.user-role {
-  font-weight: 600;
+.user-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.role-admin {
-  color: var(--ion-color-primary);
+/* Status Chips */
+.status-chip {
+  --background: transparent;
+  font-weight: 500;
+  padding: 4px 12px;
 }
 
-.role-user {
-  color: var(--ion-color-secondary);
+.admin-chip {
+  --background: rgba(var(--ion-color-primary-rgb), 0.1);
+  --color: var(--ion-color-primary);
+  border: 1px solid var(--ion-color-primary);
 }
 
-/* Task status styling */
-.task-status {
-  font-weight: 600;
+.user-chip {
+  --background: rgba(var(--ion-color-success-rgb), 0.1);
+  --color: var(--ion-color-success);
+  border: 1px solid var(--ion-color-success);
 }
 
-.status-completed {
+.time-chip {
+  --background: rgba(var(--ion-color-medium-rgb), 0.1);
+  --color: var(--ion-color-medium);
+  border: 1px solid var(--ion-color-medium);
+}
+
+/* Actions */
+.action-column {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.action-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.role-select-wrapper {
+  position: relative;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.role-select-wrapper.is-loading {
+  background: rgba(var(--ion-color-primary-rgb), 0.05);
+}
+
+.role-status {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.role-select {
+  --background: transparent;
+  --border-width: 0;
+  --padding-start: 8px;
+  --padding-end: 32px;
+  min-width: 160px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.select-error {
+  --highlight-color: var(--ion-color-danger);
+  color: var(--ion-color-danger);
+}
+
+.select-success {
+  --highlight-color: var(--ion-color-success);
   color: var(--ion-color-success);
 }
 
-.status-pending {
-  color: var(--ion-color-warning);
-}
-
-/* Due date styling */
-.due-date {
-  color: var(--ion-color-danger);
+.delete-button {
+  --border-radius: 12px;
+  --border-width: 2px;
+  --box-shadow: none;
+  height: 42px;
   font-weight: 500;
 }
 
-.metadata {
-  font-size: 0.85rem;
-  color: var(--ion-color-medium);
-  margin-top: 4px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
+.delete-button ion-icon {
+  font-size: 18px;
+  margin-right: 6px;
 }
 
-.metadata span {
-  display: inline-flex;
-  align-items: center;
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-ion-thumbnail {
-  --size: 60px;
-  margin-right: 16px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-ion-select {
-  max-width: 120px;
-  margin-right: 8px;
-}
-
-/* Resource file size styling */
-.file-size {
-  color: var(--ion-color-tertiary);
-  font-weight: 500;
-}
-
-/* Resource date styling */
-.upload-date {
-  color: var(--ion-color-medium);
-}
-
-@media (min-width: 768px) {
-  .tab-content {
-    max-width: 800px;
-    margin: 16px auto;
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .dashboard-title {
+    color: var(--ion-color-light);
   }
 
-  ion-segment,
-  ion-searchbar {
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+  .custom-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .custom-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .role-select-wrapper.is-loading {
+    background: rgba(var(--ion-color-primary-rgb), 0.15);
+  }
+
+  .avatar-content {
+    background: var(--ion-color-primary-shade);
+  }
+
+  .admin-chip {
+    --background: rgba(var(--ion-color-primary-rgb), 0.15);
+  }
+
+  .user-chip {
+    --background: rgba(var(--ion-color-success-rgb), 0.15);
+  }
+
+  .time-chip {
+    --background: rgba(var(--ion-color-medium-rgb), 0.15);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-title {
+    font-size: 1.75rem;
+  }
+
+  .action-column {
+    margin-top: 16px;
+  }
+
+  .action-wrapper {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .role-select-wrapper {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .role-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .delete-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+
+  .user-header {
+    gap: 12px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-name {
+    font-size: 1.1rem;
+  }
+
+  .user-email {
+    font-size: 0.9rem;
+  }
+
+  .status-chip {
+    font-size: 0.85rem;
+  }
+}
+
+/* Task Styles */
+.task-status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--ion-color-warning-rgb), 0.1);
+  margin-right: 16px;
+  transition: all 0.2s ease;
+}
+
+.task-status-icon.completed {
+  background: rgba(var(--ion-color-success-rgb), 0.1);
+}
+
+.task-status-icon ion-icon {
+  font-size: 24px;
+}
+
+.task-content {
+  padding: 8px 0;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.task-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.task-description {
+  color: var(--ion-color-medium);
+  margin: 8px 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.task-status {
+  margin: 0;
+}
+
+.completed-chip {
+  --background: rgba(var(--ion-color-success-rgb), 0.1);
+  --color: var(--ion-color-success);
+  border: 1px solid var(--ion-color-success);
+}
+
+.pending-chip {
+  --background: rgba(var(--ion-color-warning-rgb), 0.1);
+  --color: var(--ion-color-warning);
+  border: 1px solid var(--ion-color-warning);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .task-status-icon {
+    background: rgba(var(--ion-color-warning-rgb), 0.15);
+  }
+
+  .task-status-icon.completed {
+    background: rgba(var(--ion-color-success-rgb), 0.15);
+  }
+
+  .task-title {
+    color: var(--ion-color-light);
+  }
+
+  .completed-chip {
+    --background: rgba(var(--ion-color-success-rgb), 0.15);
+  }
+
+  .pending-chip {
+    --background: rgba(var(--ion-color-warning-rgb), 0.15);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .task-status-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+
+  .task-status-icon ion-icon {
+    font-size: 20px;
+  }
+
+  .task-title {
+    font-size: 1.1rem;
+  }
+
+  .task-description {
+    font-size: 0.9rem;
   }
 }
 </style> 
