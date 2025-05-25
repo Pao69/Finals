@@ -130,8 +130,7 @@ import {
   IonContent, IonList, IonItem, IonLabel, IonButton, IonButtons,
   IonIcon, IonSearchbar, IonCard, IonCardHeader, IonCardTitle,
   IonCardContent, IonInput, IonSelect, IonSelectOption, IonNote,
-  IonThumbnail, IonChip, IonAlert, IonToolbar, toastController,
-  IonPage, IonHeader, IonTitle, IonMenuButton
+  IonThumbnail, IonChip, IonAlert, IonToolbar, toastController
 } from '@ionic/vue';
 import {
   cloudUploadOutline, downloadOutline, trashOutline,

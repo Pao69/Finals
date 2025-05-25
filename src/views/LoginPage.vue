@@ -150,7 +150,7 @@ const handleSubmit = async () => {
         position: 'top'
       });
       await toast.present();
-      
+
       // Force a clean navigation state
       await router.replace('/login');
       
