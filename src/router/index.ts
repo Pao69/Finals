@@ -22,31 +22,41 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/tabs/dashboard'
+        redirect: to => {
+          const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+          const user = userData ? JSON.parse(userData) : null;
+          return user?.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard';
+        }
       },
       {
         path: 'dashboard',
-        component: () => import('../views/DashboardPage.vue')
+        component: () => import('../views/DashboardPage.vue'),
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'tasks',
-        component: TasksPage
+        component: TasksPage,
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'tasks/add',
-        component: () => import('../views/AddTaskPage.vue')
+        component: () => import('../views/AddTaskPage.vue'),
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'tasks/edit/:id',
-        component: () => import('../views/EditTaskPage.vue')
+        component: () => import('../views/EditTaskPage.vue'),
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'tasks/view/:id',
-        component: () => import('../views/TaskView.vue')
+        component: () => import('../views/TaskView.vue'),
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'resources',
-        component: () => import('../views/ResourcesPage.vue')
+        component: () => import('../views/ResourcesPage.vue'),
+        meta: { requiresNonAdmin: true }
       },
       {
         path: 'settings',
@@ -71,21 +81,36 @@ router.beforeEach((to, from, next) => {
   const publicPages = ['/login', '/signup'];
   const authRequired = !publicPages.includes(to.path);
   
-  // Check both localStorage and sessionStorage for authentication
+  // Get user data from the appropriate storage
   const loggedInPermanent = localStorage.getItem('user');
   const loggedInSession = sessionStorage.getItem('user');
-  const loggedIn = loggedInPermanent || loggedInSession;
-
+  
+  // Only use one storage source to prevent conflicts
+  const userData = loggedInPermanent || loggedInSession;
+  
   // If auth is required and user is not logged in
-  if (authRequired && !loggedIn) {
+  if (authRequired && !userData) {
+    // Clear both storages to ensure clean state
+    localStorage.clear();
+    sessionStorage.clear();
     return next('/login');
   }
 
-  // Check for admin routes
-  if (to.matched.some(record => record.meta.requiresAdmin)) {
-    const user = JSON.parse(loggedInPermanent || loggedInSession || '{}');
-    if (user.role !== 'admin') {
-      return next('/tabs/dashboard');
+  if (userData) {
+    const user = JSON.parse(userData);
+    
+    // Check for admin routes
+    if (to.matched.some(record => record.meta.requiresAdmin)) {
+      if (user.role !== 'admin') {
+        return next('/tabs/dashboard');
+      }
+    }
+
+    // Check for non-admin routes
+    if (to.matched.some(record => record.meta.requiresNonAdmin)) {
+      if (user.role === 'admin') {
+        return next('/tabs/admin');
+      }
     }
   }
 

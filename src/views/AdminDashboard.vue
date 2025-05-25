@@ -29,8 +29,8 @@
               <h2>{{ user.username }}</h2>
               <p>{{ user.email }}</p>
               <p class="metadata">
-                Role: {{ user.role || 'user' }} | 
-                Last Login: {{ formatDate(user.last_login) }}
+                <span>Role: <span :class="['user-role', user.role === 'admin' ? 'role-admin' : 'role-user']">{{ user.role || 'user' }}</span></span> | 
+                <span>Last Login: {{ formatDate(user.last_login) }}</span>
               </p>
             </ion-label>
             <ion-select 
@@ -54,15 +54,23 @@
 
       <!-- Tasks Tab -->
       <div v-if="selectedTab === 'tasks'" class="tab-content">
-        <ion-list>
-          <ion-item v-for="task in filteredTasks" :key="task.id" class="list-item">
+        <ion-list v-for="(userTasks, index) in groupedTasks" :key="index">
+          <ion-list-header>
+            <ion-label>
+              <h2>{{ userTasks.username }}</h2>
+              <p>{{ userTasks.tasks.length }} tasks</p>
+            </ion-label>
+          </ion-list-header>
+          
+          <ion-item v-for="task in userTasks.tasks" :key="task.id" class="list-item">
             <ion-label>
               <h2>{{ task.title }}</h2>
               <p>{{ task.description }}</p>
               <p class="metadata">
-                Assigned to: {{ task.assigned_to }} | 
-                Due: {{ formatDate(task.due_date) }} |
-                Status: {{ task.completed ? 'Completed' : 'Pending' }}
+                <span class="due-date">Due: {{ formatDate(task.due_date) }}</span> |
+                <span>Status: <span :class="['task-status', task.completed ? 'status-completed' : 'status-pending']">
+                  {{ task.completed ? 'Completed' : 'Pending' }}
+                </span></span>
               </p>
             </ion-label>
             <ion-button 
@@ -77,8 +85,15 @@
 
       <!-- Resources Tab -->
       <div v-if="selectedTab === 'resources'" class="tab-content">
-        <ion-list>
-          <ion-item v-for="resource in filteredResources" :key="resource.id" class="list-item">
+        <ion-list v-for="(userResources, index) in groupedResources" :key="index">
+          <ion-list-header>
+            <ion-label>
+              <h2>{{ userResources.username }}</h2>
+              <p>{{ userResources.resources.length }} resources</p>
+            </ion-label>
+          </ion-list-header>
+
+          <ion-item v-for="resource in userResources.resources" :key="resource.id" class="list-item">
             <ion-thumbnail slot="start">
               <img 
                 v-if="isImage(resource.file_type)" 
@@ -95,9 +110,8 @@
               <h2>{{ resource.original_filename }}</h2>
               <p>{{ resource.description }}</p>
               <p class="metadata">
-                Uploaded by: {{ resource.uploaded_by }} | 
-                Size: {{ formatFileSize(resource.file_size) }} |
-                Date: {{ formatDate(resource.upload_date) }}
+                <span class="file-size">{{ formatFileSize(resource.file_size) }}</span> |
+                <span class="upload-date">{{ formatDate(resource.upload_date) }}</span>
               </p>
             </ion-label>
             <ion-button 
@@ -119,7 +133,7 @@ import {
   IonContent, IonSegment, IonSegmentButton, IonLabel,
   IonSearchbar, IonList, IonItem, IonButton, IonIcon,
   IonSelect, IonSelectOption, IonThumbnail,
-  alertController, toastController
+  alertController, toastController, IonListHeader
 } from '@ionic/vue';
 import { 
   trashOutline, 
@@ -158,6 +172,16 @@ interface Resource {
   uploaded_by: string;
 }
 
+interface GroupedTasks {
+  username: string;
+  tasks: Task[];
+}
+
+interface GroupedResources {
+  username: string;
+  resources: Resource[];
+}
+
 // State
 const selectedTab = ref('users');
 const searchQuery = ref('');
@@ -194,6 +218,63 @@ const filteredResources = computed(() => {
     resource.description.toLowerCase().includes(query) ||
     resource.uploaded_by.toLowerCase().includes(query)
   );
+});
+
+// Computed properties for grouped data
+const groupedTasks = computed<GroupedTasks[]>(() => {
+  if (!searchQuery.value) {
+    // Group tasks by username when no search
+    return Object.values(tasks.value.reduce((acc: Record<string, GroupedTasks>, task: Task) => {
+      if (!acc[task.assigned_to]) {
+        acc[task.assigned_to] = {
+          username: task.assigned_to,
+          tasks: []
+        };
+      }
+      acc[task.assigned_to].tasks.push(task);
+      return acc;
+    }, {}));
+  } else {
+    // When searching, group filtered tasks
+    return Object.values(filteredTasks.value.reduce((acc: Record<string, GroupedTasks>, task: Task) => {
+      if (!acc[task.assigned_to]) {
+        acc[task.assigned_to] = {
+          username: task.assigned_to,
+          tasks: []
+        };
+      }
+      acc[task.assigned_to].tasks.push(task);
+      return acc;
+    }, {}));
+  }
+});
+
+const groupedResources = computed<GroupedResources[]>(() => {
+  if (!searchQuery.value) {
+    // Group resources by username when no search
+    return Object.values(resources.value.reduce((acc: Record<string, GroupedResources>, resource: Resource) => {
+      if (!acc[resource.uploaded_by]) {
+        acc[resource.uploaded_by] = {
+          username: resource.uploaded_by,
+          resources: []
+        };
+      }
+      acc[resource.uploaded_by].resources.push(resource);
+      return acc;
+    }, {}));
+  } else {
+    // When searching, group filtered resources
+    return Object.values(filteredResources.value.reduce((acc: Record<string, GroupedResources>, resource: Resource) => {
+      if (!acc[resource.uploaded_by]) {
+        acc[resource.uploaded_by] = {
+          username: resource.uploaded_by,
+          resources: []
+        };
+      }
+      acc[resource.uploaded_by].resources.push(resource);
+      return acc;
+    }, {}));
+  }
 });
 
 // Event handlers
@@ -460,16 +541,101 @@ ion-searchbar {
   --background: var(--ion-color-light);
 }
 
+/* Header styling for user groups */
+ion-list-header {
+  --background: var(--ion-color-primary-shade);
+  border-radius: 8px 8px 0 0;
+  margin-top: 16px;
+  padding: 12px 16px;
+}
+
+ion-list-header ion-label h2 {
+  color: var(--ion-color-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+ion-list-header ion-label p {
+  color: var(--ion-color-light-shade);
+  font-weight: 500;
+  margin: 4px 0 0 0;
+  opacity: 0.9;
+}
+
+/* Add a subtle shadow to the header for better depth */
+ion-list {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.list-item {
+  --background: var(--ion-color-light);
+  --border-color: transparent;
+}
+
+.list-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Item content styling */
 ion-label h2 {
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 4px;
+  color: var(--ion-color-dark);
+}
+
+ion-label p {
+  color: var(--ion-color-dark-shade);
+  margin: 4px 0;
+}
+
+/* User role styling */
+.user-role {
+  font-weight: 600;
+}
+
+.role-admin {
+  color: var(--ion-color-primary);
+}
+
+.role-user {
+  color: var(--ion-color-secondary);
+}
+
+/* Task status styling */
+.task-status {
+  font-weight: 600;
+}
+
+.status-completed {
+  color: var(--ion-color-success);
+}
+
+.status-pending {
+  color: var(--ion-color-warning);
+}
+
+/* Due date styling */
+.due-date {
+  color: var(--ion-color-danger);
+  font-weight: 500;
 }
 
 .metadata {
   font-size: 0.85rem;
   color: var(--ion-color-medium);
   margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.metadata span {
+  display: inline-flex;
+  align-items: center;
 }
 
 ion-thumbnail {
@@ -480,6 +646,17 @@ ion-thumbnail {
 ion-select {
   max-width: 120px;
   margin-right: 8px;
+}
+
+/* Resource file size styling */
+.file-size {
+  color: var(--ion-color-tertiary);
+  font-weight: 500;
+}
+
+/* Resource date styling */
+.upload-date {
+  color: var(--ion-color-medium);
 }
 
 @media (min-width: 768px) {

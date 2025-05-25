@@ -3,25 +3,29 @@
     <ion-tabs>
       <ion-router-outlet :aria-hidden="false"></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="dashboard" href="/tabs/dashboard">
-          <ion-icon :icon="gridOutline" />
-          <ion-label>Dashboard</ion-label>
-        </ion-tab-button>
+        <template v-if="isAdmin">
+          <ion-tab-button tab="admin" href="/tabs/admin">
+            <ion-icon :icon="shieldOutline" />
+            <ion-label>Admin</ion-label>
+          </ion-tab-button>
+        </template>
 
-        <ion-tab-button tab="tasks" href="/tabs/tasks">
-          <ion-icon :icon="checkboxOutline" />
-          <ion-label>Tasks</ion-label>
-        </ion-tab-button>
+        <template v-else>
+          <ion-tab-button tab="dashboard" href="/tabs/dashboard">
+            <ion-icon :icon="gridOutline" />
+            <ion-label>Dashboard</ion-label>
+          </ion-tab-button>
 
-        <ion-tab-button tab="resources" href="/tabs/resources">
-          <ion-icon :icon="documentsOutline" />
-          <ion-label>Resources</ion-label>
-        </ion-tab-button>
+          <ion-tab-button tab="tasks" href="/tabs/tasks">
+            <ion-icon :icon="checkboxOutline" />
+            <ion-label>Tasks</ion-label>
+          </ion-tab-button>
 
-        <ion-tab-button v-if="isAdmin" tab="admin" href="/tabs/admin">
-          <ion-icon :icon="shieldOutline" />
-          <ion-label>Admin</ion-label>
-        </ion-tab-button>
+          <ion-tab-button tab="resources" href="/tabs/resources">
+            <ion-icon :icon="documentsOutline" />
+            <ion-label>Resources</ion-label>
+          </ion-tab-button>
+        </template>
 
         <ion-tab-button tab="settings" href="/tabs/settings">
           <ion-icon :icon="settingsOutline" />

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://localhost/codes/PROJ/dbConnect';
+const baseURL = 'http://localhost/Codes/PROJ/dbConnect';
 
 const api = axios.create({
   baseURL,

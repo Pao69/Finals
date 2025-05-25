@@ -182,6 +182,9 @@
                 class="custom-input"
               ></ion-input>
             </ion-item>
+            <div v-if="passwordErrors.currentPassword" class="error-message">
+              {{ passwordErrors.currentPassword }}
+            </div>
           </div>
 
           <div class="form-group">
@@ -193,15 +196,17 @@
                 v-model="passwordForm.newPassword"
                 required
                 placeholder="Enter new password"
-                @input="updatePasswordStrength"
                 class="custom-input">
               </ion-input>
             </ion-item>
+            <div v-if="passwordErrors.newPassword" class="error-message">
+              {{ passwordErrors.newPassword }}
+            </div>
           </div>
 
           <div class="form-group">
             <ion-item lines="full" class="custom-input-item">
-              <ion-icon :icon="checkmarkCircleOutline" slot="start" color="primary"></ion-icon>
+              <ion-icon :icon="keyOutline" slot="start" color="primary"></ion-icon>
               <ion-label position="floating">Confirm New Password</ion-label>
               <ion-input
                 type="password"
@@ -211,59 +216,16 @@
                 class="custom-input">
               </ion-input>
             </ion-item>
-          </div>
-
-          <!-- Password Strength Meter -->
-          <div class="password-strength-container" v-if="passwordForm.newPassword">
-            <div class="strength-header">
-              <span>Password Strength</span>
-              <span class="strength-label" :class="passwordStrength.label">
-                {{ passwordStrength.label }}
-              </span>
-            </div>
-            <div class="strength-meter">
-              <div 
-                class="strength-meter-fill" 
-                :style="{ width: passwordStrength.score + '%' }"
-                :class="passwordStrength.label"
-              ></div>
-            </div>
-          </div>
-
-          <div class="password-requirements" v-if="passwordForm.newPassword">
-            <h3>Password Requirements</h3>
-            <div class="requirements-grid">
-              <div class="requirement-item" :class="{ valid: hasMinLength }">
-                <ion-icon :icon="hasMinLength ? checkmarkCircle : closeCircle"></ion-icon>
-                <span>At least 8 characters</span>
-              </div>
-              <div class="requirement-item" :class="{ valid: hasUpperCase }">
-                <ion-icon :icon="hasUpperCase ? checkmarkCircle : closeCircle"></ion-icon>
-                <span>One uppercase letter</span>
-              </div>
-              <div class="requirement-item" :class="{ valid: hasLowerCase }">
-                <ion-icon :icon="hasLowerCase ? checkmarkCircle : closeCircle"></ion-icon>
-                <span>One lowercase letter</span>
-              </div>
-              <div class="requirement-item" :class="{ valid: hasNumber }">
-                <ion-icon :icon="hasNumber ? checkmarkCircle : closeCircle"></ion-icon>
-                <span>One number</span>
-              </div>
-              <div class="requirement-item" :class="{ valid: passwordsMatch }">
-                <ion-icon :icon="passwordsMatch ? checkmarkCircle : closeCircle"></ion-icon>
-                <span>Passwords match</span>
-              </div>
+            <div v-if="passwordErrors.confirmPassword" class="error-message">
+              {{ passwordErrors.confirmPassword }}
             </div>
           </div>
 
           <ion-button 
             expand="block" 
-            type="submit" 
-            class="submit-button"
-            :disabled="!isPasswordFormValid"
-            :color="isPasswordFormValid ? 'primary' : 'medium'">
-            <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-            Update Password
+            type="submit"
+            class="submit-button">
+            Change Password
           </ion-button>
         </form>
       </ion-content>
@@ -333,9 +295,15 @@ const passwordForm = ref({
   confirmPassword: ''
 });
 
-const passwordStrength = ref({
-  score: 0,
-  label: 'weak'
+const passwordErrors = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+// Computed properties
+const isProfileChanged = computed(() => {
+  return JSON.stringify(profile.value) !== JSON.stringify(originalProfile.value);
 });
 
 // Load user profile with image
@@ -364,28 +332,32 @@ onMounted(async () => {
   }
 });
 
-// Computed properties for password validation
-const hasMinLength = computed(() => passwordForm.value.newPassword.length >= 8);
-const hasUpperCase = computed(() => /[A-Z]/.test(passwordForm.value.newPassword));
-const hasLowerCase = computed(() => /[a-z]/.test(passwordForm.value.newPassword));
-const hasNumber = computed(() => /[0-9]/.test(passwordForm.value.newPassword));
-const passwordsMatch = computed(() => 
-  passwordForm.value.newPassword === passwordForm.value.confirmPassword &&
-  passwordForm.value.newPassword !== ''
-);
+// Password validation
+const validatePassword = () => {
+  passwordErrors.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
 
-const isProfileChanged = computed(() => {
-  return JSON.stringify(profile.value) !== JSON.stringify(originalProfile.value);
-});
+  if (!passwordForm.value.currentPassword) {
+    passwordErrors.value.currentPassword = 'Current password is required';
+  }
 
-const isPasswordFormValid = computed(() => {
-  return hasMinLength.value &&
-         hasUpperCase.value &&
-         hasLowerCase.value &&
-         hasNumber.value &&
-         passwordsMatch.value &&
-         passwordForm.value.currentPassword;
-});
+  if (!passwordForm.value.newPassword) {
+    passwordErrors.value.newPassword = 'New password is required';
+  } else if (passwordForm.value.newPassword.length < 8) {
+    passwordErrors.value.newPassword = 'Password must be at least 8 characters long';
+  }
+
+  if (!passwordForm.value.confirmPassword) {
+    passwordErrors.value.confirmPassword = 'Please confirm your new password';
+  } else if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    passwordErrors.value.confirmPassword = 'Passwords do not match';
+  }
+
+  return !Object.values(passwordErrors.value).some(error => error);
+};
 
 const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement;
@@ -720,85 +692,40 @@ const openChangePasswordModal = () => {
 };
 
 const changePassword = async () => {
-  if (!isPasswordFormValid.value) return;
+  if (!validatePassword()) {
+    return;
+  }
 
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    // Additional password validation
-    if (passwordForm.value.newPassword === passwordForm.value.currentPassword) {
-      throw new Error('New password must be different from current password');
-    }
-
     const response = await api.post('/change_password.php', {
-      current_password: passwordForm.value.currentPassword,
-      new_password: passwordForm.value.newPassword
+      currentPassword: passwordForm.value.currentPassword,
+      newPassword: passwordForm.value.newPassword
     });
 
     if (response.data.success) {
-      isChangePasswordModalOpen.value = false;
-      
       const toast = await toastController.create({
         message: 'Password changed successfully',
-        duration: 3000,
-        color: 'success',
-        position: 'top',
-        icon: checkmarkCircle
+        duration: 2000,
+        color: 'success'
       });
       await toast.present();
 
-      // Clear local storage and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      const reloginToast = await toastController.create({
-        message: 'Please log in again with your new password',
-        duration: 3000,
-        color: 'warning',
-        position: 'top',
-        icon: warningOutline
-      });
-      await reloginToast.present();
-
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      // Clear form and close modal
+      passwordForm.value = {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      };
+      isChangePasswordModalOpen.value = false;
     }
   } catch (error: any) {
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to change password',
+      message: error.response?.data?.message || 'Failed to change password',
       duration: 3000,
-      color: 'danger',
-      position: 'top',
-      icon: closeCircle
+      color: 'danger'
     });
     await toast.present();
   }
-};
-
-const updatePasswordStrength = () => {
-  const password = passwordForm.value.newPassword;
-  let score = 0;
-  let label = 'weak';
-
-  // Calculate password strength
-  if (password.length >= 8) score += 20;
-  if (/[A-Z]/.test(password)) score += 20;
-  if (/[a-z]/.test(password)) score += 20;
-  if (/[0-9]/.test(password)) score += 20;
-  if (/[^A-Za-z0-9]/.test(password)) score += 20;
-
-  // Set label based on score
-  if (score >= 80) label = 'strong';
-  else if (score >= 60) label = 'good';
-  else if (score >= 40) label = 'medium';
-  else if (score >= 20) label = 'weak';
-
-  passwordStrength.value = { score, label };
 };
 
 const fetchProfilePicture = async () => {
@@ -1018,8 +945,8 @@ ion-button {
 .password-modal {
   --background: var(--ion-background-color);
   --height: auto;
-  --width: 100%;
-  --max-width: 500px;
+  --width: 90%;
+  max-width: 400px;
   --border-radius: 16px;
   border: 1px solid var(--ion-color-light-shade);
 }
@@ -1028,75 +955,27 @@ ion-button {
   padding: 16px;
 }
 
+.form-group {
+  margin-bottom: 16px;
+}
+
 .custom-input-item {
   --background: var(--ion-color-light);
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  margin-bottom: 12px;
-  border: 1px solid var(--ion-color-light-shade);
-}
-
-.password-strength-container {
-  background: var(--ion-color-light);
-  padding: 16px;
-  border-radius: 12px;
-  margin: 16px 0;
-  border: 1px solid var(--ion-color-light-shade);
-}
-
-.strength-header {
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
   margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
-.strength-meter {
-  background: var(--ion-color-light-shade);
-  height: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 8px;
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  padding-left: 16px;
 }
 
-.strength-meter-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-}
-
-.strength-meter-fill.weak { background: var(--ion-color-danger); }
-.strength-meter-fill.medium { background: var(--ion-color-warning); }
-.strength-meter-fill.good { background: var(--ion-color-success); }
-.strength-meter-fill.strong { background: var(--ion-color-primary); }
-
-.password-requirements {
-  background: var(--ion-color-light);
-  border: 1px solid var(--ion-color-light-shade);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
-}
-
-.password-requirements h3 {
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
-  margin: 0 0 8px 0;
-}
-
-.requirement-item {
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
-  margin: 4px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.requirement-item.valid {
-  color: var(--ion-color-success);
+.submit-button {
+  margin-top: 24px;
 }
 
 /* Responsive Design */

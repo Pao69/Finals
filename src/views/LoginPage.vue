@@ -176,6 +176,10 @@ const handleSubmit = async () => {
   }
 
   try {
+    // Clear both storages before logging in
+    localStorage.clear();
+    sessionStorage.clear();
+
     const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/login.php', {
       username: username.value,
       password: password.value
@@ -191,7 +195,9 @@ const handleSubmit = async () => {
         sessionStorage.setItem('token', response.data.token);
       }
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      await router.push('/tabs/dashboard');
+      
+      // Force a page reload after successful login
+      window.location.href = '/tabs/dashboard';
     } else {
       throw new Error(response.data.message || 'Invalid username or password');
     }
