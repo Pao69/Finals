@@ -45,183 +45,191 @@
           </div>
         </ion-card>
 
-        <!-- Settings Sections -->
-        <div class="settings-sections">
-          <!-- Profile Information -->
-          <ion-card class="settings-section">
-            <ion-card-header>
-              <ion-card-title>
-                <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
-                Profile Information
-              </ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              <div class="settings-form">
-                <ion-item>
-                  <ion-label position="stacked">Username</ion-label>
-                  <ion-input 
-                    v-model="profile.username" 
-                    type="text" 
-                    placeholder="Enter username"
-                    class="custom-input">
-                  </ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-label position="stacked">Email</ion-label>
-                  <ion-input 
-                    v-model="profile.email" 
-                    type="email" 
-                    placeholder="Enter email"
-                    class="custom-input">
-                  </ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-label position="stacked">Phone</ion-label>
-                  <ion-input 
-                    v-model="profile.phone" 
-                    type="tel" 
-                    placeholder="Enter phone"
-                    class="custom-input">
-                  </ion-input>
-                </ion-item>
-                <ion-button 
-                  expand="block" 
-                  @click="updateProfile" 
-                  :disabled="!isProfileChanged"
-                  class="save-button">
-                  <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-                  Save Changes
-                </ion-button>
-              </div>
-            </ion-card-content>
-          </ion-card>
+        <!-- Profile Information -->
+        <ion-card class="settings-section">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
+              Profile Information
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="settings-form">
+              <ion-item>
+                <ion-label position="stacked">Username</ion-label>
+                <ion-input 
+                  v-model="profile.username" 
+                  type="text" 
+                  placeholder="Enter username"
+                  class="custom-input">
+                </ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Email</ion-label>
+                <ion-input 
+                  v-model="profile.email" 
+                  type="email" 
+                  placeholder="Enter email"
+                  class="custom-input">
+                </ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Phone</ion-label>
+                <ion-input 
+                  v-model="profile.phone" 
+                  type="tel" 
+                  placeholder="Enter phone"
+                  class="custom-input">
+                </ion-input>
+              </ion-item>
+              <ion-button 
+                expand="block" 
+                @click="updateProfile" 
+                :disabled="!isProfileChanged"
+                class="save-button">
+                <ion-icon :icon="saveOutline" slot="start"></ion-icon>
+                Save Changes
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-          <!-- Security Settings -->
-          <ion-card class="settings-section">
-            <ion-card-header>
-              <ion-card-title>
-                <ion-icon :icon="lockClosedOutline" class="section-icon"></ion-icon>
-                Security
-              </ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              <div class="settings-form">
-                <ion-item>
-                  <ion-label position="stacked">Current Password</ion-label>
-                  <div class="inputForm">
-                    <ion-input 
-                      :type="showPasswordFields.current ? 'text' : 'password'"
-                      v-model="passwordForm.currentPassword"
-                      placeholder="Enter current password"
-                      class="custom-input">
-                    </ion-input>
-                    <span class="toggle-password" @click="showPasswordFields.current = !showPasswordFields.current">
-                      {{ showPasswordFields.current ? '👁️' : '👁️‍🗨️' }}
-                    </span>
-                  </div>
-                </ion-item>
-                <div v-if="passwordErrors.currentPassword" class="error-message">
-                  {{ passwordErrors.currentPassword }}
-                </div>
+        <!-- Security Settings -->
+        <ion-card class="settings-section">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon :icon="lockClosedOutline" class="section-icon"></ion-icon>
+              Security
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="settings-form">
+              <ion-item>
+                <ion-label position="stacked">Current Password</ion-label>
+                <ion-input 
+                  type="password"
+                  v-model="passwordForm.currentPassword"
+                  placeholder="Enter current password">
+                </ion-input>
+              </ion-item>
 
-                <ion-item>
-                  <ion-label position="stacked">New Password</ion-label>
-                  <div class="inputForm">
-                    <ion-input 
-                      :type="showPasswordFields.new ? 'text' : 'password'"
-                      v-model="passwordForm.newPassword"
-                      placeholder="Enter new password"
-                      class="custom-input">
-                    </ion-input>
-                    <span class="toggle-password" @click="showPasswordFields.new = !showPasswordFields.new">
-                      {{ showPasswordFields.new ? '👁️' : '👁️‍🗨️' }}
-                    </span>
-                  </div>
-                </ion-item>
-                <div class="password-requirements" v-if="passwordForm.newPassword">
-                  <p :class="{ valid: hasLength }">✓ At least 11 characters</p>
-                  <p :class="{ valid: hasLetter }">✓ At least one letter</p>
-                  <p :class="{ valid: hasNumber }">✓ At least one number</p>
-                  <p :class="{ valid: hasSpecial }">✓ At least one special character</p>
-                </div>
-                <div v-if="passwordErrors.newPassword" class="error-message">
-                  {{ passwordErrors.newPassword }}
-                </div>
+              <ion-item>
+                <ion-label position="stacked">New Password</ion-label>
+                <ion-input 
+                  type="password"
+                  v-model="passwordForm.newPassword"
+                  placeholder="Enter new password">
+                </ion-input>
+              </ion-item>
 
-                <ion-item>
-                  <ion-label position="stacked">Confirm New Password</ion-label>
-                  <div class="inputForm">
-                    <ion-input 
-                      :type="showPasswordFields.confirm ? 'text' : 'password'"
-                      v-model="passwordForm.confirmPassword"
-                      placeholder="Confirm new password"
-                      class="custom-input">
-                    </ion-input>
-                    <span class="toggle-password" @click="showPasswordFields.confirm = !showPasswordFields.confirm">
-                      {{ showPasswordFields.confirm ? '👁️' : '👁️‍🗨️' }}
-                    </span>
-                  </div>
-                </ion-item>
-                <div v-if="passwordErrors.confirmPassword" class="error-message">
-                  {{ passwordErrors.confirmPassword }}
-                </div>
+              <ion-item>
+                <ion-label position="stacked">Confirm New Password</ion-label>
+                <ion-input 
+                  type="password"
+                  v-model="passwordForm.confirmPassword"
+                  placeholder="Confirm new password">
+                </ion-input>
+              </ion-item>
 
-                <div class="password-actions">
-                  <ion-button 
-                    expand="block" 
-                    @click="changePassword"
-                    color="primary"
-                    class="action-button"
-                    :disabled="isChangingPassword">
-                    <ion-icon :icon="keyOutline" slot="start"></ion-icon>
-                    {{ isChangingPassword ? 'Changing Password...' : 'Change Password' }}
-                  </ion-button>
-                  <ion-button 
-                    expand="block"
-                    @click="handleForgotPassword"
-                    color="medium"
-                    class="action-button"
-                    :disabled="isChangingPassword">
-                    <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
-                    Forgot Password
-                  </ion-button>
-                </div>
-              </div>
-            </ion-card-content>
-          </ion-card>
+              <ion-button 
+                expand="block" 
+                @click="handlePasswordChange"
+                :disabled="!canChangePassword || isChangingPassword"
+                class="save-button">
+                <ion-icon :icon="saveOutline" slot="start"></ion-icon>
+                {{ isChangingPassword ? 'Changing Password...' : 'Save New Password' }}
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-          <!-- Account Actions -->
-          <ion-card class="settings-section danger-zone">
-            <ion-card-header>
-              <ion-card-title>
-                <ion-icon :icon="warningOutline" class="section-icon"></ion-icon>
-                Account Actions
-              </ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              <div class="danger-actions">
-                <ion-button 
-                  expand="block" 
-                  color="danger" 
-                  fill="outline"
-                  @click="deleteProfile"
-                  class="danger-button">
-                  <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                  Delete Account
-                </ion-button>
-                <ion-button 
-                  expand="block" 
-                  color="medium" 
-                  @click="handleLogout"
-                  class="logout-button">
-                  <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
-                  Logout
-                </ion-button>
-              </div>
-            </ion-card-content>
-          </ion-card>
-        </div>
+        <!-- Account Actions -->
+        <ion-card class="settings-section danger-zone">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon :icon="warningOutline" class="section-icon"></ion-icon>
+              Account Actions
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="danger-actions">
+              <ion-button 
+                expand="block" 
+                color="danger" 
+                fill="outline"
+                @click="deleteProfile"
+                class="danger-button">
+                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                Delete Account
+              </ion-button>
+              <ion-button 
+                expand="block" 
+                color="medium" 
+                @click="handleLogout"
+                class="logout-button">
+                <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
+                Logout
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
       </div>
+
+      <!-- Password Change Modal -->
+      <ion-modal :is-open="isPasswordModalOpen" @didDismiss="closePasswordModal" class="password-modal">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Change Password</ion-title>
+            <ion-buttons slot="end">
+              <ion-button @click="closePasswordModal">
+                <ion-icon :icon="closeOutline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          <form @submit.prevent="handlePasswordChange" class="password-form">
+            <ion-item>
+              <ion-label position="stacked">Current Password</ion-label>
+              <ion-input 
+                type="password"
+                v-model="passwordForm.currentPassword"
+                placeholder="Enter current password"
+                required>
+              </ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">New Password</ion-label>
+              <ion-input 
+                type="password"
+                v-model="passwordForm.newPassword"
+                placeholder="Enter new password"
+                required>
+              </ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Confirm New Password</ion-label>
+              <ion-input 
+                type="password"
+                v-model="passwordForm.confirmPassword"
+                placeholder="Confirm new password"
+                required>
+              </ion-input>
+            </ion-item>
+
+            <div class="modal-buttons">
+              <ion-button type="button" fill="outline" @click="closePasswordModal">
+                Cancel
+              </ion-button>
+              <ion-button type="submit" :disabled="isChangingPassword">
+                {{ isChangingPassword ? 'Changing...' : 'Change Password' }}
+              </ion-button>
+            </div>
+          </form>
+        </ion-content>
+      </ion-modal>
     </ion-content>
   </page-layout>
 </template>
@@ -236,7 +244,7 @@ import {
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
   IonButtons, toastController, IonAvatar, alertController,
-  loadingController
+  loadingController, IonHeader, IonToolbar, IonTitle
 } from '@ionic/vue';
 import {
   personOutline,
@@ -260,7 +268,7 @@ const components = {
   IonContent,
   IonList, IonItem, IonItemGroup, IonItemDivider,
   IonLabel, IonButton, IonIcon, IonInput, IonModal,
-  IonButtons, IonAvatar
+  IonButtons, IonAvatar, IonHeader, IonToolbar, IonTitle
 };
 
 const router = useRouter();
@@ -281,35 +289,6 @@ const profile = ref({
   email: '',
   phone: '',
   role: 'user'
-});
-
-// Password change form
-const passwordForm = ref({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-});
-
-// Add showPasswordFields ref
-const showPasswordFields = ref({
-  current: false,
-  new: false,
-  confirm: false
-});
-
-// Add loading state
-const isChangingPassword = ref(false);
-
-// Add computed properties for password requirements
-const hasLength = computed(() => passwordForm.value.newPassword.length >= 11);
-const hasLetter = computed(() => /[A-Za-z]/.test(passwordForm.value.newPassword));
-const hasNumber = computed(() => /[0-9]/.test(passwordForm.value.newPassword));
-const hasSpecial = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.value.newPassword));
-
-const passwordErrors = ref({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
 });
 
 // Computed properties
@@ -345,42 +324,6 @@ onMounted(async () => {
     router.push('/login');
   }
 });
-
-// Password validation
-const validatePassword = () => {
-  passwordErrors.value = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
-
-  if (!passwordForm.value.currentPassword) {
-    passwordErrors.value.currentPassword = 'Current password is required';
-  }
-
-  if (!passwordForm.value.newPassword) {
-    passwordErrors.value.newPassword = 'New password is required';
-  } else {
-    // Check password requirements
-    if (passwordForm.value.newPassword.length < 11) {
-      passwordErrors.value.newPassword = 'Password must be at least 11 characters long';
-    } else if (!/[A-Za-z]/.test(passwordForm.value.newPassword)) {
-      passwordErrors.value.newPassword = 'Password must contain at least one letter';
-    } else if (!/[0-9]/.test(passwordForm.value.newPassword)) {
-      passwordErrors.value.newPassword = 'Password must contain at least one number';
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.value.newPassword)) {
-      passwordErrors.value.newPassword = 'Password must contain at least one special character';
-    }
-  }
-
-  if (!passwordForm.value.confirmPassword) {
-    passwordErrors.value.confirmPassword = 'Please confirm your new password';
-  } else if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-    passwordErrors.value.confirmPassword = 'Passwords do not match';
-  }
-
-  return !Object.values(passwordErrors.value).some(error => error);
-};
 
 const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement;
@@ -720,55 +663,6 @@ const deleteProfile = async () => {
   await alert.present();
 };
 
-const changePassword = async () => {
-  if (!validatePassword()) {
-    return;
-  }
-
-  isChangingPassword.value = true;
-  try {
-    const response = await api.post('/dbConnect/change_password.php', {
-      currentPassword: passwordForm.value.currentPassword,
-      newPassword: passwordForm.value.newPassword
-    });
-
-    if (response.data.success) {
-      const toast = await toastController.create({
-        message: 'Password changed successfully',
-        duration: 2000,
-        color: 'success',
-        position: 'top',
-        icon: checkmarkCircle
-      });
-      await toast.present();
-
-      // Clear form
-      passwordForm.value = {
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      };
-      // Reset show password fields
-      showPasswordFields.value = {
-        current: false,
-        new: false,
-        confirm: false
-      };
-    }
-  } catch (error: any) {
-    const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to change password',
-      duration: 3000,
-      color: 'danger',
-      position: 'top',
-      icon: closeCircle
-    });
-    await toast.present();
-  } finally {
-    isChangingPassword.value = false;
-  }
-};
-
 const fetchProfilePicture = async () => {
   try {
     // First check local storage or session storage for cached profile picture
@@ -809,14 +703,87 @@ const triggerFileInput = () => {
   }
 };
 
-const handleForgotPassword = () => {
-  // Save current user data to session storage before navigating
-  const userData = localStorage.getItem('user');
-  if (userData) {
-    sessionStorage.setItem('user', userData);
+// Password change state
+const isPasswordModalOpen = ref(false);
+const isChangingPassword = ref(false);
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const openPasswordModal = () => {
+  isPasswordModalOpen.value = true;
+};
+
+const closePasswordModal = () => {
+  isPasswordModalOpen.value = false;
+  // Reset form
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
+};
+
+// Computed property to check if password can be changed
+const canChangePassword = computed(() => {
+  return passwordForm.value.currentPassword &&
+         passwordForm.value.newPassword &&
+         passwordForm.value.confirmPassword &&
+         passwordForm.value.newPassword === passwordForm.value.confirmPassword;
+});
+
+const handlePasswordChange = async () => {
+  if (!canChangePassword.value) {
+    const toast = await toastController.create({
+      message: passwordForm.value.newPassword !== passwordForm.value.confirmPassword
+        ? 'New passwords do not match'
+        : 'Please fill in all password fields',
+      duration: 2000,
+      color: 'warning',
+      position: 'top'
+    });
+    await toast.present();
+    return;
   }
-  // Navigate to forgot password page using the correct path
-  router.push('/ForgotPasswordPage');
+
+  isChangingPassword.value = true;
+  try {
+    const response = await api.post('/dbConnect/change_password.php', {
+      currentPassword: passwordForm.value.currentPassword,
+      newPassword: passwordForm.value.newPassword
+    });
+
+    if (response.data.success) {
+      const toast = await toastController.create({
+        message: 'Password changed successfully',
+        duration: 2000,
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
+      });
+      await toast.present();
+
+      // Reset form
+      passwordForm.value = {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      };
+    }
+  } catch (error: any) {
+    const toast = await toastController.create({
+      message: error.response?.data?.message || 'Failed to change password',
+      duration: 3000,
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
+    });
+    await toast.present();
+  } finally {
+    isChangingPassword.value = false;
+  }
 };
 </script>
 
@@ -825,10 +792,13 @@ const handleForgotPassword = () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .profile-card {
-  margin: 0 0 16px 0;
+  margin: 0;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--ion-color-light-shade);
@@ -900,11 +870,6 @@ const handleForgotPassword = () => {
   text-transform: none;
 }
 
-.settings-sections {
-  display: grid;
-  gap: 16px;
-}
-
 .settings-section {
   margin: 0;
   border-radius: 16px;
@@ -939,7 +904,8 @@ ion-card-content {
 }
 
 .settings-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -965,16 +931,9 @@ ion-button {
   margin: 8px 0 0 0;
 }
 
-.security-options, 
 .danger-actions {
   display: grid;
   gap: 12px;
-}
-
-.security-button {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
-  --border-color: var(--ion-color-primary);
 }
 
 .danger-zone {
@@ -990,29 +949,6 @@ ion-button {
 .logout-button {
   --background: var(--ion-color-light);
   --color: var(--ion-color-dark);
-}
-
-.password-requirements {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  padding-left: 16px;
-}
-
-.password-requirements p {
-  color: var(--ion-color-danger);
-  margin: 4px 0;
-}
-
-.password-requirements p.valid {
-  color: var(--ion-color-success);
-}
-
-.error-message {
-  color: var(--ion-color-danger);
-  font-size: 0.8rem;
-  margin-top: 4px;
-  padding-left: 16px;
-  margin-bottom: 8px;
 }
 
 .save-button {
@@ -1040,29 +976,10 @@ ion-button {
     --padding: 24px;
   }
 
-  .settings-sections {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .profile-card {
-    grid-column: 1 / -1;
-  }
-  
-  .danger-zone {
-    grid-column: 1 / -1;
-  }
-
   .settings-section:hover {
     transform: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
-}
-
-.password-actions {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
 }
 
 .action-button {
@@ -1072,7 +989,7 @@ ion-button {
 }
 
 @media (max-width: 480px) {
-  .password-actions {
+  .danger-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -1090,5 +1007,39 @@ ion-button {
   cursor: pointer;
   user-select: none;
   z-index: 1;
+}
+
+.password-modal {
+  --height: auto;
+  --max-height: 400px;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+ion-modal ion-toolbar {
+  --background: var(--ion-color-light);
+}
+
+ion-modal ion-item {
+  --background: var(--ion-color-light);
+  --border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+ion-modal ion-input {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin-top: 8px;
 }
 </style>
