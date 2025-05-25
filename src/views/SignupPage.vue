@@ -187,7 +187,7 @@ const handleSubmit = async () => {
   };
 
   try {
-    const response = await axios.post('http://localhost/codes/PROJ/dbConnect/signup.php', {
+    const response = await axios.post('/api/signup.php', {
       username: username.value,
       email: email.value,
       phone: phone.value,

@@ -1,7 +1,7 @@
 <template>
   <ion-page>
     <ion-tabs>
-      <ion-router-outlet :aria-hidden="false"></ion-router-outlet>
+      <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="dashboard" href="/tabs/dashboard">
           <ion-icon :icon="gridOutline" />
@@ -34,8 +34,22 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { gridOutline, checkboxOutline, documentsOutline, settingsOutline, shieldOutline } from 'ionicons/icons';
+import {
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+  IonLabel,
+  IonIcon,
+  IonPage,
+  IonRouterOutlet
+} from '@ionic/vue';
+import {
+  gridOutline,
+  checkboxOutline,
+  documentsOutline,
+  settingsOutline,
+  shieldOutline
+} from 'ionicons/icons';
 
 const isAdmin = ref(false);
 
@@ -47,3 +61,23 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+ion-tab-bar {
+  --background: var(--ion-color-dark);
+  --color: var(--ion-color-medium);
+  border-top: 1px solid var(--ion-color-dark-shade);
+}
+
+ion-tab-button {
+  --color-selected: var(--ion-color-primary);
+}
+
+ion-tab-button::before {
+  background-color: transparent;
+}
+
+ion-icon {
+  font-size: 24px;
+}
+</style>

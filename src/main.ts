@@ -37,10 +37,13 @@ import './theme/variables.css';
 
 const pinia = createPinia();
 const app = createApp(App)
-  .use(IonicVue)
+  .use(IonicVue, {
+    mode: 'ios'
+  })
   .use(router)
   .use(pinia);
 
+// Wait for the router to be ready before mounting
 router.isReady().then(() => {
   app.mount('#app');
 });
