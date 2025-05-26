@@ -36,7 +36,6 @@ defineProps<{
 }>();
 </script>
 
-
 <style scoped>
 ion-toolbar {
   --background: var(--ion-toolbar-background);
