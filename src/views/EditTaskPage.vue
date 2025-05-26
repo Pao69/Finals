@@ -35,6 +35,19 @@
                 class="custom-textarea"
               ></ion-textarea>
             </ion-item>
+
+            <ion-item class="form-item">
+              <ion-label position="stacked">Priority <ion-text color="danger">*</ion-text></ion-label>
+              <ion-select
+                v-model="taskForm.priority"
+                placeholder="Select priority"
+                class="custom-select"
+                required>
+                <ion-select-option value="high">High</ion-select-option>
+                <ion-select-option value="medium">Medium</ion-select-option>
+                <ion-select-option value="low">Low</ion-select-option>
+              </ion-select>
+            </ion-item>
           </div>
 
           <div class="form-section">
@@ -108,6 +121,8 @@ import {
   IonIcon,
   IonBadge,
   IonText,
+  IonSelect,
+  IonSelectOption,
   toastController
 } from '@ionic/vue';
 import {
@@ -127,6 +142,7 @@ interface TaskForm {
   description: string;
   due_date: string;
   completed: number;
+  priority: 'low' | 'medium' | 'high';
   created_at?: string;
   updated_at?: string;
 }
@@ -140,6 +156,7 @@ interface TaskResponse {
     description: string;
     due_date: string;
     completed: string;
+    priority: 'low' | 'medium' | 'high';
     created_at: string;
     updated_at: string;
   };
@@ -206,6 +223,7 @@ const fetchTask = async () => {
         description: task.description || '',
         due_date: formattedDueDate,
         completed: completed,
+        priority: task.priority || 'medium',
         created_at: task.created_at,
         updated_at: task.updated_at
       };
@@ -251,11 +269,12 @@ const handleSubmit = async () => {
 
     // Prepare the request data
     const requestData = {
-      id: taskForm.value.id,  // Use id for updates
+      id: taskForm.value.id,
       title: taskForm.value.title.trim(),
       description: taskForm.value.description.trim(),
       due_date: formattedDate,
-      completed: taskForm.value.completed ? 1 : 0
+      completed: taskForm.value.completed,
+      priority: taskForm.value.priority
     };
 
     console.log('Sending update request with data:', requestData); // Debug log

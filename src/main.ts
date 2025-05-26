@@ -9,7 +9,8 @@ import { closeCircle, closeOutline, checkmarkCircle, checkmarkOutline, timeOutli
          listOutline, documentTextOutline, clipboardOutline, addOutline, swapVerticalOutline,
          createOutline, trashOutline, documentsOutline, downloadOutline, imageOutline, documentOutline,
          gridOutline, checkboxOutline, settingsOutline, shieldOutline, personOutline, logOutOutline,
-         saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline } from 'ionicons/icons';
+         saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline,
+         analyticsOutline, filterOutline, shareOutline, statsChartOutline } from 'ionicons/icons';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
@@ -47,7 +48,8 @@ addIcons({
   listOutline, documentTextOutline, clipboardOutline, addOutline, swapVerticalOutline,
   createOutline, trashOutline, documentsOutline, downloadOutline, imageOutline, documentOutline,
   gridOutline, checkboxOutline, settingsOutline, shieldOutline, personOutline, logOutOutline,
-  saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline
+  saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline,
+  analyticsOutline, filterOutline, shareOutline, statsChartOutline
 });
 
 const pinia = createPinia();

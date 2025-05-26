@@ -32,7 +32,7 @@
           Reset Code (dev): {{ devResetCode }}
         </div>
 
-        <form v-if="step === 2" @submit.prevent="showConfirmModal = true" class="form">
+        <form v-if="step === 2" @submit.prevent="handleResetPassword" class="form">
           <span class="input-span">
             <label for="code" class="label">Reset Code</label>
             <div class="inputForm">
@@ -83,7 +83,7 @@
               type="submit" 
               :disabled="loading || !isFormValid"
               class="submit-button">
-              Reset Password
+              {{ loading ? 'Resetting Password...' : 'Reset Password' }}
             </ion-button>
             <ion-button 
               v-if="resendTimer === 0" 
@@ -101,29 +101,13 @@
         <router-link to="/login" class="back-link">Back to Login</router-link>
       </div>
     </ion-content>
-
-    <!-- Confirmation Modal -->
-    <ion-modal :is-open="showConfirmModal" @didDismiss="showConfirmModal = false" class="confirmation-modal">
-      <ion-content class="ion-padding">
-        <div class="modal-content">
-          <h2>Confirm Password Reset</h2>
-          <p>Are you sure you want to reset your password?</p>
-          <div class="modal-buttons">
-            <ion-button fill="outline" @click="showConfirmModal = false">Cancel</ion-button>
-            <ion-button @click="handleResetPassword" :disabled="loading">
-              {{ loading ? 'Resetting...' : 'Confirm Reset' }}
-            </ion-button>
-          </div>
-        </div>
-      </ion-content>
-    </ion-modal>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonPage, IonContent, IonModal, IonButton, toastController } from '@ionic/vue';
+import { IonPage, IonContent, IonButton, toastController } from '@ionic/vue';
 import api from '@/utils/api';
 
 const router = useRouter();
@@ -139,7 +123,6 @@ const loading = ref(false);
 const devResetCode = ref('');
 const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const resendTimer = ref(0);
-const showConfirmModal = ref(false);
 let resendInterval: number | undefined;
 
 const hasLength = computed(() => newPassword.value.length >= 11);
@@ -180,7 +163,7 @@ const handleRequestCode = async () => {
   devResetCode.value = '';
   loading.value = true;
   try {
-    const response = await api.post('/Codes/PROJ/dbConnect/request_reset.php', {
+    const response = await api.post('/request_reset.php', {
       email: email.value
     });
     if (response.data.success) {
@@ -207,7 +190,6 @@ const handleRequestCode = async () => {
 const handleResetPassword = async () => {
   error.value = '';
   successMessage.value = '';
-  showConfirmModal.value = false;
 
   if (!code.value) {
     error.value = 'Reset code is required.';
@@ -240,20 +222,16 @@ const handleResetPassword = async () => {
 
   loading.value = true;
   try {
-    const response = await api.post('/Codes/PROJ/dbConnect/reset_password.php', {
+    const response = await api.post('/reset_password.php', {
       email: email.value,
       code: code.value,
       newPassword: newPassword.value
     });
+
     if (response.data.success) {
-      successMessage.value = 'Password reset successful! You can now log in.';
-      error.value = '';
-      step.value = 1;
-      email.value = '';
-      code.value = '';
-      newPassword.value = '';
-      confirmPassword.value = '';
-      devResetCode.value = '';
+      // Clear any existing auth data
+      localStorage.clear();
+      sessionStorage.clear();
 
       // Show success toast
       const toast = await toastController.create({
@@ -264,11 +242,21 @@ const handleResetPassword = async () => {
       });
       await toast.present();
 
+      // Reset form
+      successMessage.value = 'Password reset successful! You can now log in.';
+      error.value = '';
+      step.value = 1;
+      email.value = '';
+      code.value = '';
+      newPassword.value = '';
+      confirmPassword.value = '';
+      devResetCode.value = '';
+
       // Wait for toast to be shown
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Navigate to login page
-      router.push('/login');
+      // Navigate to login page using replace to prevent going back
+      router.replace('/login');
     } else {
       throw new Error(response.data.message || 'Failed to reset password.');
     }
@@ -487,42 +475,5 @@ input::placeholder {
 .back-link:hover {
   color: #357abd;
   text-decoration: underline;
-}
-
-.confirmation-modal {
-  --height: auto;
-  --width: 90%;
-  max-width: 400px;
-}
-
-.modal-content {
-  background-color: #2a2a2a;
-  padding: 2rem;
-  border-radius: 15px;
-  text-align: center;
-  color: #ffffff;
-}
-
-.modal-content h2 {
-  color: #4a90e2;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.modal-content p {
-  color: #ffffff;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.modal-buttons ion-button {
-  flex: 1;
-  max-width: 150px;
 }
 </style> 

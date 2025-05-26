@@ -69,7 +69,15 @@
                 <ion-label>
                   <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                   <p class="task-description">{{ task.description }}</p>
-                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+                  <div class="task-meta">
+                    <ion-badge :color="getStatusColor(task.completed)">
+                      {{ task.completed === 1 ? 'Completed' : 'Pending' }}
+                    </ion-badge>
+                    <ion-badge :color="getPriorityColor(task.priority)">
+                      {{ task.priority }}
+                    </ion-badge>
+                    <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+                  </div>
                 </ion-label>
               </ion-item>
             </template>
@@ -86,7 +94,15 @@
               <ion-label>
                 <h2 :class="{ completed: task.completed === 1 }">{{ task.title }}</h2>
                 <p class="task-description">{{ task.description }}</p>
-                <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+                <div class="task-meta">
+                  <ion-badge :color="getStatusColor(task.completed)">
+                    {{ task.completed === 1 ? 'Completed' : 'Pending' }}
+                  </ion-badge>
+                  <ion-badge :color="getPriorityColor(task.priority)">
+                    {{ task.priority }}
+                  </ion-badge>
+                  <p class="task-due" :class="getDueDateClass(task)">Due {{ formatDate(task.due_date) }}</p>
+                </div>
               </ion-label>
             </ion-item>
           </template>
@@ -176,6 +192,7 @@ interface Task {
   description: string;
   due_date: string;
   completed: number;
+  priority: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at: string;
 }
@@ -556,6 +573,18 @@ onMounted(() => {
     selectedFilter.value = route.query.filter as string;
   }
 });
+
+// Add priority color function
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'high': return 'danger';
+    case 'medium': return 'warning';
+    case 'low': return 'success';
+    default: return 'medium';
+  }
+};
+
+const getStatusColor = (completed: number) => completed === 1 ? 'success' : 'warning';
 </script>
 
 <style scoped>
@@ -682,18 +711,22 @@ ion-badge {
   line-height: 1.4;
 }
 
-.task-due {
-  font-size: 0.85rem;
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.task-meta ion-badge {
+  text-transform: capitalize;
   font-weight: 500;
-  margin: 4px 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  
-  &.completed-task { color: var(--ion-color-medium); }
-  &.due-today { color: var(--ion-color-warning); }
-  &.overdue { color: var(--ion-color-danger); }
-  &.upcoming { color: var(--ion-color-success); }
+}
+
+.task-due {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
 }
 
 /* Empty state */

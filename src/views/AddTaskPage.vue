@@ -28,6 +28,20 @@
               class="custom-textarea">
             </ion-textarea>
           </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Priority <ion-text color="danger">*</ion-text></ion-label>
+            <ion-select
+              v-model="taskForm.priority"
+              placeholder="Select priority"
+              class="custom-select"
+              required>
+              <ion-select-option value="high">High</ion-select-option>
+              <ion-select-option value="medium">Medium</ion-select-option>
+              <ion-select-option value="low">Low</ion-select-option>
+            </ion-select>
+            <ion-note v-if="errors.priority" color="danger">{{ errors.priority }}</ion-note>
+          </ion-item>
         </div>
 
         <div class="form-section">
@@ -83,6 +97,8 @@ import {
   IonNote,
   IonText,
   IonToggle,
+  IonSelect,
+  IonSelectOption,
   toastController
 } from '@ionic/vue';
 import { addOutline, checkmarkCircle, closeCircle } from 'ionicons/icons';
@@ -93,11 +109,13 @@ interface TaskForm {
   description: string;
   due_date: string;
   completed: boolean;
+  priority: 'low' | 'medium' | 'high';
 }
 
 interface Errors {
   title?: string;
   due_date?: string;
+  priority?: string;
   general?: string;
 }
 
@@ -108,7 +126,8 @@ const taskForm = ref<TaskForm>({
   title: '',
   description: '',
   due_date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
-  completed: false
+  completed: false,
+  priority: 'medium'
 });
 
 // Compute minimum date time (current time)
@@ -130,6 +149,11 @@ const validateForm = (): boolean => {
 
   if (!taskForm.value.due_date) {
     errors.value.due_date = 'Due date is required';
+    isValid = false;
+  }
+
+  if (!taskForm.value.priority) {
+    errors.value.priority = 'Priority is required';
     isValid = false;
   }
 
@@ -185,18 +209,13 @@ const handleSubmit = async (event: Event) => {
       title: taskForm.value.title.trim(),
       description: taskForm.value.description.trim(),
       due_date: formattedDate,
-      completed: taskForm.value.completed ? 1 : 0
+      completed: taskForm.value.completed ? 1 : 0,
+      priority: taskForm.value.priority
     };
 
     console.log('Sending create request with data:', requestData); // Debug log
 
-    const response = await api.post(
-      '/tasks.php',
-      requestData,
-      {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}` }
-      }
-    );
+    const response = await api.post('/tasks.php', requestData);
 
     console.log('Server response:', response.data); // Debug log
 

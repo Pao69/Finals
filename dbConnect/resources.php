@@ -45,16 +45,23 @@ try {
                 FROM resources r 
                 LEFT JOIN users u ON r.user_id = u.id
                 LEFT JOIN tasks t ON r.task_id = t.id
+                WHERE (r.user_id = :user_id OR :is_admin = true)
             ";
             
+            $params = [
+                'user_id' => $user->user_id,
+                'is_admin' => $user->role === 'admin'
+            ];
+
             if ($taskId) {
-                $query .= " WHERE r.task_id = :task_id";
-                $stmt = $pdo->prepare($query);
-                $stmt->execute(['task_id' => $taskId]);
-            } else {
-                $stmt = $pdo->prepare($query);
-                $stmt->execute();
+                $query .= " AND r.task_id = :task_id";
+                $params['task_id'] = $taskId;
             }
+
+            $query .= " ORDER BY r.upload_date DESC";
+            
+            $stmt = $pdo->prepare($query);
+            $stmt->execute($params);
             
             $resources = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'resources' => $resources]);

@@ -67,6 +67,11 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresNonAdmin: true }
       },
       {
+        path: 'report',
+        component: () => import('../views/ReportPage.vue'),
+        meta: { requiresAdmin: true }
+      },
+      {
         path: 'resources',
         component: () => import('../views/ResourcesPage.vue'),
         meta: { requiresNonAdmin: true }
@@ -91,7 +96,13 @@ router.beforeEach((to, from, next) => {
   const publicPages = ['/login', '/signup', '/forgot-password'];
   const authRequired = !publicPages.includes(to.path);
   
-  // Check if this is a page refresh - only true for initial page load
+  // If going to forgot-password, clear any existing auth data
+  if (to.path === '/forgot-password') {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+  
+  // Check if this is a page refresh
   const isPageRefresh = !from.name && !from.path;
 
   console.log('Route transition details:', {

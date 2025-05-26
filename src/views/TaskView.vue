@@ -21,6 +21,14 @@
           </div>
 
           <div class="info-section">
+            <ion-icon :icon="flagOutline"></ion-icon>
+            <div class="info-content">
+              <h3>Priority</h3>
+              <ion-badge :color="getPriorityColor(task.priority)">{{ task.priority }}</ion-badge>
+            </div>
+          </div>
+
+          <div class="info-section">
             <ion-icon :icon="documentTextOutline"></ion-icon>
             <div class="info-content">
               <h3>Description</h3>
@@ -113,13 +121,13 @@ import api from '@/utils/api';
 import {
   IonContent, IonButton, IonIcon,
   IonCheckbox, IonAlert, IonSpinner, toastController,
-  IonChip, IonLabel, IonThumbnail, IonList, IonItem, IonButtons
+  IonChip, IonLabel, IonThumbnail, IonList, IonItem, IonButtons, IonBadge
 } from '@ionic/vue';
 import { 
   createOutline, trashOutline, calendarOutline,
   documentTextOutline, checkmarkCircle, closeCircle,
   documentsOutline, downloadOutline, imageOutline,
-  documentOutline
+  documentOutline, flagOutline
 } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
@@ -130,6 +138,7 @@ interface Task {
   description: string;
   due_date: string;
   completed: number;
+  priority: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at: string;
   owner_username: string;
@@ -350,6 +359,15 @@ const downloadResource = (resource: Resource) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'high': return 'danger';
+    case 'medium': return 'warning';
+    case 'low': return 'success';
+    default: return 'medium';
+  }
 };
 </script>
 

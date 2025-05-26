@@ -128,27 +128,47 @@ try {
             $date = DateTime::createFromFormat('m/d/Y h:i A', $data['due_date']);
             $mysqlDate = $date->format('Y-m-d H:i:s');
             
-            // Prepare the SQL statement
-            $sql = "INSERT INTO tasks (user_id, title, description, due_date, completed) 
-                    VALUES (:user_id, :title, :description, :due_date, :completed)";
-            
-            $stmt = $pdo->prepare($sql);
-            
-            // Bind parameters
+            // Prepare the SQL statement for task creation
+            if (isset($data['id'])) {
+                // Update existing task
+                $sql = "UPDATE tasks 
+                        SET title = :title, 
+                            description = :description, 
+                            due_date = :due_date, 
+                            completed = :completed,
+                            priority = :priority
+                        WHERE id = :id AND (user_id = :user_id OR :isAdmin = true)";
+                
+                $stmt = $pdo->prepare($sql);
+                
+                // Bind parameters for update
+                $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
+                $stmt->bindValue(':user_id', $user->user_id, PDO::PARAM_INT);
+                $stmt->bindValue(':isAdmin', $user->role === 'admin', PDO::PARAM_BOOL);
+            } else {
+                // Create new task
+                $sql = "INSERT INTO tasks (user_id, title, description, due_date, completed, priority) 
+                        VALUES (:user_id, :title, :description, :due_date, :completed, :priority)";
+                
+                $stmt = $pdo->prepare($sql);
+            }
+
+            // Bind common parameters
             $stmt->bindValue(':user_id', $user->user_id, PDO::PARAM_INT);
             $stmt->bindValue(':title', $data['title'], PDO::PARAM_STR);
             $stmt->bindValue(':description', $data['description'] ?? '', PDO::PARAM_STR);
             $stmt->bindValue(':due_date', $mysqlDate, PDO::PARAM_STR);
             $stmt->bindValue(':completed', $data['completed'] ?? 0, PDO::PARAM_INT);
+            $stmt->bindValue(':priority', $data['priority'] ?? 'medium', PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Task created successfully',
-                    'task_id' => $pdo->lastInsertId()
+                    'message' => isset($data['id']) ? 'Task updated successfully' : 'Task created successfully',
+                    'task_id' => isset($data['id']) ? $data['id'] : $pdo->lastInsertId()
                 ]);
             } else {
-                throw new Exception('Failed to create task');
+                throw new Exception(isset($data['id']) ? 'Failed to update task' : 'Failed to create task');
             }
             break;
 
