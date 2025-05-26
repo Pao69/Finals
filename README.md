@@ -228,12 +228,6 @@ npm run preview
 | Global Settings | Configure system parameters | /admin/settings |
 | Resource Control | Manage storage, quotas, limitations | /admin/resources |
 
-### ⚙️ Admin Usage Guide
-| Action | Steps |
-|User Management |	View, add, edit, or delete user accounts and manage user roles |
-|System Monitoring |	Access system statistics, user activity logs, and resource usage tracking |
-|Global Settings |	Control overarching application settings |
-
 ### 🔧 Troubleshooting
 
 | Issue | Solution | Prevention |
@@ -270,10 +264,6 @@ project/
 - Join discussions in GitHub Discussions
 - Submit PRs for improvements
 - Documentation updates welcome
-
-## 📄 License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 Made with ❤️ using Ionic, Vue.js, and PHP
