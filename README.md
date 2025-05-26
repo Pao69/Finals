@@ -228,7 +228,13 @@ npm run preview
 | Global Settings | Configure system parameters | /admin/settings |
 | Resource Control | Manage storage, quotas, limitations | /admin/resources |
 
-## 🔧 Troubleshooting
+### ⚙️ Admin Usage Guide
+| Action | Steps |
+|User Management |	View, add, edit, or delete user accounts and manage user roles |
+|System Monitoring |	Access system statistics, user activity logs, and resource usage tracking |
+|Global Settings |	Control overarching application settings |
+
+### 🔧 Troubleshooting
 
 | Issue | Solution | Prevention |
 |-------|----------|------------|
