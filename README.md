@@ -176,7 +176,13 @@ npm run dev
 | View | Access from task details |
 | Download | Click on resource to download |
 
-## 🔧 Troubleshooting
+### ⚙️ Admin Usage Guide
+| Action | Steps |
+|User Management |	View, add, edit, or delete user accounts and manage user roles |
+|System Monitoring |	Access system statistics, user activity logs, and resource usage tracking |
+|Global Settings |	Control overarching application settings |
+
+### 🔧 Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
