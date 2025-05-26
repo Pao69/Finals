@@ -111,7 +111,31 @@ try {
             // Get POST data
             $data = json_decode(file_get_contents('php://input'), true);
             
-            // Validate required fields
+            // Check if this is just a completion status update
+            if (isset($data['id']) && isset($data['completed']) && count($data) === 2) {
+                // Update only the completion status
+                $sql = "UPDATE tasks 
+                        SET completed = :completed
+                        WHERE id = :id AND (user_id = :user_id OR :isAdmin = true)";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindValue(':id', $data['id'], PDO::PARAM_INT);
+                $stmt->bindValue(':completed', $data['completed'], PDO::PARAM_INT);
+                $stmt->bindValue(':user_id', $user->user_id, PDO::PARAM_INT);
+                $stmt->bindValue(':isAdmin', $user->role === 'admin', PDO::PARAM_BOOL);
+                
+                if ($stmt->execute()) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Task completion status updated successfully'
+                    ]);
+                    break;
+                } else {
+                    throw new Exception('Failed to update task completion status');
+                }
+            }
+
+            // For full task updates, validate required fields
             if (empty($data['title']) || empty($data['due_date'])) {
                 throw new Exception('Title and due date are required');
             }
