@@ -188,9 +188,5 @@ npm run dev
 
 Need help? Found a bug? Please create an issue in the repository.
 
-## 📄 License
-
-This project is licensed under the MIT License.
-
 ---
-Made with ❤️ using Ionic, React, and PHP 
+Made with ❤️ using Ionic, Vue and PHP 
