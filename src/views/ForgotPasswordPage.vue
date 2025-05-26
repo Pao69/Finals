@@ -122,9 +122,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import axios from 'axios';
-import { IonPage, IonContent, IonModal, IonButton } from '@ionic/vue';
+import { useRouter } from 'vue-router';
+import { IonPage, IonContent, IonModal, IonButton, toastController } from '@ionic/vue';
+import api from '@/utils/api';
 
+const router = useRouter();
 const step = ref(1);
 const email = ref('');
 const code = ref('');
@@ -138,7 +140,7 @@ const devResetCode = ref('');
 const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const resendTimer = ref(0);
 const showConfirmModal = ref(false);
-let resendInterval: any = null;
+let resendInterval: number | undefined;
 
 const hasLength = computed(() => newPassword.value.length >= 11);
 const hasLetter = computed(() => /[A-Za-z]/.test(newPassword.value));
@@ -158,12 +160,16 @@ const isFormValid = computed(() => {
 
 function startResendTimer() {
   resendTimer.value = 30;
-  if (resendInterval) clearInterval(resendInterval);
-  resendInterval = setInterval(() => {
+  if (resendInterval) {
+    window.clearInterval(resendInterval);
+  }
+  resendInterval = window.setInterval(() => {
     if (resendTimer.value > 0) {
       resendTimer.value--;
     } else {
-      clearInterval(resendInterval);
+      if (resendInterval) {
+        window.clearInterval(resendInterval);
+      }
     }
   }, 1000);
 }
@@ -174,7 +180,7 @@ const handleRequestCode = async () => {
   devResetCode.value = '';
   loading.value = true;
   try {
-    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/request_reset.php', {
+    const response = await api.post('/Codes/PROJ/dbConnect/request_reset.php', {
       email: email.value
     });
     if (response.data.success) {
@@ -189,14 +195,20 @@ const handleRequestCode = async () => {
       error.value = response.data.message || 'Failed to send reset code.';
     }
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Failed to send reset code.';
+    error.value = err.response?.data?.message || 
+                 (err.message === 'Network Error' ? 
+                   'Cannot connect to server. Please check if XAMPP is running and Apache is started.' : 
+                   err.message || 'Failed to send reset code.');
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 };
 
 const handleResetPassword = async () => {
   error.value = '';
   successMessage.value = '';
+  showConfirmModal.value = false;
+
   if (!code.value) {
     error.value = 'Reset code is required.';
     return;
@@ -225,9 +237,10 @@ const handleResetPassword = async () => {
     error.value = 'Passwords do not match.';
     return;
   }
+
   loading.value = true;
   try {
-    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/reset_password.php', {
+    const response = await api.post('/Codes/PROJ/dbConnect/reset_password.php', {
       email: email.value,
       code: code.value,
       newPassword: newPassword.value
@@ -241,13 +254,40 @@ const handleResetPassword = async () => {
       newPassword.value = '';
       confirmPassword.value = '';
       devResetCode.value = '';
+
+      // Show success toast
+      const toast = await toastController.create({
+        message: 'Password reset successful! Please log in with your new password.',
+        duration: 3000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+      // Wait for toast to be shown
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Navigate to login page
+      router.push('/login');
     } else {
-      error.value = response.data.message || 'Failed to reset password.';
+      throw new Error(response.data.message || 'Failed to reset password.');
     }
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Failed to reset password.';
+    error.value = err.response?.data?.message || 
+                 (err.message === 'Network Error' ? 
+                   'Cannot connect to server. Please check if XAMPP is running and Apache is started.' : 
+                   err.message || 'Failed to reset password.');
+    
+    const toast = await toastController.create({
+      message: error.value,
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 };
 </script>
 

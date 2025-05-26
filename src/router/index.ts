@@ -27,7 +27,11 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         redirect: to => {
-          const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+          // Check localStorage first, then sessionStorage
+          let userData = localStorage.getItem('user');
+          if (!userData) {
+            userData = sessionStorage.getItem('user');
+          }
           const user = userData ? JSON.parse(userData) : null;
           return user?.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard';
         }
@@ -82,16 +86,65 @@ const router = createRouter({
 
 // Navigation guard to check authentication and roles
 router.beforeEach((to, from, next) => {
+  console.log('Navigation started:', { from: from.path, to: to.path });
+  
   const publicPages = ['/login', '/signup', '/forgot-password'];
   const authRequired = !publicPages.includes(to.path);
   
-  // Get user data and token from the appropriate storage
-  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  // Check if this is a page refresh - only true for initial page load
+  const isPageRefresh = !from.name && !from.path;
+
+  console.log('Route transition details:', {
+    fromName: from.name,
+    fromPath: from.path,
+    toName: to.name,
+    toPath: to.path,
+    isPageRefresh
+  });
+
+  // Check both storages
+  const localStorageData = {
+    token: localStorage.getItem('token'),
+    user: localStorage.getItem('user')
+  };
   
-  // If auth is required and no token/user data
+  const sessionStorageData = {
+    token: sessionStorage.getItem('token'),
+    user: sessionStorage.getItem('user')
+  };
+
+  console.log('Storage state:', {
+    localStorage: { hasToken: !!localStorageData.token, hasUser: !!localStorageData.user },
+    sessionStorage: { hasToken: !!sessionStorageData.token, hasUser: !!sessionStorageData.user },
+    isPageRefresh
+  });
+
+  // Determine which storage to use
+  let userData = null;
+  let token = null;
+
+  if (localStorageData.token && localStorageData.user) {
+    // Use localStorage if it has data
+    userData = localStorageData.user;
+    token = localStorageData.token;
+    console.log('Using localStorage data');
+  } else if (sessionStorageData.token && sessionStorageData.user) {
+    // Use sessionStorage data
+    userData = sessionStorageData.user;
+    token = sessionStorageData.token;
+    console.log('Using sessionStorage data');
+    
+    // Only clear session on actual browser refresh
+    if (isPageRefresh && !publicPages.includes(to.path)) {
+      console.log('Page refresh detected with sessionStorage, clearing session');
+      sessionStorage.clear();
+      return next('/login');
+    }
+  }
+
+  // Handle authentication requirement
   if (authRequired && (!token || !userData)) {
-    // Clear both storages to ensure clean state
+    console.log('Authentication required but no valid credentials found');
     localStorage.clear();
     sessionStorage.clear();
     return next('/login');
@@ -101,7 +154,9 @@ router.beforeEach((to, from, next) => {
     const user = JSON.parse(userData);
     const isAdmin = user.role === 'admin';
 
-    // Force admin users to admin route and non-admin users to dashboard
+    console.log('User authenticated:', { role: user.role, isAdmin });
+
+    // Handle routing based on user role
     if (isAdmin && to.path === '/tabs/dashboard') {
       return next('/tabs/admin');
     }
@@ -109,26 +164,21 @@ router.beforeEach((to, from, next) => {
       return next('/tabs/dashboard');
     }
 
-    // Handle root paths
     if (to.path === '/tabs/' || to.path === '/tabs') {
-      return next(isAdmin ? '/tabs/admin' : '/tabs/dashboard');
+      const targetPath = isAdmin ? '/tabs/admin' : '/tabs/dashboard';
+      return next(targetPath);
     }
     
-    // Check for admin routes
-    if (to.matched.some(record => record.meta.requiresAdmin)) {
-      if (!isAdmin) {
-        return next('/tabs/dashboard');
-      }
+    if (to.matched.some(record => record.meta.requiresAdmin) && !isAdmin) {
+      return next('/tabs/dashboard');
     }
 
-    // Check for non-admin routes
-    if (to.matched.some(record => record.meta.requiresNonAdmin)) {
-      if (isAdmin) {
-        return next('/tabs/admin');
-      }
+    if (to.matched.some(record => record.meta.requiresNonAdmin) && isAdmin) {
+      return next('/tabs/admin');
     }
   }
 
+  console.log('Navigation proceeding to:', to.path);
   next();
 });
 

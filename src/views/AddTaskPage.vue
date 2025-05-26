@@ -4,7 +4,7 @@
       <form @submit.prevent="handleSubmit" class="task-form">
         <div class="form-section">
           <div class="section-header">
-            <h2>Task Details</h2>
+          <h2>Task Details</h2>
           </div>
           
           <ion-item class="form-item">
@@ -32,7 +32,7 @@
 
         <div class="form-section">
           <div class="section-header">
-            <h2>Schedule</h2>
+          <h2>Schedule</h2>
           </div>
           
           <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
@@ -48,7 +48,7 @@
 
         <div class="form-section">
           <div class="section-header">
-            <h2>Status</h2>
+          <h2>Status</h2>
           </div>
           
           <ion-item class="form-item toggle-item">
@@ -71,7 +71,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonContent,
   IonItem,
@@ -82,16 +82,17 @@ import {
   IonDatetime,
   IonNote,
   IonText,
+  IonToggle,
   toastController
 } from '@ionic/vue';
-import { addOutline } from 'ionicons/icons';
+import { addOutline, checkmarkCircle, closeCircle } from 'ionicons/icons';
 import PageLayout from '@/components/PageLayout.vue';
 
 interface TaskForm {
   title: string;
   description: string;
   due_date: string;
-  completed: number | boolean;
+  completed: boolean;
 }
 
 interface Errors {
@@ -106,7 +107,7 @@ const errors = ref<Errors>({});
 const taskForm = ref<TaskForm>({
   title: '',
   description: '',
-  due_date: new Date().toISOString().split('T')[0],
+  due_date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
   completed: false
 });
 
@@ -160,32 +161,82 @@ const handleSubmit = async (event: Event) => {
   if (!validateForm()) return;
 
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      taskForm.value,
+    // Convert the input datetime to a Date object
+    const dueDate = new Date(taskForm.value.due_date);
+    
+    // Format the date as MM/DD/YYYY HH:MM AM/PM
+    const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+    const day = String(dueDate.getDate()).padStart(2, '0');
+    const year = dueDate.getFullYear();
+    
+    let hours = dueDate.getHours();
+    const minutes = String(dueDate.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    // Convert hours to 12-hour format
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const formattedHours = String(hours).padStart(2, '0');
+
+    const formattedDate = `${month}/${day}/${year} ${formattedHours}:${minutes} ${ampm}`;
+
+    // Prepare the request data
+    const requestData = {
+      title: taskForm.value.title.trim(),
+      description: taskForm.value.description.trim(),
+      due_date: formattedDate,
+      completed: taskForm.value.completed ? 1 : 0
+    };
+
+    console.log('Sending create request with data:', requestData); // Debug log
+
+    const response = await api.post(
+      '/tasks.php',
+      requestData,
       {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}` }
       }
     );
+
+    console.log('Server response:', response.data); // Debug log
 
     if (response.data.success) {
       const toast = await toastController.create({
         message: 'Task created successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top',
+        icon: checkmarkCircle
       });
       await toast.present();
 
-      // Navigate back to tasks list
-      router.replace('/tabs/tasks');
+      // Navigate back to tasks list and refresh
+      router.push('/tabs/tasks').then(() => {
+        // Use the global refresh function if available
+        if (window.refreshTaskList) {
+          window.refreshTaskList();
+        }
+      });
+    } else {
+      throw new Error(response.data.message || 'Failed to create task');
     }
   } catch (error: any) {
     console.error('Error creating task:', error);
+    console.error('Error response:', error.response?.data); // Additional error logging
+    
+    let errorMessage = 'Failed to create task';
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     const toast = await toastController.create({
-      message: error.response?.data?.message || 'Failed to create task',
-      duration: 2000,
-      color: 'danger'
+      message: errorMessage,
+      duration: 3000,
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
   }
@@ -330,7 +381,7 @@ ion-note {
   .task-form {
     margin: 1.5rem auto;
     padding: 1.5rem;
-  }
+}
 
   .form-section {
     padding: 2rem;

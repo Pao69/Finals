@@ -65,8 +65,13 @@
                     v-model="profile.username" 
                     type="text" 
                     placeholder="Enter username"
-                    class="custom-input">
+                    class="custom-input"
+                    @ionInput="(e: CustomEvent) => validateField('username', (e.target as HTMLInputElement).value || '')"
+                    :class="{ 'has-error': validationErrors.username }">
                   </ion-input>
+                  <ion-note color="danger" v-if="validationErrors.username">
+                    {{ validationErrors.username }}
+                  </ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label position="stacked">Email</ion-label>
@@ -74,17 +79,27 @@
                     v-model="profile.email" 
                     type="email" 
                     placeholder="Enter email"
-                    class="custom-input">
+                    class="custom-input"
+                    @ionInput="(e: CustomEvent) => validateField('email', (e.target as HTMLInputElement).value || '')"
+                    :class="{ 'has-error': validationErrors.email }">
                   </ion-input>
+                  <ion-note color="danger" v-if="validationErrors.email">
+                    {{ validationErrors.email }}
+                  </ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label position="stacked">Phone</ion-label>
                   <ion-input 
                     v-model="profile.phone" 
                     type="tel" 
-                    placeholder="Enter phone"
-                    class="custom-input">
+                    placeholder="Enter phone (e.g., +639123456789)"
+                    class="custom-input"
+                    @ionInput="(e: CustomEvent) => validateField('phone', (e.target as HTMLInputElement).value || '')"
+                    :class="{ 'has-error': validationErrors.phone }">
                   </ion-input>
+                  <ion-note color="danger" v-if="validationErrors.phone">
+                    {{ validationErrors.phone }}
+                  </ion-note>
                 </ion-item>
                 <ion-button 
                   expand="block" 
@@ -135,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/utils/api';
 import axios from 'axios';
@@ -187,8 +202,9 @@ const components = {
 
 const router = useRouter();
 
-//for default profile
+// Profile state
 const profileImage = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
+const isImageLoading = ref(false);
 
 // Profile state
 const originalProfile = ref({
@@ -210,65 +226,51 @@ const isProfileChanged = computed(() => {
   return JSON.stringify(profile.value) !== JSON.stringify(originalProfile.value);
 });
 
-// Load user profile with image
-onMounted(async () => {
+// Function to update profile image everywhere
+const updateProfileImageEverywhere = (imageUrl: string) => {
+  // Update the local state
+  profileImage.value = imageUrl;
+  
+  // Update storage
+  const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+  const userData = JSON.parse(storage.getItem('user') || '{}');
+  userData.pfp = imageUrl;
+  storage.setItem('user', JSON.stringify(userData));
+};
+
+// Enhanced fetchProfilePicture function
+const fetchProfilePicture = async () => {
   try {
-    // Get user data from the storage that contains it
-    const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-    const userData = storage.getItem('user');
+    isImageLoading.value = true;
     
+    // First check storage for cached profile picture
+    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (userData) {
       const user = JSON.parse(userData);
-      
-      // Fetch latest user data from the server
-      const response = await api.get('/profile.php');
-      if (response.data.success) {
-        const serverUser = response.data.user;
-        originalProfile.value = {
-          username: serverUser.username || user.username || '',
-          email: serverUser.email || user.email || '',
-          phone: serverUser.phone || user.phone || '',
-          role: serverUser.role || user.role || 'user'
-        };
-        profile.value = { ...originalProfile.value };
-      } else {
-        // Fallback to stored data if server fetch fails
-        originalProfile.value = {
-          username: user.username || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          role: user.role || 'user'
-        };
-        profile.value = { ...originalProfile.value };
-      }
-      
-      // Set profile image if it exists in user data
       if (user.pfp) {
         profileImage.value = user.pfp;
       }
-      
-      // Fetch current profile picture in case it was updated
-      await fetchProfilePicture();
-    } else {
-      // If no user data is found, redirect to login
-      router.push('/login');
+    }
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) return;
+
+    const response = await api.get('/profile_picture.php');
+    if (response.data.success && response.data.image_link) {
+      const imageUrl = response.data.image_link;
+      updateProfileImageEverywhere(imageUrl);
     }
   } catch (error) {
-    console.error('Error loading profile:', error);
-    const toast = await toastController.create({
-      message: 'Failed to load profile data',
-      duration: 2000,
-      color: 'danger'
-    });
-    await toast.present();
+    console.error('Failed to fetch profile picture:', error);
+    if (!profileImage.value) {
+      profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    }
+  } finally {
+    isImageLoading.value = false;
   }
-});
-
-const handleImageError = (e: Event) => {
-  const target = e.target as HTMLImageElement;
-  target.src = 'https://ionicframework.com/docs/img/demos/avatar.svg';
 };
 
+// Modified handleProfilePictureSelect
 const handleProfilePictureSelect = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files[0]) {
@@ -301,15 +303,16 @@ const handleProfilePictureSelect = async (event: Event) => {
     }
 
     try {
+      // Show loading indicator
+      const loading = await loadingController.create({
+        message: 'Uploading...',
+        duration: 3000
+      });
+      await loading.present();
+
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('profile_image', file);
-
-      console.log('Uploading file:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
 
       // Use the consistent API instance with FormData
       const response = await api.post('/profile_picture.php', formData, {
@@ -318,8 +321,6 @@ const handleProfilePictureSelect = async (event: Event) => {
         }
       });
 
-      console.log('Server response:', response.data);
-
       if (response.data.success) {
         // Construct the full URL for the profile image
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost';
@@ -327,13 +328,11 @@ const handleProfilePictureSelect = async (event: Event) => {
           ? response.data.image_link 
           : `${baseUrl}${response.data.image_link}`;
         
-        // Update the profile image
-        profileImage.value = imageUrl;
-        
-        // Update local storage
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        userData.pfp = imageUrl;
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Update profile image everywhere
+        updateProfileImageEverywhere(imageUrl);
+
+        // Dismiss loading indicator
+        await loading.dismiss();
 
         const toast = await toastController.create({
           message: 'Profile picture updated successfully',
@@ -346,12 +345,11 @@ const handleProfilePictureSelect = async (event: Event) => {
 
         // Clear the file input
         input.value = '';
-
-        // Force a page refresh after a shorter delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 200);
+        
+        // Fetch the updated profile picture
+        await fetchProfilePicture();
       } else {
+        await loading.dismiss();
         const toast = await toastController.create({
           message: response.data.message || 'Failed to update profile picture',
           duration: 2000,
@@ -403,6 +401,7 @@ const handleProfilePictureSelect = async (event: Event) => {
   }
 };
 
+// Modified deleteProfilePicture
 const deleteProfilePicture = async () => {
   const alert = await alertController.create({
     header: 'Remove Profile Picture',
@@ -418,17 +417,19 @@ const deleteProfilePicture = async () => {
         role: 'destructive',
         handler: async () => {
           try {
+            const loading = await loadingController.create({
+              message: 'Removing...',
+              duration: 2000
+            });
+            await loading.present();
+
             const response = await api.delete('/profile_picture.php');
 
             if (response.data.success) {
-              // Reset to default avatar
-              profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-              
-              // Update local storage
-              const userData = JSON.parse(localStorage.getItem('user') || '{}');
-              userData.pfp = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-              localStorage.setItem('user', JSON.stringify(userData));
+              const defaultAvatar = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+              updateProfileImageEverywhere(defaultAvatar);
 
+              await loading.dismiss();
               const toast = await toastController.create({
                 message: 'Profile picture removed successfully',
                 duration: 2000,
@@ -437,12 +438,20 @@ const deleteProfilePicture = async () => {
                 icon: checkmarkCircle
               });
               await toast.present();
+              
+              // Fetch the updated profile picture
+              await fetchProfilePicture();
+            } else {
+              await loading.dismiss();
+              const toast = await toastController.create({
+                message: 'Failed to remove profile picture',
+                duration: 2000,
+                color: 'danger',
+                position: 'top',
+                icon: closeCircle
+              });
+              await toast.present();
             }
-
-            // Force a page refresh after a shorter delay, regardless of success or failure
-            setTimeout(() => {
-              window.location.reload();
-            }, 200);
           } catch (error: any) {
             console.error('Delete error:', error);
             const toast = await toastController.create({
@@ -453,11 +462,6 @@ const deleteProfilePicture = async () => {
               icon: closeCircle
             });
             await toast.present();
-
-            // Still reload the page even if there's an error
-            setTimeout(() => {
-              window.location.reload();
-            }, 200);
           }
         }
       }
@@ -467,7 +471,72 @@ const deleteProfilePicture = async () => {
   await alert.present();
 };
 
-//Logout
+// Enhanced onMounted setup
+onMounted(async () => {
+  try {
+    // Get user data from the storage that contains it
+    const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
+    const userData = storage.getItem('user');
+    
+    if (userData) {
+      const user = JSON.parse(userData);
+      
+      // Fetch latest user data from the server
+      const response = await api.get('/profile.php');
+      if (response.data.success) {
+        const serverUser = response.data.user;
+        originalProfile.value = {
+          username: serverUser.username || user.username || '',
+          email: serverUser.email || user.email || '',
+          phone: serverUser.phone || user.phone || '',
+          role: serverUser.role || user.role || 'user'
+        };
+        profile.value = { ...originalProfile.value };
+      } else {
+        originalProfile.value = {
+          username: user.username || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          role: user.role || 'user'
+        };
+        profile.value = { ...originalProfile.value };
+      }
+      
+      // Set initial profile image if it exists in user data
+      if (user.pfp) {
+        profileImage.value = user.pfp;
+      }
+      
+      // Fetch current profile picture
+      await fetchProfilePicture();
+    } else {
+      router.push('/login');
+    }
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    const toast = await toastController.create({
+      message: 'Failed to load profile data',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+});
+
+// Add watch effect for profile image changes
+watch(profileImage, (newValue) => {
+  if (newValue && newValue !== 'https://ionicframework.com/docs/img/demos/avatar.svg') {
+    // Pre-load the image to ensure it's in the browser cache
+    const img = new Image();
+    img.src = newValue;
+  }
+}, { immediate: true });
+
+const handleImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement;
+  target.src = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+};
+
 const handleLogout = async () => {
   // Clear both storages to ensure clean state
   localStorage.clear();
@@ -489,36 +558,85 @@ const handleLogout = async () => {
   }, 100);
 };
 
+// Add validation functions
+type ValidationField = 'username' | 'email' | 'phone';
+
+const validationRules: Record<ValidationField, RegExp> = {
+  username: /^[a-zA-Z0-9_]{3,20}$/,
+  email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|net|org|edu|gov|mil|biz|info|io|co\.uk|co\.in|com\.au|edu\.ph)$/,
+  phone: /^(\+63|0)[0-9]{10}$/
+};
+
+const validationMessages: Record<ValidationField, string> = {
+  username: 'Username must be 3-20 characters long and can only contain letters, numbers, and underscores',
+  email: 'Please enter a valid email address with a valid domain (e.g., .com, .net, .org)',
+  phone: 'Please enter a valid phone number (e.g., +639123456789 or 09123456789)'
+};
+
+const validationErrors = ref<Record<ValidationField, string>>({
+  username: '',
+  email: '',
+  phone: ''
+});
+
+const validateField = (field: ValidationField, value: string) => {
+  if (!value || !validationRules[field].test(value)) {
+    validationErrors.value[field] = validationMessages[field];
+    return false;
+  }
+  validationErrors.value[field] = '';
+  return true;
+};
+
+// Update profile function
 const updateProfile = async () => {
   try {
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(profile.value.email)) {
-      throw new Error('Please enter a valid email address');
+    // Validate all fields
+    let isValid = true;
+    (Object.keys(validationRules) as ValidationField[]).forEach(field => {
+      if (!validateField(field, profile.value[field] || '')) {
+        isValid = false;
+      }
+    });
+
+    if (!isValid) {
+      const toast = await toastController.create({
+        message: 'Please fix the validation errors',
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+      return;
     }
 
-    // Validate phone format (optional)
-    if (profile.value.phone && !/^\+?[\d\s-]{10,}$/.test(profile.value.phone)) {
-      throw new Error('Please enter a valid phone number');
-    }
+    // Show loading
+    const loading = await loadingController.create({
+      message: 'Updating profile...',
+      duration: 3000
+    });
+    await loading.present();
 
-    const response = await api.post('/update_profile.php', profile.value);
+    const response = await api.post('/user_profile.php', {
+      username: profile.value.username,
+      email: profile.value.email,
+      phone: profile.value.phone
+    });
+
+    await loading.dismiss();
 
     if (response.data.success) {
-      // Get the storage where user data is stored
+      // Update local storage/session storage
       const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
       const userData = JSON.parse(storage.getItem('user') || '{}');
-      
-      // Update user data while preserving other fields
-      const updatedUser = { 
-        ...userData,
+      Object.assign(userData, {
         username: profile.value.username,
         email: profile.value.email,
         phone: profile.value.phone
-      };
-      
-      // Store updated user data in the same storage
-      storage.setItem('user', JSON.stringify(updatedUser));
+      });
+      storage.setItem('user', JSON.stringify(userData));
+
+      // Update original profile to match current
       originalProfile.value = { ...profile.value };
 
       const toast = await toastController.create({
@@ -600,48 +718,6 @@ const deleteProfile = async () => {
   });
 
   await alert.present();
-};
-
-const fetchProfilePicture = async () => {
-  try {
-    // First check local storage or session storage for cached profile picture
-    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      if (user.pfp) {
-        profileImage.value = user.pfp;
-      }
-    }
-
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) return;
-
-    const response = await api.get('/profile_picture.php');
-    if (response.data.success && response.data.image_link) {
-      profileImage.value = response.data.image_link;
-      
-      // Update user data in the storage that contains it
-      const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-      const userData = JSON.parse(storage.getItem('user') || '{}');
-      userData.pfp = response.data.image_link;
-      storage.setItem('user', JSON.stringify(userData));
-    }
-  } catch (error) {
-    console.error('Failed to fetch profile picture:', error);
-    // If there's an error, ensure we at least show the default avatar
-    if (!profileImage.value) {
-      profileImage.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-    }
-    
-    // Show error message to user
-    const toast = await toastController.create({
-      message: 'Failed to fetch profile picture',
-      duration: 2000,
-      color: 'danger',
-      position: 'top'
-    });
-    await toast.present();
-  }
 };
 
 const triggerFileInput = () => {
@@ -925,5 +1001,22 @@ ion-button {
   cursor: pointer;
   user-select: none;
   z-index: 1;
+}
+
+.has-error {
+  --border-color: var(--ion-color-danger);
+}
+
+ion-note {
+  font-size: 0.8rem;
+  padding: 4px 0;
+}
+
+.custom-input {
+  margin-top: 4px;
+}
+
+ion-item {
+  --padding-bottom: 8px;
 }
 </style>

@@ -137,6 +137,7 @@
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonContent,
   IonList,
@@ -208,8 +209,8 @@ const sortOptions = [
   { label: 'Created Date (Oldest)', value: 'created_asc' }
 ];
 
-onMounted(() => {
-  fetchTasks();
+onMounted(async () => {
+  await fetchTasks();
 });
 
 const currentSort = ref('due_date_asc');
@@ -224,27 +225,19 @@ window.refreshTaskList = refreshTaskList;
 
 // Fetch tasks from the database
 const fetchTasks = async () => {
-  loading.value = true;
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    const response = await axios.get('http://localhost/codes/PROJ/dbConnect/tasks.php', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
+    loading.value = true;
+    const response = await api.get('/tasks.php');
     if (response.data.success) {
-      tasks.value = response.data.tasks || [];
+      tasks.value = response.data.tasks;
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching tasks:', error);
     const toast = await toastController.create({
       message: 'Failed to fetch tasks',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top'
     });
     await toast.present();
   } finally {
@@ -325,17 +318,10 @@ const handleFilterChange = (event: CustomEvent) => {
 // Toggle task completion
 const toggleTaskCompletion = async (task: Task, completed: boolean) => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      {
-        id: task.id,
-        completed: completed ? 1 : 0
-      },
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
+    const response = await api.post('/tasks.php', {
+      id: task.id,
+      completed: completed ? 1 : 0
+    });
 
     if (response.data.success) {
       // Show success toast
@@ -381,9 +367,7 @@ const deleteTask = async () => {
   if (!taskToDelete.value) return;
 
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete('http://localhost/codes/PROJ/dbConnect/tasks.php', {
-      headers: { 'Authorization': `Bearer ${token}` },
+    const response = await api.delete('/tasks.php', {
       data: { taskId: taskToDelete.value.id }
     });
 
@@ -577,7 +561,53 @@ onMounted(() => {
 <style scoped>
 /* Base styles */
 ion-content {
+  --padding-top: 16px;
   --padding-bottom: 80px;
+}
+
+/* Custom searchbar and toolbar */
+ion-toolbar {
+  --min-height: 56px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  position: relative;
+  background: var(--ion-background-color);
+}
+
+.search-container {
+  padding: 8px 16px;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-background-color);
+}
+
+.custom-searchbar {
+  --background: var(--ion-color-light);
+  --border-radius: 10px;
+  --box-shadow: none;
+  --placeholder-color: var(--ion-color-medium);
+  --icon-color: var(--ion-color-primary);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 44px;
+  margin: 0;
+  max-width: 100%;
+  width: auto;
+}
+
+ion-segment {
+  padding: 8px 16px;
+  background: var(--ion-background-color);
+  position: relative;
+  margin-bottom: 8px;
+}
+
+/* Add spacing after the search container */
+.search-container + * {
+  margin-top: 8px;
 }
 
 .hide-sm {
@@ -586,82 +616,48 @@ ion-content {
   }
 }
 
-/* Custom searchbar */
-.custom-searchbar {
-  --background: var(--ion-background-color);
-  --border-radius: 10px;
-  --box-shadow: none;
-  --placeholder-color: var(--ion-color-medium);
-  --icon-color: var(--ion-color-primary);
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --min-height: 44px;
-  margin: 8px 12px;
-  max-width: 100%;
-  width: auto;
+.segment-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
-ion-toolbar {
-  --min-height: 56px;
-  --padding-top: 0;
-  --padding-bottom: 0;
-  contain: none;
-  overflow: visible;
+.label-text {
+  font-size: 0.9rem;
+}
+
+ion-badge {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 3px;
+  --padding-bottom: 3px;
+  font-size: 0.8rem;
 }
 
 @media (max-width: 360px) {
   .custom-searchbar {
     --min-height: 40px;
-    margin: 4px 8px;
   }
   
   ion-toolbar {
     --min-height: 48px;
+  }
+
+  ion-segment {
+    top: 48px;
   }
 }
 
 @media (min-width: 768px) {
   .custom-searchbar {
     max-width: 800px;
-    margin: 8px auto;
+    margin: 0 auto;
   }
-}
 
-/* Segment styles */
-ion-segment {
-  --background: var(--ion-card-background);
-  border-radius: 12px;
-  margin: 8px 12px;
-  display: flex;
-  overflow: visible;
-  width: auto;
-}
-
-ion-segment-button {
-  --background-checked: var(--ion-color-primary);
-  --color-checked: var(--ion-color-primary-contrast);
-  --indicator-color: transparent;
-  min-width: auto;
-  flex: 1;
-  font-size: 0.85rem;
-  text-transform: none;
-  padding: 4px;
-  
-  .label-text {
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  ion-badge {
-    --padding-start: 6px;
-    --padding-end: 6px;
-    --padding-top: 2px;
-    --padding-bottom: 2px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 10px;
+  ion-segment {
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
 
@@ -806,14 +802,5 @@ ion-segment-button {
     --padding-start: 8px;
     --padding-end: 8px;
   }
-}
-
-.search-container {
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

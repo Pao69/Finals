@@ -134,12 +134,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonContent, IonList, IonItem, IonLabel, IonButton, IonButtons,
   IonIcon, IonSearchbar, IonCard, IonCardHeader, IonCardTitle,
   IonCardContent, IonInput, IonSelect, IonSelectOption, IonNote,
-  IonThumbnail, IonChip, IonAlert, IonToolbar, toastController
+  IonThumbnail, IonChip, IonAlert, IonToolbar, toastController,
+  IonText, IonItemGroup, loadingController
 } from '@ionic/vue';
 import {
   cloudUploadOutline, downloadOutline, trashOutline,
@@ -190,25 +191,42 @@ const canModifyResource = (resource: Resource) => {
 // Fetch resources
 const fetchResources = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    // Check both localStorage and sessionStorage for token
+    let token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      token = sessionStorage.getItem('token');
+    }
+
+    if (!token) {
+      console.error('No token found in either localStorage or sessionStorage');
+      resources.value = [];
       return;
     }
 
-    const response = await axios.get('http://localhost/codes/PROJ/dbConnect/resources.php', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    console.log('Fetching resources with token...');
+    const response = await api.get('/resources.php');
+    console.log('Response:', response);
 
     if (response.data.success) {
       resources.value = response.data.resources || [];
+      console.log('Resources loaded:', resources.value.length);
+    } else {
+      console.error('Failed to fetch resources:', response.data);
+      resources.value = [];
     }
   } catch (error: any) {
     console.error('Error fetching resources:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    resources.value = [];
     const toast = await toastController.create({
-      message: 'Failed to fetch resources',
-      duration: 2000,
-      color: 'danger'
+      message: 'Failed to fetch resources: ' + (error.response?.data?.message || error.message),
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
     });
     await toast.present();
   }
@@ -217,16 +235,21 @@ const fetchResources = async () => {
 // Fetch tasks for the select dropdown
 const fetchTasks = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.get('http://localhost/codes/PROJ/dbConnect/tasks.php', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    // Check if user is logged in by checking for token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      tasks.value = [];
+      return;
+    }
+
+    const response = await api.get('/tasks.php');
 
     if (response.data.success) {
       tasks.value = response.data.tasks || [];
     }
   } catch (error) {
     console.error('Error fetching tasks:', error);
+    tasks.value = []; // Reset tasks on error
   }
 };
 
@@ -253,10 +276,61 @@ const handleFileSelect = (event: Event) => {
 
 // Handle resource upload
 const handleUpload = async () => {
-  if (!selectedFile.value) return;
+  if (!selectedFile.value) {
+    const toast = await toastController.create({
+      message: 'Please select a file to upload',
+      duration: 2000,
+      color: 'warning',
+      position: 'top'
+    });
+    await toast.present();
+    return;
+  }
 
   try {
-    const token = localStorage.getItem('token');
+    // Show loading indicator
+    const loading = await loadingController.create({
+      message: 'Uploading resource...',
+      duration: 30000 // 30 seconds timeout
+    });
+    await loading.present();
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (selectedFile.value.size > maxSize) {
+      await loading.dismiss();
+      const toast = await toastController.create({
+        message: 'File size should be less than 10MB',
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!allowedTypes.includes(selectedFile.value.type)) {
+      await loading.dismiss();
+      const toast = await toastController.create({
+        message: 'Invalid file type. Allowed types: Images, PDF, Word documents',
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', selectedFile.value);
     formData.append('description', uploadForm.value.description);
@@ -264,22 +338,25 @@ const handleUpload = async () => {
       formData.append('task_id', uploadForm.value.task_id.toString());
     }
 
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/resources.php',
+    const response = await api.post(
+      '/resources.php',
       formData,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 30000 // 30 seconds timeout
       }
     );
+
+    await loading.dismiss();
 
     if (response.data.success) {
       const toast = await toastController.create({
         message: 'Resource uploaded successfully',
         duration: 2000,
-        color: 'success'
+        color: 'success',
+        position: 'top'
       });
       await toast.present();
 
@@ -296,10 +373,34 @@ const handleUpload = async () => {
     }
   } catch (error: any) {
     console.error('Error uploading resource:', error);
+    
+    // Dismiss loading if it's still showing
+    try {
+      await loadingController.dismiss();
+    } catch {}
+
+    let errorMessage = 'Failed to upload resource';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.error_details) {
+      const details = error.response.data.error_details;
+      if (!details.upload_dir_exists) {
+        errorMessage = 'Upload directory does not exist';
+      } else if (!details.upload_dir_writable) {
+        errorMessage = 'Upload directory is not writable';
+      } else if (details.error) {
+        errorMessage = details.error;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     const toast = await toastController.create({
-      message: 'Failed to upload resource',
-      duration: 2000,
-      color: 'danger'
+      message: errorMessage,
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
     });
     await toast.present();
   }
@@ -315,9 +416,7 @@ const deleteResource = async () => {
   if (!resourceToDelete.value) return;
 
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete('http://localhost/codes/PROJ/dbConnect/resources.php', {
-      headers: { 'Authorization': `Bearer ${token}` },
+    const response = await api.delete('/resources.php', {
       data: { resource_id: resourceToDelete.value.id }
     });
 
@@ -370,7 +469,8 @@ const getFileIcon = (fileType: string) => {
 };
 
 const getResourceUrl = (filename: string): string => {
-  return `http://localhost/codes/PROJ/uploads/${filename}`;
+  // Use the correct path to access uploaded files
+  return `${import.meta.env.VITE_API_URL || 'http://localhost/codes/PROJ/Finals'}/public/uploads/${filename}`;
 };
 
 const downloadResource = (resource: Resource) => {
@@ -419,6 +519,10 @@ declare global {
 
 // Add cleanup on unmount
 onBeforeUnmount(() => {
+  // Clear resources and tasks when component is unmounted
+  resources.value = [];
+  tasks.value = [];
+  
   if (window.refreshResourceList) {
     window.refreshResourceList = undefined;
   }
@@ -428,12 +532,31 @@ onBeforeUnmount(() => {
 <style scoped>
 /* Base styles */
 ion-content {
+  --padding-top: 16px;
   --padding-bottom: 80px;
 }
 
-/* Custom searchbar */
+/* Custom searchbar and toolbar */
+ion-toolbar {
+  --min-height: 56px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  position: relative;
+  background: var(--ion-background-color);
+}
+
+.search-container {
+  padding: 8px 16px;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-background-color);
+}
+
 .custom-searchbar {
-  --background: var(--ion-background-color);
+  --background: var(--ion-color-light);
   --border-radius: 10px;
   --box-shadow: none;
   --placeholder-color: var(--ion-color-medium);
@@ -441,44 +564,14 @@ ion-content {
   --padding-top: 0;
   --padding-bottom: 0;
   --min-height: 44px;
-  margin: 8px 12px;
+  margin: 0;
   max-width: 100%;
   width: auto;
 }
 
-ion-toolbar {
-  --min-height: 56px;
-  --padding-top: 0;
-  --padding-bottom: 0;
-  contain: none;
-  overflow: visible;
-}
-
-.search-container {
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 360px) {
-  .custom-searchbar {
-    --min-height: 40px;
-    margin: 4px 8px;
-  }
-  
-  ion-toolbar {
-    --min-height: 48px;
-  }
-}
-
-@media (min-width: 768px) {
-  .custom-searchbar {
-    max-width: 800px;
-    margin: 8px auto;
-  }
+/* Add spacing after the search container */
+.search-container + * {
+  margin-top: 8px;
 }
 
 .upload-card {

@@ -99,6 +99,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import api from '@/utils/api';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonGrid, IonRow, IonCol, 
          IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem, IonLabel, 
          IonBadge, IonIcon, IonChip } from '@ionic/vue';
@@ -121,15 +122,7 @@ const tasks = ref<Task[]>([]);
 // Fetch tasks from the database
 const fetchTasks = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    const response = await axios.get('http://localhost/codes/PROJ/dbConnect/tasks.php', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await api.get('/tasks.php');
 
     if (response.data.success) {
       tasks.value = response.data.tasks || [];

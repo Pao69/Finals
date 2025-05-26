@@ -1,7 +1,7 @@
 import axios from 'axios';
 import router from '../router';
 
-const baseURL = 'http://localhost/Codes/PROJ/dbConnect';
+const baseURL = 'http://localhost/codes/PROJ/Finals/dbConnect';
 
 const api = axios.create({
   baseURL,
@@ -14,8 +14,12 @@ const api = axios.create({
 // Add request interceptor to add token to all requests
 api.interceptors.request.use(
   (config) => {
-    // Try to get token from the storage that contains it
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    // Try to get token from either storage
+    let token = localStorage.getItem('token');
+    if (!token) {
+      token = sessionStorage.getItem('token');
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -32,7 +36,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );

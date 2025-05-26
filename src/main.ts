@@ -4,6 +4,12 @@ import router from './router';
 import { createPinia } from 'pinia';
 
 import { IonicVue } from '@ionic/vue';
+import { addIcons } from 'ionicons';
+import { closeCircle, closeOutline, checkmarkCircle, checkmarkOutline, timeOutline, calendarOutline, 
+         listOutline, documentTextOutline, clipboardOutline, addOutline, swapVerticalOutline,
+         createOutline, trashOutline, documentsOutline, downloadOutline, imageOutline, documentOutline,
+         gridOutline, checkboxOutline, settingsOutline, shieldOutline, personOutline, logOutOutline,
+         saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline } from 'ionicons/icons';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
@@ -34,6 +40,15 @@ import '@ionic/vue/css/palettes/dark.system.css';
 
 /* Theme variables */
 import './theme/variables.css';
+
+// Register Ionicons
+addIcons({
+  closeCircle, closeOutline, checkmarkCircle, checkmarkOutline, timeOutline, calendarOutline,
+  listOutline, documentTextOutline, clipboardOutline, addOutline, swapVerticalOutline,
+  createOutline, trashOutline, documentsOutline, downloadOutline, imageOutline, documentOutline,
+  gridOutline, checkboxOutline, settingsOutline, shieldOutline, personOutline, logOutOutline,
+  saveOutline, cameraOutline, checkmarkCircleOutline, warningOutline, refreshOutline, linkOutline
+});
 
 const pinia = createPinia();
 const app = createApp(App)

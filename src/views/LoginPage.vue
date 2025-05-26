@@ -35,6 +35,8 @@
             <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
           </span>
 
+          <span class="error-message" v-if="errors.general">{{ errors.general }}</span>
+
           <div class="remember-forgot-row">
             <label class="remember-label">
               <input type="checkbox" v-model="rememberMe" /> Remember Me
@@ -42,7 +44,9 @@
             <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
           </div>
 
-          <button class="button-submit" type="submit" :disabled="!isFormValid">Sign In</button>
+          <button class="button-submit" type="submit" :disabled="!isFormValid || loading">
+            {{ loading ? 'Signing in...' : 'Sign In' }}
+          </button>
 
           <p class="p">Don't have an account? <span class="span" @click="goToSignup">Sign Up</span></p>
         </form>
@@ -54,26 +58,29 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 import { IonPage, IonContent, toastController } from '@ionic/vue';
+import api from '@/utils/api';
 
 const router = useRouter();
 const username = ref('');
 const password = ref('');
 const showPassword = ref(false);
+const loading = ref(false);
 const errors = ref({
   username: '',
   password: '',
   general: ''
 });
 
-const rememberMe = ref(true);
+const rememberMe = ref(false);
 
 const isFormValid = computed(() => {
   return username.value && password.value;
 });
 
 const handleSubmit = async () => {
+  console.log('Form submitted with rememberMe:', rememberMe.value);
+  
   // Reset errors
   errors.value = {
     username: '',
@@ -91,29 +98,20 @@ const handleSubmit = async () => {
     return;
   }
 
+  loading.value = true;
+
   try {
     // Clear both storages before logging in
     localStorage.clear();
     sessionStorage.clear();
 
-    const response = await axios.post('http://localhost/Codes/PROJ/dbConnect/login.php', {
+    const response = await api.post('/login.php', {
       username: username.value,
       password: password.value
     });
 
     if (response.data.message === 'success') {
       const user = response.data.user;
-      console.log('Response user data:', user);
-      
-      // Explicitly check and preserve admin status
-      const isAdmin = user.role === 'admin';
-      console.log('Is admin?', isAdmin);
-      console.log('Original role:', user.role);
-      
-      // Clear everything first
-      localStorage.clear();
-      sessionStorage.clear();
-      delete axios.defaults.headers.common['Authorization'];
       
       // Create a new user object with explicit role preservation
       const userToStore = {
@@ -121,26 +119,40 @@ const handleSubmit = async () => {
         username: user.username,
         email: user.email,
         phone: user.phone,
-        role: user.role // Use the exact role from the response
+        role: user.role
       };
-      console.log('User data to store:', userToStore);
       
-      // Store user data and token in the appropriate storage
-      const storage = rememberMe.value ? localStorage : sessionStorage;
-      console.log('Using storage:', rememberMe.value ? 'localStorage' : 'sessionStorage');
-      
-      // Set the token first
+      // Get the token
       const token = response.data.token;
-      storage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Then set the user data
-      storage.setItem('user', JSON.stringify(userToStore));
-      
-      // Verify stored data
-      const storedUserData = storage.getItem('user');
-      const storedUser = storedUserData ? JSON.parse(storedUserData) : null;
-      console.log('Stored user data:', storedUser);
+
+      // Clear both storages again before storing new data
+      localStorage.clear();
+      sessionStorage.clear();
+
+      if (rememberMe.value) {
+        // Store in localStorage if remember me is checked
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userToStore));
+        console.log('Stored in localStorage:', { token: !!token, user: userToStore });
+      } else {
+        // Store in sessionStorage if remember me is not checked
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(userToStore));
+        console.log('Stored in sessionStorage:', { token: !!token, user: userToStore });
+      }
+
+      // Verify storage
+      if (rememberMe.value) {
+        console.log('localStorage check:', {
+          token: !!localStorage.getItem('token'),
+          user: !!localStorage.getItem('user')
+        });
+      } else {
+        console.log('sessionStorage check:', {
+          token: !!sessionStorage.getItem('token'),
+          user: !!sessionStorage.getItem('user')
+        });
+      }
       
       // Show success message
       const toast = await toastController.create({
@@ -150,32 +162,34 @@ const handleSubmit = async () => {
         position: 'top'
       });
       await toast.present();
+
+      // Wait for storage and toast to be updated
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Force a clean navigation state
-      await router.replace('/login');
-      
-      // Then navigate to the correct route
-      setTimeout(() => {
-        const targetRoute = isAdmin ? '/tabs/admin' : '/tabs/dashboard';
-        router.replace(targetRoute);
-      }, 100);
-    } 
-    
-    else {
+      // Navigate to the correct route
+      const targetRoute = user.role === 'admin' ? '/tabs/admin' : '/tabs/dashboard';
+      console.log('Attempting navigation to:', targetRoute);
+      await router.replace(targetRoute);
+    } else {
       throw new Error(response.data.message || 'Invalid username or password');
     }
-  } 
-  catch (error: any) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please try again.';
+    const errorMessage = error.response?.data?.message || 
+                        (error.message === 'Network Error' ? 
+                          'Cannot connect to server. Please check if XAMPP is running and Apache is started.' : 
+                          error.message || 'Login failed. Please try again.');
+    
     const toast = await toastController.create({
       message: errorMessage,
-      duration: 2000,
+      duration: 3000,
       color: 'danger',
       position: 'top'
     });
     await toast.present();
     errors.value.general = errorMessage;
+  } finally {
+    loading.value = false;
   }
 };
 

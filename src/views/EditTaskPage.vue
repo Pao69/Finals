@@ -41,7 +41,7 @@
             <div class="section-header">
               <h2>Schedule</h2>
             </div>
-            
+
             <ion-item class="form-item" :class="{ 'ion-valid': taskForm.due_date !== '' }">
               <ion-label position="stacked">Due Date <ion-text color="danger">*</ion-text></ion-label>
               <input
@@ -58,7 +58,7 @@
             <div class="section-header">
               <h2>Status</h2>
             </div>
-            
+
             <ion-item class="form-item toggle-item">
               <ion-label>Mark as Completed</ion-label>
               <ion-toggle
@@ -94,6 +94,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonContent,
   IonItem,
@@ -182,19 +183,8 @@ onMounted(async () => {
 // Fetch task data
 const fetchTask = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     const taskId = route.params.id;
-    const response = await axios.get<TaskResponse>(
-      `http://localhost/codes/PROJ/dbConnect/tasks.php?taskId=${taskId}`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
+    const response = await api.get<TaskResponse>(`/tasks.php?taskId=${taskId}`);
 
     if (response.data.success && response.data.task) {
       const task = response.data.task;
@@ -202,24 +192,34 @@ const fetchTask = async () => {
       if (isNaN(completed)) {
         throw new Error('Invalid completed status');
       }
+
+      // Create a Date object from the due_date string
+      const dueDate = new Date(task.due_date);
+      
+      // Format the date as YYYY-MM-DDTHH:mm (format required by datetime-local input)
+      const formattedDueDate = dueDate.toISOString().slice(0, 16);
+
       taskForm.value = {
         id: task.id,
         user_id: task.user_id,
         title: task.title,
-        description: task.description,
-        due_date: task.due_date.split('T')[0],
-        completed,
+        description: task.description || '',
+        due_date: formattedDueDate,
+        completed: completed,
         created_at: task.created_at,
         updated_at: task.updated_at
       };
     } else {
-      throw new Error('Task not found');
+      throw new Error('Failed to fetch task');
     }
   } catch (error: any) {
+    console.error('Error fetching task:', error);
     const toast = await toastController.create({
-      message: error.response?.data?.message || error.message || 'Failed to fetch task',
+      message: error.response?.data?.message || 'Failed to fetch task',
       duration: 2000,
-      color: 'danger'
+      color: 'danger',
+      position: 'top',
+      icon: closeCircle
     });
     await toast.present();
     router.back();
@@ -230,21 +230,28 @@ const handleSubmit = async () => {
   if (!taskForm.value || !isFormValid.value) return;
 
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    // Convert the input datetime to a Date object
+    const dueDate = new Date(taskForm.value.due_date);
+    
+    // Format the date as MM/DD/YYYY HH:MM AM/PM
+    const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+    const day = String(dueDate.getDate()).padStart(2, '0');
+    const year = dueDate.getFullYear();
+    
+    let hours = dueDate.getHours();
+    const minutes = String(dueDate.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    // Convert hours to 12-hour format
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const formattedHours = String(hours).padStart(2, '0');
 
-    // Format the date to YYYY-MM-DD HH:mm:ss as required by the backend
-    const formattedDate = new Date(taskForm.value.due_date)
-      .toISOString()
-      .slice(0, 19)
-      .replace('T', ' ');
+    const formattedDate = `${month}/${day}/${year} ${formattedHours}:${minutes} ${ampm}`;
 
     // Prepare the request data
     const requestData = {
-      id: taskForm.value.id,
+      id: taskForm.value.id,  // Use id for updates
       title: taskForm.value.title.trim(),
       description: taskForm.value.description.trim(),
       due_date: formattedDate,
@@ -253,16 +260,7 @@ const handleSubmit = async () => {
 
     console.log('Sending update request with data:', requestData); // Debug log
 
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      requestData,
-      {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const response = await api.post('/tasks.php', requestData);
 
     console.log('Server response:', response.data); // Debug log
 
@@ -276,10 +274,13 @@ const handleSubmit = async () => {
       });
       await toast.present();
 
-      // Navigate back to tasks page after a shorter delay
-      setTimeout(() => {
-        router.push('/tabs/tasks');
-      }, 200);
+      // Navigate back to tasks page and trigger refresh
+      router.push('/tabs/tasks').then(() => {
+        // Use the global refresh function if available
+        if (window.refreshTaskList) {
+          window.refreshTaskList();
+        }
+      });
     } else {
       throw new Error(response.data.message || 'Failed to update task');
     }

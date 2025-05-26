@@ -109,6 +109,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import api from '@/utils/api';
 import {
   IonContent, IonButton, IonIcon,
   IonCheckbox, IonAlert, IonSpinner, toastController,
@@ -153,12 +154,10 @@ const resources = ref<Resource[]>([]);
 const showDeleteAlert = ref(false);
 
 // Add computed property to check if user can edit/delete
-const currentUser = ref(JSON.parse(localStorage.getItem('user') || '{}'));
+const currentUser = ref(JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'));
 const canModifyTask = computed(() => {
-  return task.value && (
-    task.value.user_id === currentUser.value.id || 
-    currentUser.value.role === 'admin'
-  );
+  if (!task.value || !currentUser.value) return false;
+  return task.value.user_id === currentUser.value.id || currentUser.value.role === 'admin';
 });
 
 // Add onMounted to fetch task details when component loads
@@ -175,9 +174,7 @@ const fetchTaskDetails = async () => {
       return;
     }
 
-    const response = await axios.get(`http://localhost/codes/PROJ/dbConnect/tasks.php?taskId=${route.params.id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await api.get(`/tasks.php?taskId=${route.params.id}`);
 
     if (response.data.success) {
       task.value = response.data.task;
@@ -201,9 +198,7 @@ const fetchTaskDetails = async () => {
 const fetchResources = async () => {
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.get(`http://localhost/codes/PROJ/dbConnect/resources.php?task_id=${task.value?.id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await api.get(`/resources.php?task_id=${task.value?.id}`);
 
     if (response.data.success) {
       resources.value = response.data.resources || [];
@@ -218,17 +213,10 @@ const toggleTaskCompletion = async (completed: boolean) => {
   if (!task.value) return;
 
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      'http://localhost/codes/PROJ/dbConnect/tasks.php',
-      {
-        id: task.value.id,
-        completed: completed ? 1 : 0
-      },
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
+    const response = await api.post('/tasks.php', {
+      id: task.value.id,
+      completed: completed ? 1 : 0
+    });
 
     if (response.data.success) {
       task.value.completed = completed ? 1 : 0;
@@ -268,9 +256,7 @@ const deleteTask = async () => {
   if (!task.value) return;
 
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete('http://localhost/codes/PROJ/dbConnect/tasks.php', {
-      headers: { 'Authorization': `Bearer ${token}` },
+    const response = await api.delete('/tasks.php', {
       data: { taskId: task.value.id }
     });
 
