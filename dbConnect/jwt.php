@@ -2,7 +2,7 @@
 // Define constants
 
 // define('JWT_SECRET_KEY', '4yLZT8uRn2xVfJ7vKpMwNcBgQhWjXkAe'); This is just an example, use your own secure key
-define('JWT_SECRET_KEY', 'niggapenis69'); 
+define('JWT_SECRET_KEY', 'G#Kp8dR4sE3LpN2mBv9Cj7yH4gF6eD5'); 
 define('JWT_EXPIRATION_TIME', 7 * 24 * 60 * 60); // 7 days in seconds
 define('APP_NAME', 'APP_NAME');
 // ====================================
