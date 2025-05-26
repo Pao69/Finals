@@ -1,56 +1,77 @@
 # 📋 Task Management System
 
-> A modern task management application built with Ionic, React, and PHP
+> A modern task management application built with Ionic, Vue.js, and PHP
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Ionic](https://img.shields.io/badge/Ionic-latest-blue.svg)
-![React](https://img.shields.io/badge/React-latest-61dafb.svg)
+![Ionic](https://img.shields.io/badge/Ionic-7.5.0-blue.svg)
+![Vue](https://img.shields.io/badge/Vue.js-3.3.0-4FC08D.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.2.12-777BB4.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-10.4.32-orange.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0.2-blue.svg)
 
 ## ✨ Features
 
 📱 **Modern UI/UX**
-- Responsive design
-- Intuitive interface
-- Dark mode support
+- Responsive design with Ionic components
+- Intuitive interface with Vue.js Composition API
+- Dark/Light mode support
+- Mobile-first approach
+- Smooth animations and transitions
 
 🔐 **Security**
-- User authentication & authorization
-- Password hashing
-- Session management
+- JWT-based authentication & authorization
+- Bcrypt password hashing
+- Secure session management
 - Login attempt monitoring
+- CORS protection
+- XSS prevention
 
 📝 **Task Management**
 - Create, edit, and delete tasks
-- Priority levels
-- Due date tracking
+- Priority levels (Low, Medium, High)
+- Due date tracking with notifications
 - Task completion status
+- Task categorization
+- Bulk actions support
 
 📁 **Resource Management**
-- File uploads
+- Drag-and-drop file uploads
 - Multiple file types support
-- Resource description
+- Resource description and tagging
 - Secure file handling
+- File preview capability
+- Storage quota management
 
 👤 **User Features**
-- Profile management
-- Password reset
+- Profile management with avatars
+- Password reset via email
 - Profile picture upload
 - Role-based access control
+- Activity logging
+- Notification preferences
 
 ## 🚀 Quick Start
 
+### System Requirements
+
+- **Node.js**: v16.0.0 or higher
+- **PHP**: v8.2.12 or higher
+- **MySQL**: v10.4.32 or higher
+- **Storage**: Minimum 1GB free space
+- **Memory**: 2GB RAM minimum
+- **XAMPP**: v8.2.12 or higher
+
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (Latest LTS version)
-- [XAMPP](https://www.apachefriends.org/) (for PHP & MySQL)
-- npm or yarn package manager
+Before installation, ensure you have:
+1. [Node.js](https://nodejs.org/) (LTS version)
+2. [XAMPP](https://www.apachefriends.org/) (for PHP & MySQL)
+3. npm or yarn package manager
+4. Git for version control
 
 ### Installation
 
-1. **Clone & Install**
+1. **Clone & Setup**
 ```bash
 # Clone the repository
 git clone [repository-url]
@@ -60,9 +81,26 @@ cd [project-directory]
 
 # Install dependencies
 npm install
+
+# Create environment file
+cp .env.example .env
 ```
 
-2. **Database Setup**
+2. **Configure Environment**
+```env
+# .env file
+VITE_API_URL=http://localhost/codes/PROJ/Finals/dbConnect
+VITE_APP_NAME="Task Management System"
+VITE_FILE_UPLOAD_MAX=5242880
+VITE_ALLOWED_FILE_TYPES=jpg,jpeg,png,pdf,doc,docx,xls,xlsx
+```
+
+3. **Database Setup**
+- Start XAMPP (Apache and MySQL)
+- Open phpMyAdmin
+- Create new database
+- Import SQL schema:
+
 ```sql
 -- Create database
 CREATE DATABASE task_app;
@@ -143,50 +181,93 @@ CREATE TABLE `password_resets` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
-3. **Start Development Server**
+4. **Start Development Server**
 ```bash
+# Development mode
 npm run dev
+
+# Production build
+npm run build
+npm run preview
 ```
 
 ## 📱 Usage Guide
 
 ### 👤 User Management
 
-| Feature | Description |
-|---------|-------------|
-| Registration | Create account with username, email, phone, password |
-| Login | Secure authentication with email/password |
-| Profile | Update personal information and profile picture |
-| Password Reset | Self-service password recovery via email |
+| Feature | Description | Access Level |
+|---------|-------------|--------------|
+| Registration | Create account with email verification | Public |
+| Login | Secure authentication with 2FA option | Public |
+| Profile | Update personal info and preferences | User |
+| Password Reset | Email-based recovery system | Public |
 
 ### ✅ Task Operations
 
-| Action | Steps |
-|--------|--------|
-| Create Task | Click "Add Task" → Fill details → Save |
-| View Tasks | Dashboard displays all tasks with filters |
-| Update Task | Select task → Modify → Save Changes |
-| Delete Task | Select task → Delete → Confirm |
+| Action | Steps | Notes |
+|--------|--------|-------|
+| Create Task | 1. Click "+" button<br>2. Fill details<br>3. Set priority & due date<br>4. Save | Supports attachments |
+| View Tasks | 1. Access dashboard<br>2. Use filters/search<br>3. Sort by preference | Multiple view modes |
+| Update Task | 1. Select task<br>2. Edit details<br>3. Save changes | Real-time updates |
+| Delete Task | 1. Select task<br>2. Click delete<br>3. Confirm action | Soft delete available |
 
 ### 📁 Resource Management
 
-| Action | Steps |
-|--------|--------|
-| Upload | Navigate to task → Add Resource → Select file |
-| View | Access from task details |
-| Download | Click on resource to download |
+| Action | Steps | Supported Types |
+|--------|--------|----------------|
+| Upload | 1. Open task<br>2. Drag & drop files<br>3. Add description | Images, Documents, Spreadsheets |
+| View | 1. Access task<br>2. Open resources tab | Built-in preview |
+| Download | 1. Select resource<br>2. Click download | Batch download available |
+
+### ⚙️ Admin Features
+
+| Feature | Description | Access Path |
+|---------|-------------|-------------|
+| User Management | Manage accounts, roles, permissions | /admin/users |
+| System Monitoring | View logs, metrics, performance data | /admin/monitor |
+| Global Settings | Configure system parameters | /admin/settings |
+| Resource Control | Manage storage, quotas, limitations | /admin/resources |
 
 ## 🔧 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Database Connection | Check XAMPP services & credentials |
-| File Upload Fails | Verify size limits & permissions |
-| Login Issues | Clear cache or reset password |
+| Issue | Solution | Prevention |
+|-------|----------|------------|
+| Database Connection | 1. Verify XAMPP services<br>2. Check credentials<br>3. Test connection | Regular maintenance |
+| File Upload Fails | 1. Check file size<br>2. Verify permissions<br>3. Clear temp files | Set proper limits |
+| Login Issues | 1. Clear cache<br>2. Reset session<br>3. Check credentials | Use password manager |
+| Performance | 1. Clear browser cache<br>2. Update dependencies<br>3. Check network | Regular updates |
 
-## 🤝 Support
+## 🛠️ Development
 
-Need help? Found a bug? Please create an issue in the repository.
+### Tech Stack
+- **Frontend**: Vue.js 3.3, Ionic 7, TypeScript
+- **Backend**: PHP 8.2, MySQL 10.4
+- **Tools**: Vite, ESLint, Prettier
+- **Testing**: Vitest, PHPUnit
+
+### Architecture
+```
+project/
+├── src/                  # Frontend source
+│   ├── components/       # Vue components
+│   ├── views/           # Page components
+│   ├── composables/     # Vue composables
+│   └── services/        # API services
+├── dbConnect/           # Backend PHP files
+├── public/              # Static assets
+└── tests/              # Test files
+```
+
+## 🤝 Support & Contribution
+
+- Report issues via GitHub Issues
+- Join discussions in GitHub Discussions
+- Submit PRs for improvements
+- Documentation updates welcome
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
-Made with ❤️ using Ionic, Vue and PHP 
+Made with ❤️ using Ionic, Vue.js, and PHP
