@@ -198,7 +198,7 @@ npm run preview
 | Feature | Description | Access Level |
 |---------|-------------|--------------|
 | Registration | Create account with email verification | Public |
-| Login | Secure authentication with 2FA option | Public |
+| Login | Secure authenticationn | Public |
 | Profile | Update personal info and preferences | User |
 | Password Reset | Email-based recovery system | Public |
 
