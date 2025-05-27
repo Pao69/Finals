@@ -184,7 +184,7 @@ CREATE TABLE `password_resets` (
 4. **Start Development Server**
 ```bash
 # Development mode
-npm run dev
+npm run dev or ionic serve
 
 # Production build
 npm run build
