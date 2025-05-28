@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  TasksPage.vue - Main tasks listing page with filtering, sorting, and task management functionality.
+-->
 <template>
+  
   <page-layout title="My Tasks" :show-back-button="false">
     <template #additional-toolbar>
       <ion-toolbar>

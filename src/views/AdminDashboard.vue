@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  AdminDashboard.vue - Administrative dashboard with user management, system statistics, and global task oversight.
+-->
 <template>
+  
   <page-layout title="Admin Dashboard" :show-back-button="false">
     <ion-content class="ion-padding">
       <!-- Segment Tabs -->

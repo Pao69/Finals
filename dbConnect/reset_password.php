@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * reset_password.php - Handles password reset logic and updates user credentials.
+ */
+
 header("Access-Control-Allow-Origin: http://localhost:8100");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");

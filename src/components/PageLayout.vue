@@ -1,3 +1,7 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  PageLayout.vue - Reusable layout component for pages. Includes a header with optional back button and slots for content.
+-->
 <template>
   <ion-page>
     <ion-header>
@@ -20,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+// NOTE: Imports for Ionic components.
 import {
   IonPage,
   IonHeader,
@@ -29,6 +34,7 @@ import {
   IonBackButton,
 } from '@ionic/vue';
 
+// NOTE: Props for page title, back button visibility, and default back link.
 defineProps<{
   title: string;
   showBackButton?: boolean;

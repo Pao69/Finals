@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * tasks.php - Handles CRUD operations for tasks (GET, POST, DELETE, etc.)
+ */
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -9,7 +14,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
 
-// Handle preflight requests
+// NOTE: Handle preflight CORS requests for browsers.
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -18,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once 'db.php';
 require_once 'jwt.php';
 
+// NOTE: Utility function for logging errors to a file.
 function logError($message, $error = null) {
     $logMessage = date('Y-m-d H:i:s') . " - " . $message;
     if ($error) {
@@ -26,6 +32,7 @@ function logError($message, $error = null) {
     error_log($logMessage . "\n", 3, "tasks_error.log");
 }
 
+// NOTE: Validate incoming task data for required fields and formats.
 function validateTaskData($data) {
     $errors = [];
     
@@ -47,7 +54,7 @@ function validateTaskData($data) {
 // CORS is now handled by the handle_cors() function in jwt.php
 handle_cors();
 
-// Get user data from token
+// NOTE: Get user data from JWT token for authentication.
 $user = getUserFromToken();
 if (!$user) {
     http_response_code(401);
@@ -59,9 +66,10 @@ try {
     // Get database connection
     $pdo = getConnection();
     
-    // Handle different HTTP methods
+    // NOTE: Main switch to handle different HTTP request methods (GET, POST, DELETE, etc.)
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
+            // NOTE: Handle fetching tasks (all or by ID).
             // Get task ID from query parameters if it exists
             $taskId = isset($_GET['taskId']) ? $_GET['taskId'] : null;
             
@@ -108,6 +116,7 @@ try {
             break;
 
         case 'POST':
+            // NOTE: Handle task creation or update.
             // Get POST data
             $data = json_decode(file_get_contents('php://input'), true);
             
@@ -197,6 +206,7 @@ try {
             break;
 
         case 'DELETE':
+            // NOTE: Handle task deletion.
             $data = json_decode(file_get_contents('php://input'), true);
             
             if (!isset($data['taskId'])) {
@@ -231,7 +241,8 @@ try {
             break;
     }
 } catch (Exception $e) {
-    logError('Error in tasks.php', $e->getMessage());
+    // NOTE: Catch and log any exceptions that occur during request handling.
+    logError('Exception in tasks.php', $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Internal server error']);
 }

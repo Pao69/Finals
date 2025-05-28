@@ -1,3 +1,6 @@
+// NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+// api.ts - Axios instance for API requests. Handles authentication, CORS, and error handling.
+
 import axios from 'axios';
 import router from '../router';
 
@@ -11,7 +14,7 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor to add token to all requests
+// NOTE: Request interceptor to add JWT token to all requests.
 api.interceptors.request.use(
   (config) => {
     // Try to get token from either storage
@@ -40,7 +43,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle token expiration
+// NOTE: Response interceptor to handle token expiration and unauthorized errors.
 api.interceptors.response.use(
   (response) => response,
   (error) => {

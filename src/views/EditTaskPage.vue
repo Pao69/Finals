@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  EditTaskPage.vue - Form for editing existing tasks, including updating details, status, and associated resources.
+-->
 <template>
+  
   <page-layout title="Edit Task" :showBackButton="true" backHref="/tabs/tasks">
     <ion-content class="ion-padding">
       <div class="edit-task-container">

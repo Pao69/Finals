@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  TabsPage.vue - Main tab navigation component that handles routing between different sections of the app.
+-->
 <template>
+  
   <ion-page>
     <ion-tabs>
       <ion-router-outlet :aria-hidden="false"></ion-router-outlet>

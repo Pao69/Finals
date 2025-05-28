@@ -3,6 +3,9 @@ import { RouteRecordRaw } from 'vue-router';
 import TabsPage from '../views/TabsPage.vue'
 import TasksPage from '../views/TasksPage.vue'
 
+// NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+// index.ts - Vue Router configuration for the application, including route guards and role-based redirects.
+// NOTE: Route definitions for all main pages, including admin and user dashboards.
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -89,7 +92,7 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard to check authentication and roles
+// NOTE: Navigation guard to check authentication and roles before each route change.
 router.beforeEach((to, from, next) => {
   console.log('Navigation started:', { from: from.path, to: to.path });
   

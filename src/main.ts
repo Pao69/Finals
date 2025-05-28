@@ -1,3 +1,5 @@
+// NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+// main.ts - Entry point for the Vue/Ionic application. Sets up plugins, router, and mounts the app.
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router';
@@ -43,6 +45,7 @@ import '@ionic/vue/css/palettes/dark.system.css';
 import './theme/variables.css';
 
 // Register Ionicons
+// NOTE: Icon registration for use throughout the app.
 addIcons({
   closeCircle, closeOutline, checkmarkCircle, checkmarkOutline, timeOutline, calendarOutline,
   listOutline, documentTextOutline, clipboardOutline, addOutline, swapVerticalOutline,
@@ -52,12 +55,14 @@ addIcons({
   analyticsOutline, filterOutline, shareOutline, statsChartOutline
 });
 
+// NOTE: Pinia (state management), IonicVue, and router are registered here.
 const pinia = createPinia();
 const app = createApp(App)
   .use(IonicVue)
   .use(router)
   .use(pinia);
 
+// NOTE: Wait for router to be ready before mounting the app.
 router.isReady().then(() => {
   app.mount('#app');
 });

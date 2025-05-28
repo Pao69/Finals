@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  SettingsPage.vue - User settings management page including profile updates, password changes, and preferences.
+-->
 <template>
+  
   <page-layout title="Settings" :show-back-button="false">
     <ion-content class="ion-padding">
       <div class="settings-container">

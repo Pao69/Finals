@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * user_profile.php - Handles fetching and updating user profile information.
+ */
+
 require_once('jwt.php');
 require_once('db.php');
 

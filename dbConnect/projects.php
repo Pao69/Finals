@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * projects.php - Handles project CRUD operations and associations.
+ */
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept");

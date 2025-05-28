@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  LoginPage.vue - Handles user login, form validation, and authentication logic.
+-->
 <template>
+  
   <ion-page>
     <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
       <div class="login-container">

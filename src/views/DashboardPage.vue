@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  DashboardPage.vue - User dashboard showing task overview, recent activities, and quick access to key features.
+-->
 <template>
+  
   <page-layout title="Dashboard" :show-back-button="false">
     <ion-content :fullscreen="true" class="ion-padding-horizontal">
       <ion-header collapse="condense">

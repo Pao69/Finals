@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  ReportPage.vue - Displays task statistics and reports for admin users, including completion rates and resource usage.
+-->
 <template>
+  
   <page-layout title="Monthly Transaction Report" :show-back-button="false">
     <ion-content class="ion-padding">
       <div class="report-container">

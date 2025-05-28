@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * verify_reset_code.php - Verifies password reset codes for account recovery.
+ */
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 

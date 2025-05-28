@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * profile_picture.php - Handles user profile picture upload and retrieval.
+ */
+
 // Enable error reporting and display
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

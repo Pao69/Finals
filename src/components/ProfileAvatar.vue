@@ -1,4 +1,5 @@
 <template>
+  
   <div class="profile-avatar" @click="goToSettings">
     <ion-avatar>
       <img 
@@ -11,6 +12,7 @@
 </template>
 
 <script setup lang="ts">
+// NOTE: Imports for Vue, router, and Ionic components.
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { IonAvatar } from '@ionic/vue';
@@ -24,10 +26,12 @@ const handleImageError = (e: Event) => {
   target.src = 'https://ionicframework.com/docs/img/demos/avatar.svg';
 };
 
+// NOTE: Handles navigation to the settings page when avatar is clicked.
 const goToSettings = () => {
   router.push('/tabs/settings');
 };
 
+// NOTE: Fetches the user's profile picture from local storage or API.
 const fetchProfilePicture = async () => {
   try {
     const userData = localStorage.getItem('user');
@@ -56,6 +60,7 @@ const fetchProfilePicture = async () => {
   }
 };
 
+// NOTE: Fetch profile picture when component is mounted.
 onMounted(() => {
   fetchProfilePicture();
 });

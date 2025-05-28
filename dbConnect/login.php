@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * login.php - Handles user login, authentication, and JWT issuance.
+ */
+
 // Add headers for CORS
 header("Access-Control-Allow-Origin: http://localhost:8100");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");

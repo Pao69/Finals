@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  SignupPage.vue - Handles user registration with form validation and account creation.
+-->
 <template>
+  
   <ion-page>
     <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
       <div class="signup-container">

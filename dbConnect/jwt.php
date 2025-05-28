@@ -1,5 +1,10 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * jwt.php - Handles JWT creation, validation, and CORS for the backend.
+ */
 // Define constants
+
 
 // define('JWT_SECRET_KEY', '4yLZT8uRn2xVfJ7vKpMwNcBgQhWjXkAe'); This is just an example, use your own secure key
 define('JWT_SECRET_KEY', 'G#Kp8dR4sE3LpN2mBv9Cj7yH4gF6eD5'); 

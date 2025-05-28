@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  AddTaskPage.vue - Form for creating new tasks with validation and resource attachment capabilities.
+-->
 <template>
+  
   <page-layout title="Add Task" :showBackButton="true" backHref="/tabs/tasks">
     <ion-content class="ion-padding">
       <form @submit.prevent="handleSubmit" class="task-form">

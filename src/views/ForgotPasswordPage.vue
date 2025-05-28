@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  ForgotPasswordPage.vue - Handles password recovery process including email verification and reset code validation.
+-->
 <template>
+  
   <ion-page>
     <ion-content class="ion-padding" :style="{ '--background': '#1a1a1a' }">
       <div class="forgot-container">

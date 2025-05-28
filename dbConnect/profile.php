@@ -1,4 +1,9 @@
 <?php
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * profile.php - Handles user profile data retrieval and updates.
+ */
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 

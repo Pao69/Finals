@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  ResourcesPage.vue - Manages file resources associated with tasks, including upload, download, and deletion.
+-->
 <template>
+  
   <page-layout title="Resources" :show-back-button="false">
     <template #additional-toolbar>
       <ion-toolbar>

@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+ * db.php - Handles database connection for the backend.
+ */
+
 // Database connection details
 $host = 'localhost';
 $dbname = 'task_app';

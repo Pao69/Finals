@@ -1,4 +1,9 @@
+<!--
+  NOTE: The following comments are for educational/debugging purposes and may not cover all edge cases.
+  TaskView.vue - Displays detailed view of a single task, including its resources, comments, and status updates.
+-->
 <template>
+  
   <page-layout title="Task Details" :showBackButton="true" backHref="/tabs/tasks">
     <ion-content :fullscreen="true">
       <div v-if="task" class="task-details">
